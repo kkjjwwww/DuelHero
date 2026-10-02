@@ -1,0 +1,251 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4be75ffe98b7d44a82ade6488e8cfdd, type: 3}
+  m_Name: CardDatabase
+  m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Cards.CardDatabase
+  sourceSpreadsheetId: 1pspfXZtUhTmSc9ZTL1iTzQDeBgvfbb_wqwCNs83EFQE
+  importedAtUtc: 2026-10-02T09:33:20.9476846Z
+  cards:
+  - id: move_up_001
+    name: "\uC704 \uC774\uB3D9"
+    description: "\uC704\uB85C {effect1.value}\uCE78 \uC774\uB3D9\uD55C\uB2E4."
+    actionType: "\uC774\uB3D9"
+    rarity: "\uC77C\uBC18"
+    energyCost: 0
+    keywordIds: []
+    isObtainable: 0
+    isBasicAction: 1
+    isStarterCard: 1
+    effects:
+    - id: move_up_001_effect_01
+      cardId: move_up_001
+      effectType: move
+      fixedDirection: "\uC0C1"
+      targetType: "\uC790\uC2E0"
+      resolutionOrder: 1
+      value: 1
+      durationSlots: 0
+      rangeOffsets:
+      - {x: 0, y: 1}
+  - id: move_down_001
+    name: "\uC544\uB798 \uC774\uB3D9"
+    description: "\uC544\uB798\uB85C {effect1.value}\uCE78 \uC774\uB3D9\uD55C\uB2E4."
+    actionType: "\uC774\uB3D9"
+    rarity: "\uC77C\uBC18"
+    energyCost: 0
+    keywordIds: []
+    isObtainable: 0
+    isBasicAction: 1
+    isStarterCard: 1
+    effects:
+    - id: move_down_001_effect_01
+      cardId: move_down_001
+      effectType: move
+      fixedDirection: "\uD558"
+      targetType: "\uC790\uC2E0"
+      resolutionOrder: 1
+      value: 1
+      durationSlots: 0
+      rangeOffsets:
+      - {x: 0, y: -1}
+  - id: move_left_001
+    name: "\uC67C\uCABD \uC774\uB3D9"
+    description: "\uC67C\uCABD\uC73C\uB85C {effect1.value}\uCE78 \uC774\uB3D9\uD55C\uB2E4."
+    actionType: "\uC774\uB3D9"
+    rarity: "\uC77C\uBC18"
+    energyCost: 0
+    keywordIds: []
+    isObtainable: 0
+    isBasicAction: 1
+    isStarterCard: 1
+    effects:
+    - id: move_left_001_effect_01
+      cardId: move_left_001
+      effectType: move
+      fixedDirection: "\uC88C"
+      targetType: "\uC790\uC2E0"
+      resolutionOrder: 1
+      value: 1
+      durationSlots: 0
+      rangeOffsets:
+      - {x: -1, y: 0}
+  - id: move_right_001
+    name: "\uC624\uB978\uCABD \uC774\uB3D9"
+    description: "\uC624\uB978\uCABD\uC73C\uB85C {effect1.value}\uCE78 \uC774\uB3D9\uD55C\uB2E4."
+    actionType: "\uC774\uB3D9"
+    rarity: "\uC77C\uBC18"
+    energyCost: 0
+    keywordIds: []
+    isObtainable: 0
+    isBasicAction: 1
+    isStarterCard: 1
+    effects:
+    - id: move_right_001_effect_01
+      cardId: move_right_001
+      effectType: move
+      fixedDirection: "\uC6B0"
+      targetType: "\uC790\uC2E0"
+      resolutionOrder: 1
+      value: 1
+      durationSlots: 0
+      rangeOffsets:
+      - {x: 1, y: 0}
+  - id: guard_001
+    name: "\uBC29\uC5B4"
+    description: "{effect1.durationSlots}\uAC1C \uD589\uB3D9 \uC2AC\uB86F \uB3D9\uC548
+      \uBC1B\uB294 \uD53C\uD574\uB97C {effect1.value} \uAC10\uC18C\uC2DC\uD0A8\uB2E4."
+    actionType: "\uBC29\uC5B4"
+    rarity: "\uC77C\uBC18"
+    energyCost: 0
+    keywordIds: []
+    isObtainable: 0
+    isBasicAction: 1
+    isStarterCard: 1
+    effects:
+    - id: guard_001_effect_01
+      cardId: guard_001
+      effectType: guard
+      fixedDirection: 
+      targetType: "\uC790\uC2E0"
+      resolutionOrder: 1
+      value: 10
+      durationSlots: 1
+      rangeOffsets:
+      - {x: 0, y: 0}
+  - id: breathing_001
+    name: "\uC228\uACE0\uB974\uAE30"
+    description: "\uC5D0\uB108\uC9C0\uB97C {effect1.value} \uD68C\uBCF5\uD55C\uB2E4."
+    actionType: "\uD68C\uBCF5"
+    rarity: "\uC77C\uBC18"
+    energyCost: 0
+    keywordIds: []
+    isObtainable: 0
+    isBasicAction: 1
+    isStarterCard: 1
+    effects:
+    - id: breathing_001_effect_01
+      cardId: breathing_001
+      effectType: energyRestore
+      fixedDirection: 
+      targetType: "\uC790\uC2E0"
+      resolutionOrder: 1
+      value: 20
+      durationSlots: 0
+      rangeOffsets:
+      - {x: 0, y: 0}
+  - id: slash_001
+    name: "\uBCA0\uAE30"
+    description: "\uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574
+      {effect1.value}\uC744 \uC900\uB2E4."
+    actionType: "\uACF5\uACA9"
+    rarity: "\uC77C\uBC18"
+    energyCost: 10
+    keywordIds:
+    - direction_select
+    isObtainable: 0
+    isBasicAction: 0
+    isStarterCard: 1
+    effects:
+    - id: slash_001_effect_01
+      cardId: slash_001
+      effectType: damage
+      fixedDirection: 
+      targetType: "\uC801"
+      resolutionOrder: 1
+      value: 10
+      durationSlots: 0
+      rangeOffsets:
+      - {x: 0, y: 0}
+      - {x: 0, y: 1}
+  - id: thrust_001
+    name: "\uCC0C\uB974\uAE30"
+    description: "\uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574
+      {effect1.value}\uC744 \uC900\uB2E4."
+    actionType: "\uACF5\uACA9"
+    rarity: "\uC77C\uBC18"
+    energyCost: 15
+    keywordIds:
+    - direction_select
+    isObtainable: 0
+    isBasicAction: 0
+    isStarterCard: 1
+    effects:
+    - id: thrust_001_effect_01
+      cardId: thrust_001
+      effectType: damage
+      fixedDirection: 
+      targetType: "\uC801"
+      resolutionOrder: 1
+      value: 15
+      durationSlots: 0
+      rangeOffsets:
+      - {x: 0, y: 0}
+      - {x: 0, y: 1}
+      - {x: 0, y: 2}
+  - id: sweep_001
+    name: "\uD6A1\uBCA0\uAE30"
+    description: "\uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574
+      {effect1.value}\uC744 \uC900\uB2E4."
+    actionType: "\uACF5\uACA9"
+    rarity: "\uC77C\uBC18"
+    energyCost: 20
+    keywordIds:
+    - direction_select
+    isObtainable: 0
+    isBasicAction: 0
+    isStarterCard: 1
+    effects:
+    - id: sweep_001_effect_01
+      cardId: sweep_001
+      effectType: damage
+      fixedDirection: 
+      targetType: "\uC801"
+      resolutionOrder: 1
+      value: 10
+      durationSlots: 0
+      rangeOffsets:
+      - {x: 0, y: 0}
+      - {x: -1, y: 1}
+      - {x: 0, y: 1}
+      - {x: 1, y: 1}
+  keywords:
+  - id: direction_select
+    name: "\uBC29\uD5A5\uC9C0\uC815"
+    description: "\uCE74\uB4DC \uC608\uC57D \uC2DC \uC2E4\uD589 \uBC29\uD5A5\uC744
+      \uC120\uD0DD\uD55C\uB2E4."
+    resolutionRule: "\uCE74\uB4DC \uC608\uC57D \uC2DC \uC120\uD0DD\uD55C \uBC29\uD5A5\uC744
+      \uD589\uB3D9 \uD050\uC5D0 \uC800\uC7A5\uD55C\uB2E4. \uBC94\uC704 \uC88C\uD45C\uB294
+      \uC804\uBC29 +Y\uB97C \uAE30\uC900\uC73C\uB85C \uC791\uC131\uD558\uACE0, \uC2E4\uD589
+      \uC2DC \uC608\uC57D \uBC29\uD5A5\uC73C\uB85C \uD68C\uC804\uD558\uC5EC \uC801\uC6A9\uD55C\uB2E4.
+      \uC608\uC57D \uC774\uD6C4 \uCE90\uB9AD\uD130 \uBC29\uD5A5\uC774 \uBC14\uB00C\uC5B4\uB3C4
+      \uC608\uC57D \uBC29\uD5A5\uC744 \uC720\uC9C0\uD55C\uB2E4. \uC774 \uD0A4\uC6CC\uB4DC\uAC00
+      \uC5C6\uB294 \uCE74\uB4DC\uB294 \uAE30\uBCF8\uC801\uC73C\uB85C \uBC29\uD5A5\uC774
+      \uACE0\uC815\uB41C\uB2E4."
+    triggerTiming: "\uC608\uC57D \uC2DC / \uD589\uB3D9 \uC2E4\uD589 \uC2DC"
+    parameters: "\uC5C6\uC74C"
+  - id: single_target
+    name: "\uB2E8\uC77C\uB300\uC0C1"
+    description: "\uBC94\uC704 \uB0B4 \uAC00\uC7A5 \uAC00\uAE4C\uC6B4 \uC801 \uD55C
+      \uBA85\uC744 \uB300\uC0C1\uC73C\uB85C \uD55C\uB2E4. \uAC19\uC740 \uAC70\uB9AC\uC758
+      \uC801\uC774 \uC5EC\uB7EC \uBA85\uC774\uBA74 \uBB34\uC791\uC704\uB85C \uD55C
+      \uBA85\uC744 \uC120\uD0DD\uD55C\uB2E4."
+    resolutionRule: "\uD6A8\uACFC \uC2E4\uD589 \uC2DC \uBC94\uC704 \uB0B4 \uC801\uC744
+      \uD6C4\uBCF4\uB85C \uC0BC\uACE0, \uD6A8\uACFC\uB97C \uC0AC\uC6A9\uD558\uB294
+      \uCE90\uB9AD\uD130\uB85C\uBD80\uD130 \uAC00\uC7A5 \uAC00\uAE4C\uC6B4 \uC801
+      \uD55C \uBA85\uC744 \uC120\uD0DD\uD55C\uB2E4. \uCD5C\uB2E8 \uAC70\uB9AC\uAC00
+      \uAC19\uC740 \uC801\uC774 \uC5EC\uB7EC \uBA85\uC774\uBA74 \uADF8 \uD6C4\uBCF4\uB4E4
+      \uC911 \uBB34\uC791\uC704\uB85C \uD55C \uBA85\uC744 \uC120\uD0DD\uD55C\uB2E4.
+      \uBC94\uC704 \uB0B4 \uC801\uC774 \uC5C6\uC73C\uBA74 \uB300\uC0C1\uC774 \uC5C6\uB2E4.
+      \uC774 \uD0A4\uC6CC\uB4DC\uAC00 \uC5C6\uB294 \uC801 \uB300\uC0C1 \uD6A8\uACFC\uB294
+      \uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uC801\uC6A9\uD55C\uB2E4."
+    triggerTiming: "\uD589\uB3D9 \uC2E4\uD589 \uC2DC"
+    parameters: 

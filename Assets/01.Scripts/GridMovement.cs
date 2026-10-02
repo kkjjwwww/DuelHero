@@ -9,6 +9,7 @@ public class GridMovement : MonoBehaviour
     [SerializeField] private int width = 4;
     [SerializeField] private int height = 3;
     [SerializeField] private float cellSize = 1f;
+    [SerializeField] private ActionQueueUI queueUI;
 
     private readonly List<Vector2Int> moveQueue = new();
     private bool isExecuting;
@@ -17,18 +18,22 @@ public class GridMovement : MonoBehaviour
     {
         isExecuting = true;
 
-        foreach (Vector2Int direction in moveQueue)
+        for (int i = 0; i < moveQueue.Count; i++)
         {
-            TryMove(direction);
+            queueUI.Refresh(moveQueue, i);
+            TryMove(moveQueue[i]);
+
             yield return new WaitForSeconds(0.4f);
         }
 
         moveQueue.Clear();
         isExecuting = false;
+        queueUI.Refresh(moveQueue);
     }
     private void Start()
     {
         UpdateWorldPosition();
+        queueUI.Refresh(moveQueue);
     }
 
     private void Update()
@@ -49,9 +54,14 @@ public class GridMovement : MonoBehaviour
             else if (keyboard.rightArrowKey.wasPressedThisFrame)
                 moveQueue.Add(Vector2Int.right);
         }
+        if (keyboard.backspaceKey.wasPressedThisFrame && moveQueue.Count > 0)
+        {
+            moveQueue.RemoveAt(moveQueue.Count - 1);
+        }
 
-        if (keyboard.enterKey.wasPressedThisFrame &&
-            moveQueue.Count == 3)
+        queueUI.Refresh(moveQueue);
+
+        if (keyboard.enterKey.wasPressedThisFrame && moveQueue.Count == 3)
         {
             StartCoroutine(ExecuteMoves());
         }
@@ -62,8 +72,7 @@ public class GridMovement : MonoBehaviour
         Vector2Int next = gridPosition + direction;
 
         // 전장 밖으로 이동하려 하면 현재 위치를 유지합니다.
-        if (next.x < 0 || next.x >= width ||
-            next.y < 0 || next.y >= height)
+        if (next.x < 0 || next.x >= width || next.y < 0 || next.y >= height)
         {
             return false;
         }
@@ -75,10 +84,6 @@ public class GridMovement : MonoBehaviour
 
     private void UpdateWorldPosition()
     {
-        transform.position = new Vector3(
-            gridPosition.x * cellSize,
-            0f,
-            gridPosition.y * cellSize
-        );
+        transform.position = new Vector3(gridPosition.x * cellSize, 0f, gridPosition.y * cellSize);
     }
 }
