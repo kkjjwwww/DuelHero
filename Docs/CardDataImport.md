@@ -47,3 +47,18 @@
 - `GoogleSheetSyncClient`, `GoogleSheetSyncWindow`: 추가된 읽기 전용 인증·조회와 갱신 버튼.
 
 자연어 키워드 규칙은 자동 실행하지 않는다. 예외 동작은 별도 구현이 필요하다. 현재 카드 클릭은 상세 설명까지이며 예약·에너지·공격 판정 연결은 다음 단계다. 카드 목록의 초기 상태는 기존 이동 큐를 나타내지 않는다.
+
+## 카드·유닛·전투 설정 분리 갱신
+
+갱신 창의 범위에서 전체 / 카드 / 유닛(플레이어·적) / 전투 설정을 선택한다.
+로그인·조회는 GoogleSheetSyncClient를 공유하고, 각 데이터의 검증은 별도 임포터가 담당한다.
+전체 갱신은 모든 조회와 검증을 완료한 뒤 저장하며, 저장 실패 시 기존 CSV와 DB 복원을 시도한다.
+부분 갱신은 선택한 데이터만 변경한다.
+
+- Player Data / Enemy Data → Assets/Data/UnitSheets/Players.csv, Enemies.csv → UnitDatabase.asset
+- BattleConfig → Assets/Data/BattleConfigSheets/BattleConfig.csv → BattleConfig.asset
+- 카드 데이터 경로와 수동 CSV 메뉴는 기존과 동일하다.
+
+유닛 ID는 Player/Enemy 각 목록 안에서 중복을 허용하지 않는다. 체력/에너지는 음이 아닌 정수이며 최대 체력은 양수, 시작값은 최대값 이하여야 한다.
+BattleConfig의 energyRecoveryPerTurn은 빈 값이면 hasEnergyRecoveryPerTurn=false로 저장한다. 숫자 0과 미설정을 구분한다.
+유닛 및 전투 설정 에셋은 데이터 저장까지만 연결한다. 씬 캐릭터 초기화나 턴 회복에 자동 적용하지 않는다.

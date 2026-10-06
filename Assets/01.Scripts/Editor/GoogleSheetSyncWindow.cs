@@ -13,6 +13,7 @@ public sealed class GoogleSheetSyncWindow : EditorWindow
     private string spreadsheetId;
     private string status = "최초 1회 OAuth JSON 가져오기와 Google 로그인이 필요합니다.";
     private bool busy;
+    private SheetSyncScope scope = SheetSyncScope.All;
     private CancellationTokenSource cancellation;
     private string PreferenceKey => "DuelHero.SheetId." + Application.dataPath;
 
@@ -34,11 +35,12 @@ public sealed class GoogleSheetSyncWindow : EditorWindow
     private void Cancel() => cancellation?.Cancel();
     private void OnGUI()
     {
-        GUILayout.Label("Google Sheets → 카드 데이터", EditorStyles.boldLabel);
-        EditorGUILayout.HelpBox("Card Data / Card Effect Data / Keyword Data를 읽고 검증한 뒤 CSV, 카드 DB와 덱 미리보기를 갱신합니다.", MessageType.Info);
+        GUILayout.Label("Google Sheets → 게임 데이터", EditorStyles.boldLabel);
+        EditorGUILayout.HelpBox("카드·유닛·전투 설정을 선택해 갱신합니다. 전체 갱신은 모든 검증을 통과한 뒤 함께 저장합니다.", MessageType.Info);
         using (new EditorGUI.DisabledScope(busy))
         {
             spreadsheetId = EditorGUILayout.TextField("시트 ID 또는 URL", spreadsheetId);
+            scope = (SheetSyncScope)EditorGUILayout.Popup("갱신 범위", (int)scope, new[] { "전체", "카드", "유닛 (플레이어·적)", "전투 설정" });
             GUILayout.Label("OAuth 설정: " + (GoogleSheetSyncClient.HasClient ? "등록됨" : "필요"));
             GUILayout.Label("저장된 로그인: " + (GoogleSheetSyncClient.HasToken ? "있음" : "없음"));
             if (GUILayout.Button("1. 데스크톱 OAuth 클라이언트 JSON 가져오기"))
@@ -59,7 +61,11 @@ public sealed class GoogleSheetSyncWindow : EditorWindow
         if (busy && GUILayout.Button("취소")) Cancel();
         EditorGUILayout.HelpBox(status, MessageType.None);
         var database = AssetDatabase.LoadAssetAtPath<CardDatabase>(CardSheetImporter.DatabasePath);
-        if (database != null) EditorGUILayout.LabelField("최근 갱신 (UTC)", database.importedAtUtc);
+        if (database != null) EditorGUILayout.LabelField("카드 갱신 (UTC)", database.importedAtUtc);
+        var units = AssetDatabase.LoadAssetAtPath<DuelHero.Data.UnitDatabase>(UnitSheetImporter.DatabasePath);
+        if (units != null) EditorGUILayout.LabelField("유닛 갱신 (UTC)", units.importedAtUtc);
+        var config = AssetDatabase.LoadAssetAtPath<DuelHero.Data.BattleConfig>(BattleConfigSheetImporter.DatabasePath);
+        if (config != null) EditorGUILayout.LabelField("전투 설정 갱신 (UTC)", config.importedAtUtc);
         if (GUILayout.Button("설정 및 사용 설명 열기")) Application.OpenURL("file://" + Path.GetFullPath("Docs/CardDataImport.md").Replace('\\', '/'));
     }
     private async void Run(Func<CancellationToken, Task> operation)
@@ -83,8 +89,9 @@ public sealed class GoogleSheetSyncWindow : EditorWindow
         string id = spreadsheetId.Trim();
         var match = Regex.Match(id, @"/spreadsheets/d/([A-Za-z0-9_-]+)");
         if (match.Success) id = match.Groups[1].Value;
-        status = "시트 3개를 읽는 중입니다…";
-        var csv = await GoogleSheetSyncClient.DownloadCsvAsync(id, token);
+        var selectedScope = scope;
+        status = "선택한 시트를 읽는 중입니다…";
+        var csv = await GameSheetImporter.DownloadAsync(id, selectedScope, token);
         token.ThrowIfCancellationRequested();
         if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling)
             throw new InvalidOperationException("Play 모드와 컴파일이 끝난 뒤 다시 갱신해주세요.");
@@ -94,7 +101,7 @@ public sealed class GoogleSheetSyncWindow : EditorWindow
         {
             foreach (var file in csv) File.WriteAllText(Path.Combine(stage, file.Key), file.Value, new UTF8Encoding(false));
             token.ThrowIfCancellationRequested();
-            string result = CardSheetImporter.ImportFolder(stage, id);
+            string result = GameSheetImporter.ImportFolder(stage, id, selectedScope);
             EditorPrefs.SetString(PreferenceKey, id);
             AssetDatabase.Refresh();
             status = "갱신 완료. " + result + " 씬 미리보기를 보존하려면 씬을 저장해주세요.";

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 public class GridMovement : MonoBehaviour
 {
     [SerializeField] private Vector2Int gridPosition;
+    public Vector2Int GridPosition => gridPosition;
     [SerializeField] private int width = 4;
     [SerializeField] private int height = 3;
     [SerializeField] private float cellSize = 1f;

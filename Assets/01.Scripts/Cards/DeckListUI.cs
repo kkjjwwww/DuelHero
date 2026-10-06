@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.EventSystems;
 
 namespace DuelHero.Cards
 {
@@ -118,15 +117,13 @@ namespace DuelHero.Cards
             var state = Label("State", go.transform, instance.ReservedSlot >= 0 ? "예약 슬롯 " + (instance.ReservedSlot + 1) : "미예약", 12); Position(state.rectTransform, 8, -71, -8, 22);
             var tag = Label("Kind", go.transform, card.isBasicAction ? "기본 행동" : "기술 카드", 11); Position(tag.rectTransform, 8, -95, -8, 18);
             button.onClick.AddListener(() => { if (Application.isPlaying && reservationQueue != null) reservationQueue.TryReserve(instance); });
-            var trigger = go.AddComponent<EventTrigger>();
-            var hover = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
-            hover.callback.AddListener(_ =>
+            var hover = go.AddComponent<CardHoverInfo>();
+            hover.ShowInfo = () =>
             {
                 if (detailLabel == null) return;
                 string keywords = string.Join(" · ", playerDeck.Database.keywords.Where(k => card.keywordIds.Contains(k.id)).Select(k => k.name));
                 detailLabel.text = card.name + " — " + card.ResolvedDescription() + (keywords.Length > 0 ? "\n" + keywords : "");
-            });
-            trigger.triggers.Add(hover);
+            };
         }
 
         private GameObject Make(string name, Transform parent)

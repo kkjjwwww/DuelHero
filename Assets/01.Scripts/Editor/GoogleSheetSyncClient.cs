@@ -105,13 +105,17 @@ public static class GoogleSheetSyncClient
     }
 
     public static async Task<Dictionary<string, string>> DownloadCsvAsync(string spreadsheetId, CancellationToken cancellation)
+        => await DownloadCsvAsync(spreadsheetId, TabNames, CsvNames, "id", cancellation);
+
+    public static async Task<Dictionary<string, string>> DownloadCsvAsync(string spreadsheetId, string[] tabs, string[] filenames, string keyColumn, CancellationToken cancellation)
     {
+        if (tabs == null || filenames == null || tabs.Length == 0 || tabs.Length != filenames.Length) throw new ArgumentException("잘못된 시트 조회 구성");
         if (!Regex.IsMatch(spreadsheetId ?? "", @"^[A-Za-z0-9_-]+$")) throw new ArgumentException("스프레드시트 ID 형식이 올바르지 않습니다.");
         string token = await GetAccessTokenAsync(cancellation);
         string prefix = "https://sheets.googleapis.com/v4/spreadsheets/" + spreadsheetId;
         JObject metadata = await GetJsonAsync(prefix + "?fields=" + Uri.EscapeDataString("sheets(properties(title,gridProperties(rowCount,columnCount)))"), token, cancellation);
         var ranges = new List<string>();
-        foreach (string name in TabNames)
+        foreach (string name in tabs)
         {
             var properties = metadata["sheets"]?.Children().Select(s => s["properties"]).FirstOrDefault(p => (string)p?["title"] == name);
             if (properties == null) throw new FormatException("시트 탭을 찾을 수 없습니다: " + name);
@@ -122,36 +126,39 @@ public static class GoogleSheetSyncClient
         }
         string query = string.Join("&", ranges.Select(r => "ranges=" + Uri.EscapeDataString(r))) + "&majorDimension=ROWS&valueRenderOption=FORMATTED_VALUE";
         JObject payload = await GetJsonAsync(prefix + "/values:batchGet?" + query, token, cancellation);
-        return ConvertValuesResponse(payload);
+        return ConvertValuesResponse(payload, tabs, filenames, keyColumn);
     }
 
     // Google returns ranges in request order. Preserve headers and skip id-less checkbox rows.
     public static Dictionary<string, string> ConvertValuesResponse(JObject payload)
+        => ConvertValuesResponse(payload, TabNames, CsvNames, "id");
+
+    public static Dictionary<string, string> ConvertValuesResponse(JObject payload, string[] tabs, string[] filenames, string keyColumn)
     {
         var valueRanges = payload["valueRanges"] as JArray;
-        if (valueRanges == null || valueRanges.Count != TabNames.Length) throw new FormatException("카드/효과/키워드 응답 개수가 올바르지 않습니다.");
+        if (valueRanges == null || valueRanges.Count != tabs.Length) throw new FormatException("시트 응답 개수가 올바르지 않습니다.");
         var files = new Dictionary<string, string>();
-        for (int i = 0; i < TabNames.Length; i++)
+        for (int i = 0; i < tabs.Length; i++)
         {
             var range = valueRanges[i] as JObject;
             string returnedRange = (string)range?["range"];
-            string expected = "'" + TabNames[i] + "'!";
-            if (returnedRange == null || !(returnedRange.StartsWith(expected, StringComparison.Ordinal) || returnedRange.StartsWith(TabNames[i] + "!", StringComparison.Ordinal)))
-                throw new FormatException("다른 시트 범위가 반환되었습니다: " + TabNames[i]);
+            string expected = "'" + tabs[i] + "'!";
+            if (returnedRange == null || !(returnedRange.StartsWith(expected, StringComparison.Ordinal) || returnedRange.StartsWith(tabs[i] + "!", StringComparison.Ordinal)))
+                throw new FormatException("다른 시트 범위가 반환되었습니다: " + tabs[i]);
             var rows = range["values"] as JArray;
-            if (rows == null || rows.Count == 0) throw new FormatException(TabNames[i] + ": 헤더가 없습니다.");
+            if (rows == null || rows.Count == 0) throw new FormatException(tabs[i] + ": 헤더가 없습니다.");
             var header = (JArray)rows[0];
-            int idIndex = header.Select((cell, index) => new { cell, index }).Where(x => x.cell.ToString().Trim().TrimStart('\uFEFF') == "id").Select(x => x.index).DefaultIfEmpty(-1).First();
-            if (idIndex < 0) throw new FormatException(TabNames[i] + ": id 열이 없습니다.");
+            int idIndex = header.Select((cell, index) => new { cell, index }).Where(x => x.cell.ToString().Trim().TrimStart('\uFEFF') == keyColumn).Select(x => x.index).DefaultIfEmpty(-1).First();
+            if (idIndex < 0) throw new FormatException(tabs[i] + ": " + keyColumn + " 열이 없습니다.");
             var output = new StringBuilder();
             for (int rowIndex = 0; rowIndex < rows.Count; rowIndex++)
             {
                 var row = rows[rowIndex] as JArray;
-                if (row == null) throw new FormatException(TabNames[i] + ": 행 형식 오류");
+                if (row == null) throw new FormatException(tabs[i] + ": 행 형식 오류");
                 if (rowIndex > 0 && (row.Count <= idIndex || string.IsNullOrWhiteSpace(row[idIndex].ToString()))) continue;
                 output.AppendLine(string.Join(",", Enumerable.Range(0, header.Count).Select(column => Quote(column < row.Count ? row[column].ToString() : ""))));
             }
-            files.Add(CsvNames[i], output.ToString());
+            files.Add(filenames[i], output.ToString());
         }
         return files;
     }
