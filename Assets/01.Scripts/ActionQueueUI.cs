@@ -1,11 +1,47 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using DuelHero.Cards;
 
 public class ActionQueueUI : MonoBehaviour
 {
     [SerializeField] private Text[] actionLabels = new Text[3];
     [SerializeField] private Image[] slotImages = new Image[3];
+    [SerializeField] private CardReservationQueue reservationQueue;
+    private readonly List<UnityEngine.Events.UnityAction> cancelListeners = new();
+    private readonly List<Button> reservationButtons = new();
+    public bool UsesCardReservations => reservationQueue != null;
+    private void OnEnable()
+    {
+        if (reservationQueue == null) return;
+        reservationQueue.Changed += RefreshCards;
+        for (int i = 0; i < slotImages.Length; i++)
+        {
+            if (slotImages[i] == null) continue;
+            int slot = i;
+            var button = slotImages[i].GetComponent<Button>();
+            if (button == null) button = slotImages[i].gameObject.AddComponent<Button>();
+            button.targetGraphic = slotImages[i];
+            UnityEngine.Events.UnityAction listener = () => reservationQueue.CancelAt(slot);
+            button.onClick.AddListener(listener); cancelListeners.Add(listener); reservationButtons.Add(button);
+        }
+        RefreshCards();
+    }
+    private void OnDisable()
+    {
+        if (reservationQueue != null) reservationQueue.Changed -= RefreshCards;
+        for (int i = 0; i < reservationButtons.Count; i++) if (reservationButtons[i] != null) reservationButtons[i].onClick.RemoveListener(cancelListeners[i]);
+        reservationButtons.Clear(); cancelListeners.Clear();
+    }
+    public void RefreshCards()
+    {
+        if (reservationQueue == null) return;
+        for (int i = 0; i < actionLabels.Length; i++)
+        {
+            if (actionLabels[i] != null) actionLabels[i].text = i < reservationQueue.Reservations.Count ? reservationQueue.Reservations[i].Definition.name : "--";
+            if (i < slotImages.Length && slotImages[i] != null) slotImages[i].color = normalColor;
+        }
+    }
 
     private readonly Color normalColor = new Color(0.16f, 0.16f, 0.16f, 0.65f);
 
@@ -13,6 +49,7 @@ public class ActionQueueUI : MonoBehaviour
 
     public void Refresh(IReadOnlyList<Vector2Int> queue, int activeIndex = -1)
     {
+        if (UsesCardReservations) { RefreshCards(); return; }
         for (int i = 0; i < actionLabels.Length; i++)
         {
             actionLabels[i].text =

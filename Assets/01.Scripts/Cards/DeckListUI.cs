@@ -3,13 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 namespace DuelHero.Cards
 {
     [ExecuteAlways]
     public class DeckListUI : MonoBehaviour
     {
-        [SerializeField] private CardDatabase database;
+        [SerializeField] private PlayerDeck playerDeck;
+        [SerializeField] private CardReservationQueue reservationQueue;
         [SerializeField] private RectTransform content;
         [SerializeField] private Text detailLabel;
         [SerializeField] private float minimumCardWidth = 108f;
@@ -23,6 +25,7 @@ namespace DuelHero.Cards
 
         private void OnEnable()
         {
+            if (playerDeck != null) playerDeck.Changed += Rebuild;
 #if UNITY_EDITOR
             if (!Application.isPlaying) { UnityEditor.EditorApplication.delayCall += EditorRebuild; return; }
 #endif
@@ -30,6 +33,7 @@ namespace DuelHero.Cards
         }
         private void OnDisable()
         {
+            if (playerDeck != null) playerDeck.Changed -= Rebuild;
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.delayCall -= EditorRebuild;
 #endif
@@ -41,9 +45,13 @@ namespace DuelHero.Cards
         [ContextMenu("Rebuild deck preview")]
         public void Rebuild()
         {
-            if (database == null || content == null) return;
+            if (playerDeck == null || content == null) return;
+            // Initialize before subscribing redraws can recurse on the first Changed event.
+            playerDeck.Changed -= Rebuild;
+            playerDeck.Initialize();
+            if (isActiveAndEnabled) playerDeck.Changed += Rebuild;
             deck.Clear(); grids.Clear(); groupLayouts.Clear();
-            foreach (var definition in database.StarterCards) deck.Add(new CardInstance(definition));
+            deck.AddRange(playerDeck.Cards);
             // This content is dedicated to the imported deck; rebuild it without changing other UI.
             foreach (Transform child in content.Cast<Transform>().ToArray())
             {
@@ -52,7 +60,7 @@ namespace DuelHero.Cards
             }
             font = Font.CreateDynamicFontFromOSFont(new[] { "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans CJK KR", "Arial" }, 16);
             string[] types = { "공격", "이동", "방어", "회복" };
-            foreach (string type in types)
+            foreach (string type in types.Concat(deck.Select(c => c.Definition.actionType)).Distinct())
             {
                 var cards = deck.Where(c => c.Definition.actionType == type).ToArray();
                 if (cards.Length == 0) continue;
@@ -71,7 +79,7 @@ namespace DuelHero.Cards
             }
             previousWidth = -1;
             Canvas.ForceUpdateCanvases(); Reflow();
-            if (detailLabel != null) { detailLabel.font = font; detailLabel.text = "카드를 선택하면 설명을 확인할 수 있습니다."; }
+            if (detailLabel != null) { detailLabel.font = font; detailLabel.text = "카드에 마우스를 올리면 설명을 확인할 수 있습니다."; }
         }
 
         private void LateUpdate() => Reflow();
@@ -107,14 +115,18 @@ namespace DuelHero.Cards
                 : card.Amount("energyRestore") > 0 ? "회복 " + card.Amount("energyRestore") : "이동 " + card.Amount("move") + "칸";
             var values = Label("Values", go.transform, "에너지 " + card.energyCost + "\n" + metric, 12);
             Position(values.rectTransform, 8, -35, -8, 36);
-            var state = Label("State", go.transform, "사용 가능 · 미예약", 12); Position(state.rectTransform, 8, -71, -8, 22);
+            var state = Label("State", go.transform, instance.ReservedSlot >= 0 ? "예약 슬롯 " + (instance.ReservedSlot + 1) : "미예약", 12); Position(state.rectTransform, 8, -71, -8, 22);
             var tag = Label("Kind", go.transform, card.isBasicAction ? "기본 행동" : "기술 카드", 11); Position(tag.rectTransform, 8, -95, -8, 18);
-            button.onClick.AddListener(() =>
+            button.onClick.AddListener(() => { if (Application.isPlaying && reservationQueue != null) reservationQueue.TryReserve(instance); });
+            var trigger = go.AddComponent<EventTrigger>();
+            var hover = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
+            hover.callback.AddListener(_ =>
             {
                 if (detailLabel == null) return;
-                string keywords = string.Join(" · ", database.keywords.Where(k => card.keywordIds.Contains(k.id)).Select(k => k.name));
+                string keywords = string.Join(" · ", playerDeck.Database.keywords.Where(k => card.keywordIds.Contains(k.id)).Select(k => k.name));
                 detailLabel.text = card.name + " — " + card.ResolvedDescription() + (keywords.Length > 0 ? "\n" + keywords : "");
             });
+            trigger.triggers.Add(hover);
         }
 
         private GameObject Make(string name, Transform parent)

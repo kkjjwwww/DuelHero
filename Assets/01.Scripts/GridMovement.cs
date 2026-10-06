@@ -38,6 +38,7 @@ public class GridMovement : MonoBehaviour
 
     private void Update()
     {
+        if (queueUI != null && queueUI.UsesCardReservations) return;
         if (isExecuting) return;
 
         Keyboard keyboard = Keyboard.current;
