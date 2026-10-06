@@ -9,6 +9,7 @@ namespace DuelHero.Logging
     {
         [SerializeField] private BattleLog source;
         [SerializeField] private CardDatabase cards;
+        [SerializeField] private DuelHero.Data.UnitDatabase units;
         [SerializeField] private ScrollRect scroll;
         [SerializeField] private RectTransform content;
         [SerializeField] private Font font;
@@ -44,14 +45,16 @@ namespace DuelHero.Logging
         private string Format(BattleLogEntry entry)
         {
             string prefix = "턴 " + entry.Round + " · ";
+            string actor = units == null ? entry.ActorId : units.players.Concat(units.enemies).FirstOrDefault(u => u.id == entry.ActorId)?.name ?? entry.ActorId;
             string card = cards == null ? entry.CardId : cards.cards.FirstOrDefault(c => c.id == entry.CardId)?.name ?? entry.CardId;
+            string action = string.IsNullOrEmpty(card) ? "이동" : card;
             return prefix + (entry.Kind switch
             {
                 BattleLogKind.TurnStarted => "시작",
                 BattleLogKind.TurnEnded => "종료",
-                BattleLogKind.CardExecuted => card + " 실행",
-                BattleLogKind.ExecutionBlocked => card + " 실행 불가 (미구현 효과)",
-                BattleLogKind.Movement => entry.Result == BattleLogResult.BoundaryBlocked ? card + ": 경계로 이동 실패 " + entry.From : card + ": " + entry.From + " → " + entry.To,
+                BattleLogKind.CardExecuted => actor + " · " + card + " 실행",
+                BattleLogKind.ExecutionBlocked => actor + " · " + card + " 실행 불가 (미구현 효과)",
+                BattleLogKind.Movement => actor + " · " + action + (entry.Result == BattleLogResult.BoundaryBlocked ? ": 경계로 이동 실패 " + entry.From : ": " + entry.From + " → " + entry.To),
                 _ => entry.Kind.ToString()
             });
         }
