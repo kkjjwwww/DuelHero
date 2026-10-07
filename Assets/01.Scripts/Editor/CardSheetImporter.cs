@@ -106,7 +106,7 @@ public static class CardSheetImporter
     public static CardDatabase ParseFolder(string folder)
     {
         var cardRows = Table(Path.Combine(folder, "Cards.csv"), "id", "name", "description", "actionType", "energyCost", "keywordIds", "rarity", "isObtainable", "isBasicAction", "isStarterCard");
-        var effectRows = Table(Path.Combine(folder, "Effects.csv"), "id", "cardId", "resolutionOrder", "effectType", "value", "durationSlots", "rangeOffsets", "fixedDirection", "targetType");
+        var effectRows = Table(Path.Combine(folder, "Effects.csv"), "id", "cardId", "resolutionOrder", "effectType", "value", "durationSlots", "rangeOffsets", "targetType");
         var keywordRows = Table(Path.Combine(folder, "Keywords.csv"), "id", "name", "description", "resolutionRule", "triggerTiming", "parameters");
         var cards = cardRows.Select(r => new CardDefinition
         {
@@ -124,7 +124,7 @@ public static class CardSheetImporter
         {
             id = Required(r, "id"), cardId = Required(r, "cardId"), effectType = Required(r, "effectType"),
             resolutionOrder = Number(r, "resolutionOrder"), value = Number(r, "value"), durationSlots = Number(r, "durationSlots"),
-            rangeOffsets = Offsets(r["rangeOffsets"]), fixedDirection = r["fixedDirection"], targetType = Required(r, "targetType")
+            rangeOffsets = Offsets(r["rangeOffsets"]), targetType = Required(r, "targetType")
         }).ToArray();
         if (cards.Length == 0) throw new FormatException("No card rows with an id.");
         Unique(cards.Select(c => c.id), "card id"); Unique(effects.Select(e => e.id), "effect id"); Unique(keywords.Select(k => k.id), "keyword id");
@@ -136,7 +136,9 @@ public static class CardSheetImporter
             if (!new[] { "move", "guard", "damage", "energyRestore" }.Contains(effect.effectType))
                 throw new FormatException($"{effect.id}: unsupported effectType {effect.effectType}");
             if (effect.resolutionOrder < 1) throw new FormatException($"{effect.id}: resolutionOrder must be positive");
-            if (!new[] { "", "상", "하", "좌", "우" }.Contains(effect.fixedDirection)) throw new FormatException($"{effect.id}: invalid fixedDirection");
+            if (effect.effectType == "move" && (effect.rangeOffsets.Length != 1 ||
+                Math.Abs((long)effect.rangeOffsets[0].x) + Math.Abs((long)effect.rangeOffsets[0].y) != 1))
+                throw new FormatException($"{effect.id}: move requires one cardinal unit offset");
             if (!new[] { "자신", "적" }.Contains(effect.targetType)) throw new FormatException($"{effect.id}: invalid targetType");
         }
         foreach (var card in cards)

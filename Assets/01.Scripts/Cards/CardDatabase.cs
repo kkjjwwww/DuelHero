@@ -9,7 +9,7 @@ namespace DuelHero.Cards
     [Serializable]
     public class CardEffectDefinition
     {
-        public string id, cardId, effectType, fixedDirection, targetType;
+        public string id, cardId, effectType, targetType;
         public int resolutionOrder, value, durationSlots;
         public Vector2Int[] rangeOffsets;
     }

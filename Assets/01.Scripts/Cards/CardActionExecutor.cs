@@ -22,12 +22,13 @@ namespace DuelHero.Cards
         public bool TryExecute()
         {
             if (queue == null || movement == null || !isActiveAndEnabled || queue.IsExecuting || queue.Reservations.Count != 3) return false;
+            if (!queue.HasEnoughEnergy(out string energyError)) { LastError = energyError; return false; }
             foreach (var card in queue.Reservations)
             {
                 if (card.Definition.effects == null || card.Definition.effects.Length == 0 ||
-                    card.Definition.effects.Any(effect => effect.effectType != "move" || effect.value < 1 || !TryDirection(effect.fixedDirection, out _)))
+                    card.Definition.effects.Any(effect => effect.effectType == "move" ? effect.value < 1 || !TryDirection(effect.rangeOffsets, out _) : effect.effectType != "energyRestore" || effect.value < 0 || effect.targetType != "자신"))
                 {
-                    LastError = card.Definition.name + ": 현재 이동 효과만 실행할 수 있습니다. 예약을 변경해주세요.";
+                    LastError = card.Definition.name + ": 현재 이동·에너지 회복 효과만 실행할 수 있습니다. 예약을 변경해주세요.";
                     Publish(BattleActionKind.ExecutionBlocked, card.Definition.id, BattleActionOutcome.UnsupportedEffect);
                     return false;
                 }
@@ -41,10 +42,20 @@ namespace DuelHero.Cards
             for (int slot = 0; slot < queue.Reservations.Count; slot++)
             {
                 queue.SetActiveSlot(slot);
+                if (!queue.UnitStats.TrySpendEnergy(queue.Reservations[slot].Definition.energyCost))
+                {
+                    LastError = "실행 중 에너지가 부족해졌습니다."; queue.AbortExecution(); yield break;
+                }
                 Publish(BattleActionKind.CardExecuted, queue.Reservations[slot].Definition.id);
                 foreach (var effect in queue.Reservations[slot].Definition.effects.OrderBy(effect => effect.resolutionOrder))
                 {
-                    TryDirection(effect.fixedDirection, out var direction);
+                    if (effect.effectType == "energyRestore")
+                    {
+                        queue.UnitStats.RestoreEnergy(effect.value);
+                        yield return new WaitForSeconds(stepDelay);
+                        continue;
+                    }
+                    TryDirection(effect.rangeOffsets, out var direction);
                     for (int step = 0; step < effect.value; step++)
                     {
                         bool moved = movement.TryMove(direction, queue.Reservations[slot].Definition.id, queue.CurrentRound);
@@ -62,10 +73,10 @@ namespace DuelHero.Cards
             StopAllCoroutines();
             if (queue != null && queue.IsExecuting) queue.AbortExecution();
         }
-        private static bool TryDirection(string value, out Vector2Int direction)
+        private static bool TryDirection(Vector2Int[] offsets, out Vector2Int direction)
         {
-            direction = value switch { "상" => Vector2Int.up, "하" => Vector2Int.down, "좌" => Vector2Int.left, "우" => Vector2Int.right, _ => Vector2Int.zero };
-            return direction != Vector2Int.zero;
+            direction = offsets != null && offsets.Length == 1 ? offsets[0] : Vector2Int.zero;
+            return direction == Vector2Int.up || direction == Vector2Int.down || direction == Vector2Int.left || direction == Vector2Int.right;
         }
     }
 }

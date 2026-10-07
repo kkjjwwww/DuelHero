@@ -62,3 +62,10 @@
 유닛 ID는 Player/Enemy 각 목록 안에서 중복을 허용하지 않는다. 체력/에너지는 음이 아닌 정수이며 최대 체력은 양수, 시작값은 최대값 이하여야 한다.
 BattleConfig의 energyRecoveryPerTurn은 빈 값이면 hasEnergyRecoveryPerTurn=false로 저장한다. 숫자 0과 미설정을 구분한다.
 유닛 및 전투 설정 에셋은 데이터 저장까지만 연결한다. 씬 캐릭터 초기화나 턴 회복에 자동 적용하지 않는다.
+
+## 방향 좌표 규칙
+
+Effects.csv와 Card Effect Data에서 fixedDirection 열을 제거했다.
+이동은 rangeOffsets에 상 (0,1), 하 (0,-1), 좌 (-1,0), 우 (1,0) 중 단위 좌표 하나를 넣고 value에 이동 칸 수를 넣는다.
+임포터는 이동의 대각선·영벡터·복수 좌표를 거부한다. 공격은 현재 우측 기준 범위를 그대로 저장한다.
+direction_select 키워드 처리는 아직 구현하지 않았으며, 추후 우측 기본 범위를 선택 방향으로 회전한다.

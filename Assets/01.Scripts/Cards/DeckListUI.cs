@@ -15,6 +15,11 @@ namespace DuelHero.Cards
         [SerializeField] private Text detailLabel;
         [SerializeField] private float minimumCardWidth = 108f;
         [SerializeField] private float cardHeight = 118f;
+        [Header("Effect Value Colors")]
+        [SerializeField] private Color damageColor = new Color(1f, 0.45f, 0.45f);
+        [SerializeField] private Color guardColor = new Color(0.45f, 0.7f, 1f);
+        [SerializeField] private Color energyRestoreColor = new Color(0.45f, 0.9f, 0.6f);
+        [SerializeField] private Color moveColor = new Color(1f, 0.85f, 0.4f);
         private readonly List<CardInstance> deck = new();
         private readonly List<GridLayoutGroup> grids = new();
         private readonly List<LayoutElement> groupLayouts = new();
@@ -39,6 +44,12 @@ namespace DuelHero.Cards
         }
 #if UNITY_EDITOR
         private void EditorRebuild() { if (this != null && isActiveAndEnabled) Rebuild(); }
+        private void OnValidate()
+        {
+            // Rebuild on the editor main thread, after Inspector serialization finishes.
+            UnityEditor.EditorApplication.delayCall -= EditorRebuild;
+            UnityEditor.EditorApplication.delayCall += EditorRebuild;
+        }
 #endif
 
         [ContextMenu("Rebuild deck preview")]
@@ -109,10 +120,12 @@ namespace DuelHero.Cards
             var button = go.AddComponent<Button>(); button.targetGraphic = image;
             var colors = button.colors; colors.highlightedColor = new Color(0.7f, 0.7f, 0.7f); colors.selectedColor = new Color(0.7f, 0.7f, 0.7f); button.colors = colors;
             var name = Label("Name", go.transform, card.name, 17); Position(name.rectTransform, 8, -8, -8, 30);
-            string metric = card.Amount("damage") > 0 ? "피해 " + card.Amount("damage")
-                : card.Amount("guard") > 0 ? "방어 " + card.Amount("guard")
-                : card.Amount("energyRestore") > 0 ? "회복 " + card.Amount("energyRestore") : "이동 " + card.Amount("move") + "칸";
+            string metric = card.Amount("damage") > 0 ? "피해 " + ColoredValue(card.Amount("damage"), damageColor)
+                : card.Amount("guard") > 0 ? "방어 " + ColoredValue(card.Amount("guard"), guardColor)
+                : card.Amount("energyRestore") > 0 ? "회복 " + ColoredValue(card.Amount("energyRestore"), energyRestoreColor)
+                : "이동 " + ColoredValue(card.Amount("move"), moveColor) + "칸";
             var values = Label("Values", go.transform, "에너지 " + card.energyCost + "\n" + metric, 12);
+            values.supportRichText = true;
             Position(values.rectTransform, 8, -35, -8, 36);
             var state = Label("State", go.transform, instance.ReservedSlot >= 0 ? "예약 슬롯 " + (instance.ReservedSlot + 1) : "미예약", 12); Position(state.rectTransform, 8, -71, -8, 22);
             var tag = Label("Kind", go.transform, card.isBasicAction ? "기본 행동" : "기술 카드", 11); Position(tag.rectTransform, 8, -95, -8, 18);
@@ -125,6 +138,9 @@ namespace DuelHero.Cards
                 detailLabel.text = card.name + " — " + card.ResolvedDescription() + (keywords.Length > 0 ? "\n" + keywords : "");
             };
         }
+
+        private static string ColoredValue(int value, Color color)
+            => "<color=#" + ColorUtility.ToHtmlStringRGBA(color) + ">" + value + "</color>";
 
         private GameObject Make(string name, Transform parent)
         {

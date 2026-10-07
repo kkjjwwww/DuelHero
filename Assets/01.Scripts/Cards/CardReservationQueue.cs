@@ -6,6 +6,16 @@ namespace DuelHero.Cards
     public sealed class CardReservationQueue : MonoBehaviour
     {
         [SerializeField] private PlayerDeck playerDeck;
+        [SerializeField] private DuelHero.Units.UnitStats unitStats;
+        public DuelHero.Units.UnitStats UnitStats => unitStats;
+        private void OnEnable() { if (unitStats != null) unitStats.Changed += OnEnergyChanged; }
+        private void OnDisable() { if (unitStats != null) unitStats.Changed -= OnEnergyChanged; }
+        private void OnEnergyChanged() => Changed?.Invoke();
+        public bool HasEnoughEnergy(out string reason)
+        {
+            if (unitStats == null || !unitStats.IsInitialized) { reason = "유닛 에너지가 아직 초기화되지 않았습니다."; return false; }
+            return CardEnergyRules.CanExecute(Reservations, unitStats.Energy, unitStats.MaxEnergy, out reason);
+        }
         private readonly List<CardInstance> reservations = new();
         private IReadOnlyList<CardInstance> readOnlyReservations;
         public IReadOnlyList<CardInstance> Reservations => readOnlyReservations ??= reservations.AsReadOnly();
@@ -33,7 +43,7 @@ namespace DuelHero.Cards
         }
         public bool BeginExecution()
         {
-            if (IsExecuting || reservations.Count != 3) return false;
+            if (IsExecuting || reservations.Count != 3 || !HasEnoughEnergy(out _)) return false;
             IsExecuting = true; Notify(); return true;
         }
         public void SetActiveSlot(int slot) { ActiveSlot = slot; Notify(); }

@@ -41,7 +41,8 @@ public class ActionQueueUI : MonoBehaviour
     }
     public void RefreshCards()
     {
-        if (executeButton != null) executeButton.interactable = reservationQueue != null && !reservationQueue.IsExecuting && reservationQueue.Reservations.Count == 3;
+        bool energyValid = reservationQueue != null && reservationQueue.HasEnoughEnergy(out _);
+        if (executeButton != null) executeButton.interactable = reservationQueue != null && !reservationQueue.IsExecuting && reservationQueue.Reservations.Count == 3 && energyValid;
         if (reservationQueue == null) return;
         for (int i = 0; i < actionLabels.Length; i++)
         {
@@ -49,7 +50,11 @@ public class ActionQueueUI : MonoBehaviour
             if (i < slotImages.Length && slotImages[i] != null) slotImages[i].color = i == reservationQueue.ActiveSlot ? executingColor : normalColor;
         }
         foreach (var button in reservationButtons) button.interactable = !reservationQueue.IsExecuting;
-        if (executionStatus != null) executionStatus.text = reservationQueue.IsExecuting ? "행동 실행 중" : "턴 " + reservationQueue.CurrentRound;
+        if (executionStatus != null)
+        {
+            reservationQueue.HasEnoughEnergy(out string reason);
+            executionStatus.text = reservationQueue.IsExecuting ? "행동 실행 중" : energyValid ? "턴 " + reservationQueue.CurrentRound : reason;
+        }
     }
     private void ExecuteCards()
     {

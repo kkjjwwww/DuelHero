@@ -29,7 +29,6 @@ MonoBehaviour:
     - id: move_up_001_effect_01
       cardId: move_up_001
       effectType: move
-      fixedDirection: "\uC0C1"
       targetType: "\uC790\uC2E0"
       resolutionOrder: 1
       value: 1
@@ -50,7 +49,6 @@ MonoBehaviour:
     - id: move_down_001_effect_01
       cardId: move_down_001
       effectType: move
-      fixedDirection: "\uD558"
       targetType: "\uC790\uC2E0"
       resolutionOrder: 1
       value: 1
@@ -71,7 +69,6 @@ MonoBehaviour:
     - id: move_left_001_effect_01
       cardId: move_left_001
       effectType: move
-      fixedDirection: "\uC88C"
       targetType: "\uC790\uC2E0"
       resolutionOrder: 1
       value: 1
@@ -92,7 +89,6 @@ MonoBehaviour:
     - id: move_right_001_effect_01
       cardId: move_right_001
       effectType: move
-      fixedDirection: "\uC6B0"
       targetType: "\uC790\uC2E0"
       resolutionOrder: 1
       value: 1
@@ -114,7 +110,6 @@ MonoBehaviour:
     - id: guard_001_effect_01
       cardId: guard_001
       effectType: guard
-      fixedDirection: 
       targetType: "\uC790\uC2E0"
       resolutionOrder: 1
       value: 10
@@ -135,7 +130,6 @@ MonoBehaviour:
     - id: breathing_001_effect_01
       cardId: breathing_001
       effectType: energyRestore
-      fixedDirection: 
       targetType: "\uC790\uC2E0"
       resolutionOrder: 1
       value: 20
@@ -158,14 +152,13 @@ MonoBehaviour:
     - id: slash_001_effect_01
       cardId: slash_001
       effectType: damage
-      fixedDirection: 
       targetType: "\uC801"
       resolutionOrder: 1
       value: 10
       durationSlots: 0
       rangeOffsets:
       - {x: 0, y: 0}
-      - {x: 0, y: 1}
+      - {x: 1, y: 0}
   - id: thrust_001
     name: "\uCC0C\uB974\uAE30"
     description: "\uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574
@@ -182,15 +175,14 @@ MonoBehaviour:
     - id: thrust_001_effect_01
       cardId: thrust_001
       effectType: damage
-      fixedDirection: 
       targetType: "\uC801"
       resolutionOrder: 1
       value: 15
       durationSlots: 0
       rangeOffsets:
       - {x: 0, y: 0}
-      - {x: 0, y: 1}
-      - {x: 0, y: 2}
+      - {x: 1, y: 0}
+      - {x: 2, y: 0}
   - id: sweep_001
     name: "\uD6A1\uBCA0\uAE30"
     description: "\uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574
@@ -207,16 +199,15 @@ MonoBehaviour:
     - id: sweep_001_effect_01
       cardId: sweep_001
       effectType: damage
-      fixedDirection: 
       targetType: "\uC801"
       resolutionOrder: 1
       value: 10
       durationSlots: 0
       rangeOffsets:
       - {x: 0, y: 0}
-      - {x: -1, y: 1}
-      - {x: 0, y: 1}
       - {x: 1, y: 1}
+      - {x: 1, y: 0}
+      - {x: 1, y: -1}
   keywords:
   - id: direction_select
     name: "\uBC29\uD5A5\uC9C0\uC815"
