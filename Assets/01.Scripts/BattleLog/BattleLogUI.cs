@@ -48,6 +48,7 @@ namespace DuelHero.Logging
             string actor = units == null ? entry.ActorId : units.players.Concat(units.enemies).FirstOrDefault(u => u.id == entry.ActorId)?.name ?? entry.ActorId;
             string card = cards == null ? entry.CardId : cards.cards.FirstOrDefault(c => c.id == entry.CardId)?.name ?? entry.CardId;
             string action = string.IsNullOrEmpty(card) ? "이동" : card;
+            string target = units == null ? entry.TargetId : units.players.Concat(units.enemies).FirstOrDefault(u => u.id == entry.TargetId)?.name ?? entry.TargetId;
             return prefix + (entry.Kind switch
             {
                 BattleLogKind.TurnStarted => "시작",
@@ -55,6 +56,7 @@ namespace DuelHero.Logging
                 BattleLogKind.CardExecuted => actor + " · " + card + " 실행",
                 BattleLogKind.ExecutionBlocked => actor + " · " + card + " 실행 불가 (미구현 효과)",
                 BattleLogKind.Movement => actor + " · " + action + (entry.Result == BattleLogResult.BoundaryBlocked ? ": 경계로 이동 실패 " + entry.From : ": " + entry.From + " → " + entry.To),
+                BattleLogKind.Damage => actor + " · " + card + (entry.Result == BattleLogResult.NoTarget ? ": 명중 대상 없음" : " → " + target + ": 피해 " + entry.Value),
                 _ => entry.Kind.ToString()
             });
         }

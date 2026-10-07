@@ -31,6 +31,7 @@ namespace DuelHero.Logging
                 BattleActionKind.ExecutionBlocked => BattleLogKind.ExecutionBlocked,
                 BattleActionKind.TurnStarted => BattleLogKind.TurnStarted,
                 BattleActionKind.TurnEnded => BattleLogKind.TurnEnded,
+                BattleActionKind.Damage => BattleLogKind.Damage,
                 _ => throw new ArgumentOutOfRangeException()
             };
             var outcome = result.Outcome switch
@@ -38,6 +39,7 @@ namespace DuelHero.Logging
                 BattleActionOutcome.Success => BattleLogResult.Success,
                 BattleActionOutcome.BoundaryBlocked => BattleLogResult.BoundaryBlocked,
                 BattleActionOutcome.UnsupportedEffect => BattleLogResult.UnsupportedEffect,
+                BattleActionOutcome.NoTarget => BattleLogResult.NoTarget,
                 _ => throw new ArgumentOutOfRangeException()
             };
             int round = result.Round > 0 ? result.Round : turnSource != null ? turnSource.CurrentRound : 0;

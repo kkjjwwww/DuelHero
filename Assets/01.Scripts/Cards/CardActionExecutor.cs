@@ -10,6 +10,7 @@ namespace DuelHero.Cards
     {
         [SerializeField] private CardReservationQueue queue;
         [SerializeField] private GridMovement movement;
+        [SerializeField] private CombatEffectResolver combatEffects;
         [SerializeField] private string actorId;
         [SerializeField, Min(0.01f)] private float stepDelay = 0.4f;
         public string LastError { get; private set; }
@@ -26,9 +27,9 @@ namespace DuelHero.Cards
             foreach (var card in queue.Reservations)
             {
                 if (card.Definition.effects == null || card.Definition.effects.Length == 0 ||
-                    card.Definition.effects.Any(effect => effect.effectType == "move" ? effect.value < 1 || !TryDirection(effect.rangeOffsets, out _) : effect.effectType != "energyRestore" || effect.value < 0 || effect.targetType != "자신"))
+                    card.Definition.effects.Any(effect => !Supports(effect)))
                 {
-                    LastError = card.Definition.name + ": 현재 이동·에너지 회복 효과만 실행할 수 있습니다. 예약을 변경해주세요.";
+                    LastError = card.Definition.name + ": 지원하지 않는 효과이거나 유닛 참조가 준비되지 않았습니다.";
                     Publish(BattleActionKind.ExecutionBlocked, card.Definition.id, BattleActionOutcome.UnsupportedEffect);
                     return false;
                 }
@@ -49,6 +50,12 @@ namespace DuelHero.Cards
                 Publish(BattleActionKind.CardExecuted, queue.Reservations[slot].Definition.id);
                 foreach (var effect in queue.Reservations[slot].Definition.effects.OrderBy(effect => effect.resolutionOrder))
                 {
+                    if (effect.effectType == "damage")
+                    {
+                        combatEffects.ResolveDamage(actorId, queue.Reservations[slot].Definition.id, effect, queue.CurrentRound);
+                        yield return new WaitForSeconds(stepDelay);
+                        continue;
+                    }
                     if (effect.effectType == "energyRestore")
                     {
                         queue.UnitStats.RestoreEnergy(effect.value);
@@ -72,6 +79,17 @@ namespace DuelHero.Cards
         {
             StopAllCoroutines();
             if (queue != null && queue.IsExecuting) queue.AbortExecution();
+        }
+        private bool Supports(CardEffectDefinition effect)
+        {
+            if (effect == null) return false;
+            return effect.effectType switch
+            {
+                "move" => effect.value > 0 && effect.targetType == "자신" && TryDirection(effect.rangeOffsets, out _),
+                "energyRestore" => effect.value >= 0 && effect.targetType == "자신",
+                "damage" => effect.value >= 0 && effect.targetType == "적" && effect.rangeOffsets != null && effect.rangeOffsets.Length > 0 && combatEffects != null && combatEffects.CanResolve(actorId),
+                _ => false
+            };
         }
         private static bool TryDirection(Vector2Int[] offsets, out Vector2Int direction)
         {

@@ -1,8 +1,8 @@
 using UnityEngine;
 namespace DuelHero.Logging
 {
-    public enum BattleLogKind { TurnStarted, TurnEnded, CardExecuted, Movement, ExecutionBlocked }
-    public enum BattleLogResult { Success, BoundaryBlocked, UnsupportedEffect }
+    public enum BattleLogKind { TurnStarted, TurnEnded, CardExecuted, Movement, ExecutionBlocked, Damage }
+    public enum BattleLogResult { Success, BoundaryBlocked, UnsupportedEffect, NoTarget }
     public sealed class BattleLogEntry
     {
         public BattleLogKind Kind { get; }

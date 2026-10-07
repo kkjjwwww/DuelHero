@@ -2,8 +2,8 @@ using System;
 using UnityEngine;
 namespace DuelHero.Battle
 {
-    public enum BattleActionKind { Movement, CardExecuted, ExecutionBlocked, TurnStarted, TurnEnded }
-    public enum BattleActionOutcome { Success, BoundaryBlocked, UnsupportedEffect }
+    public enum BattleActionKind { Movement, CardExecuted, ExecutionBlocked, TurnStarted, TurnEnded, Damage }
+    public enum BattleActionOutcome { Success, BoundaryBlocked, UnsupportedEffect, NoTarget }
     public interface IBattleActionSource
     {
         event Action<BattleActionResult> ActionResolved;
