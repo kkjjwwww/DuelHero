@@ -24,7 +24,7 @@ namespace DuelHero.Units
         public void Refresh()
         {
             bool ready = status != null && status.IsInitialized;
-            if (healthLabel != null) healthLabel.text = ready ? $"체력 {status.Health} / {status.MaxHealth}" : "체력 --";
+            if (healthLabel != null) healthLabel.text = ready ? $"체력 {status.Health} / {status.MaxHealth}" + (status.GuardReduction > 0 ? $" · 방어 {status.GuardReduction}" : "") : "체력 --";
             if (energyLabel != null) energyLabel.text = ready ? $"에너지 {status.Energy} / {status.MaxEnergy}" : "에너지 --";
             if (healthFill != null) healthFill.fillAmount = ready && status.MaxHealth > 0 ? (float)status.Health / status.MaxHealth : 0;
             if (energyFill != null) energyFill.fillAmount = ready && status.MaxEnergy > 0 ? (float)status.Energy / status.MaxEnergy : 0;

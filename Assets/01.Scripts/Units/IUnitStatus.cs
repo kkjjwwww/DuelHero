@@ -8,6 +8,7 @@ namespace DuelHero.Units
         int MaxHealth { get; }
         int Energy { get; }
         int MaxEnergy { get; }
+        int GuardReduction { get; }
         event Action Changed;
     }
 }

@@ -50,6 +50,12 @@ namespace DuelHero.Cards
                 Publish(BattleActionKind.CardExecuted, queue.Reservations[slot].Definition.id);
                 foreach (var effect in queue.Reservations[slot].Definition.effects.OrderBy(effect => effect.resolutionOrder))
                 {
+                    if (effect.effectType == "guard")
+                    {
+                        combatEffects.ResolveGuard(actorId, queue.Reservations[slot].Definition.id, effect, queue.CurrentRound);
+                        yield return new WaitForSeconds(stepDelay);
+                        continue;
+                    }
                     if (effect.effectType == "damage")
                     {
                         combatEffects.ResolveDamage(actorId, queue.Reservations[slot].Definition.id, effect, queue.CurrentRound);
@@ -70,6 +76,8 @@ namespace DuelHero.Cards
                         if (!moved) break;
                     }
                 }
+                // One shared slot boundary, regardless of effect count or movement steps.
+                if (combatEffects != null) combatEffects.EndSlot(queue.CurrentRound);
             }
             Publish(BattleActionKind.TurnEnded);
             queue.CompleteExecution();
@@ -87,6 +95,7 @@ namespace DuelHero.Cards
             {
                 "move" => effect.value > 0 && effect.targetType == "자신" && TryDirection(effect.rangeOffsets, out _),
                 "energyRestore" => effect.value >= 0 && effect.targetType == "자신",
+                "guard" => effect.value >= 0 && effect.durationSlots > 0 && effect.targetType == "자신" && combatEffects != null && combatEffects.CanResolve(actorId),
                 "damage" => effect.value >= 0 && effect.targetType == "적" && effect.rangeOffsets != null && effect.rangeOffsets.Length > 0 && combatEffects != null && combatEffects.CanResolve(actorId),
                 _ => false
             };

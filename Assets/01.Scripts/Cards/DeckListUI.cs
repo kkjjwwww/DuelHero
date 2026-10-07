@@ -7,13 +7,14 @@ using UnityEngine.UI;
 namespace DuelHero.Cards
 {
     [ExecuteAlways]
+    [RequireComponent(typeof(CanvasGroup))]
     public class DeckListUI : MonoBehaviour
     {
         [SerializeField] private PlayerDeck playerDeck;
         [SerializeField] private CardReservationQueue reservationQueue;
         [SerializeField] private RectTransform content;
         [SerializeField] private Text detailLabel;
-        [SerializeField] private float minimumCardWidth = 108f;
+        [SerializeField] private float minimumCardWidth = 132f;
         [SerializeField] private float cardHeight = 118f;
         [Header("Effect Value Colors")]
         [SerializeField] private Color damageColor = new Color(1f, 0.45f, 0.45f);
@@ -21,15 +22,19 @@ namespace DuelHero.Cards
         [SerializeField] private Color energyRestoreColor = new Color(0.45f, 0.9f, 0.6f);
         [SerializeField] private Color moveColor = new Color(1f, 0.85f, 0.4f);
         private readonly List<CardInstance> deck = new();
-        private readonly List<GridLayoutGroup> grids = new();
-        private readonly List<LayoutElement> groupLayouts = new();
+        private readonly List<(CardInstance card, Button button, Text state)> views = new();
         private Font font;
-        private float previousWidth = -1;
+        private CanvasGroup panelVisibility;
         public IReadOnlyList<CardInstance> Deck => deck;
+        public string SelectedCategory { get; private set; }
+        public event Action ViewChanged;
 
         private void OnEnable()
         {
+            panelVisibility = GetComponent<CanvasGroup>();
+            RefreshVisibility();
             if (playerDeck != null) playerDeck.Changed += Rebuild;
+            if (reservationQueue != null) reservationQueue.Changed += RefreshStates;
 #if UNITY_EDITOR
             if (!Application.isPlaying) { UnityEditor.EditorApplication.delayCall += EditorRebuild; return; }
 #endif
@@ -38,6 +43,7 @@ namespace DuelHero.Cards
         private void OnDisable()
         {
             if (playerDeck != null) playerDeck.Changed -= Rebuild;
+            if (reservationQueue != null) reservationQueue.Changed -= RefreshStates;
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.delayCall -= EditorRebuild;
 #endif
@@ -46,112 +52,102 @@ namespace DuelHero.Cards
         private void EditorRebuild() { if (this != null && isActiveAndEnabled) Rebuild(); }
         private void OnValidate()
         {
-            // Rebuild on the editor main thread, after Inspector serialization finishes.
             UnityEditor.EditorApplication.delayCall -= EditorRebuild;
             UnityEditor.EditorApplication.delayCall += EditorRebuild;
         }
 #endif
-
+        public int CountCategory(string category) => playerDeck == null ? 0 : playerDeck.Cards.Count(c => c.Definition.actionType == category);
+        public void ToggleCategory(string category)
+        {
+            if (!new[] { "공격", "이동", "방어", "회복", "특수" }.Contains(category)) return;
+            SelectedCategory = SelectedCategory == category ? null : category;
+            RefreshVisibility();
+            Rebuild();
+            var scroll = content == null ? null : content.GetComponentInParent<ScrollRect>();
+            if (scroll != null) scroll.horizontalNormalizedPosition = 0;
+        }
+        private void RefreshVisibility()
+        {
+            if (panelVisibility == null) panelVisibility = GetComponent<CanvasGroup>();
+            if (panelVisibility == null) return;
+            bool visible = SelectedCategory != null;
+            panelVisibility.alpha = visible ? 1 : 0;
+            panelVisibility.interactable = visible;
+            panelVisibility.blocksRaycasts = visible;
+        }
         [ContextMenu("Rebuild deck preview")]
         public void Rebuild()
         {
             if (playerDeck == null || content == null) return;
-            // Initialize before subscribing redraws can recurse on the first Changed event.
+            Vector2 oldPosition = content.anchoredPosition;
             playerDeck.Changed -= Rebuild;
             playerDeck.Initialize();
             if (isActiveAndEnabled) playerDeck.Changed += Rebuild;
-            deck.Clear(); grids.Clear(); groupLayouts.Clear();
-            deck.AddRange(playerDeck.Cards);
-            // This content is dedicated to the imported deck; rebuild it without changing other UI.
+            deck.Clear(); deck.AddRange(playerDeck.Cards); views.Clear();
             foreach (Transform child in content.Cast<Transform>().ToArray())
             {
                 child.gameObject.SetActive(false);
                 if (Application.isPlaying) Destroy(child.gameObject); else DestroyImmediate(child.gameObject);
             }
-            font = Font.CreateDynamicFontFromOSFont(new[] { "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans CJK KR", "Arial" }, 16);
-            string[] types = { "공격", "이동", "방어", "회복" };
-            foreach (string type in types.Concat(deck.Select(c => c.Definition.actionType)).Distinct())
-            {
-                var cards = deck.Where(c => c.Definition.actionType == type).ToArray();
-                if (cards.Length == 0) continue;
-                var group = Make(type + "Group", content);
-                var vertical = group.AddComponent<VerticalLayoutGroup>();
-                vertical.spacing = 8; vertical.childControlWidth = vertical.childControlHeight = true;
-                vertical.childForceExpandHeight = false;
-                var groupLayout = group.AddComponent<LayoutElement>(); groupLayouts.Add(groupLayout);
-                var heading = Label("TypeTitle", group.transform, type + "  " + cards.Length, 16);
-                heading.gameObject.AddComponent<LayoutElement>().preferredHeight = 28;
-                var rowArea = Make("Cards", group.transform);
-                var grid = rowArea.AddComponent<GridLayoutGroup>(); grid.spacing = new Vector2(8, 8);
-                grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-                rowArea.AddComponent<LayoutElement>(); grids.Add(grid);
-                foreach (var instance in cards) CreateCard(grid.transform, instance);
-            }
-            previousWidth = -1;
-            Canvas.ForceUpdateCanvases(); Reflow();
-            if (detailLabel != null) { detailLabel.font = font; detailLabel.text = "카드에 마우스를 올리면 설명을 확인할 수 있습니다."; }
+            if (font == null) font = Font.CreateDynamicFontFromOSFont(new[] { "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans CJK KR", "Arial" }, 16);
+            RefreshVisibility();
+            foreach (var instance in deck.Where(c => SelectedCategory != null && c.Definition.actionType == SelectedCategory)
+                .OrderByDescending(c => c.Definition.isBasicAction).ThenBy(c => c.Definition.actionType)) CreateCard(content, instance);
+            RefreshStates(); Canvas.ForceUpdateCanvases(); content.anchoredPosition = oldPosition;
+            if (detailLabel != null) { detailLabel.font = font; detailLabel.text = "카드에 마우스를 올리면 설명과 상태를 확인할 수 있습니다."; }
+            ViewChanged?.Invoke();
         }
-
-        private void LateUpdate() => Reflow();
-        private void Reflow()
+        private string UnavailableReason(CardInstance instance)
         {
-            if (content == null || grids.Count == 0) return;
-            float width = content.rect.width;
-            if (width <= 0 || Mathf.Abs(width - previousWidth) < 0.5f) return;
-            previousWidth = width;
-            int columns = Mathf.Max(1, Mathf.FloorToInt((width + 8) / (minimumCardWidth + 8)));
-            float cellWidth = (width - (columns - 1) * 8) / columns;
-            for (int i = 0; i < grids.Count; i++)
-            {
-                var grid = grids[i]; grid.constraintCount = columns; grid.cellSize = new Vector2(cellWidth, cardHeight);
-                int rows = Mathf.CeilToInt(grid.transform.childCount / (float)columns);
-                float areaHeight = rows * cardHeight + Mathf.Max(0, rows - 1) * 8;
-                grid.GetComponent<LayoutElement>().preferredHeight = areaHeight;
-                groupLayouts[i].preferredHeight = 28 + 8 + areaHeight;
-            }
-            LayoutRebuilder.MarkLayoutForRebuild(content);
+            if (reservationQueue == null) return "예약 관리자 미연결";
+            if (reservationQueue.IsExecuting) return "행동 실행 중";
+            if (instance.ReservedSlot >= 0) return "예약 슬롯 " + (instance.ReservedSlot + 1);
+            int cooldown = instance.RemainingCooldown(reservationQueue.CurrentRound);
+            if (cooldown > 0) return "재사용 대기 " + cooldown + "턴";
+            if (reservationQueue.Reservations.Count >= 3) return "행동 슬롯 가득 참";
+            return null;
         }
-
+        private void RefreshStates()
+        {
+            foreach (var view in views)
+            {
+                string reason = UnavailableReason(view.card);
+                view.button.interactable = reason == null;
+                view.state.text = reason ?? "사용 가능 · 미예약";
+            }
+        }
         private void CreateCard(Transform parent, CardInstance instance)
         {
-            CardDefinition card = instance.Definition;
+            var card = instance.Definition;
             var go = Make("Card_" + card.id, parent);
+            var layout = go.AddComponent<LayoutElement>(); layout.preferredWidth = minimumCardWidth; layout.preferredHeight = cardHeight; layout.flexibleWidth = 0;
             var image = go.AddComponent<Image>(); image.color = new Color(0.12f, 0.12f, 0.12f, 0.72f);
             var button = go.AddComponent<Button>(); button.targetGraphic = image;
-            var colors = button.colors; colors.highlightedColor = new Color(0.7f, 0.7f, 0.7f); colors.selectedColor = new Color(0.7f, 0.7f, 0.7f); button.colors = colors;
-            var name = Label("Name", go.transform, card.name, 17); Position(name.rectTransform, 8, -8, -8, 30);
+            var colors = button.colors; colors.highlightedColor = colors.selectedColor = new Color(0.7f, 0.7f, 0.7f); colors.disabledColor = new Color(0.45f, 0.45f, 0.45f, 0.6f); button.colors = colors;
+            var name = Label("Name", go.transform, card.name, 17); Position(name.rectTransform, 8, -8, -8, 26);
             string metric = card.Amount("damage") > 0 ? "피해 " + ColoredValue(card.Amount("damage"), damageColor)
                 : card.Amount("guard") > 0 ? "방어 " + ColoredValue(card.Amount("guard"), guardColor)
                 : card.Amount("energyRestore") > 0 ? "회복 " + ColoredValue(card.Amount("energyRestore"), energyRestoreColor)
                 : "이동 " + ColoredValue(card.Amount("move"), moveColor) + "칸";
-            var values = Label("Values", go.transform, "에너지 " + card.energyCost + "\n" + metric, 12);
-            values.supportRichText = true;
-            Position(values.rectTransform, 8, -35, -8, 36);
-            var state = Label("State", go.transform, instance.ReservedSlot >= 0 ? "예약 슬롯 " + (instance.ReservedSlot + 1) : "미예약", 12); Position(state.rectTransform, 8, -71, -8, 22);
-            var tag = Label("Kind", go.transform, card.isBasicAction ? "기본 행동" : "기술 카드", 11); Position(tag.rectTransform, 8, -95, -8, 18);
+            var values = Label("Values", go.transform, "에너지 " + card.energyCost + "\n" + metric, 12); values.supportRichText = true; Position(values.rectTransform, 8, -34, -8, 34);
+            var state = Label("State", go.transform, "", 12); Position(state.rectTransform, 8, -70, -8, 24);
+            var kind = Label("Kind", go.transform, card.isBasicAction ? "기본 행동" : "기술 · " + card.actionType, 11); Position(kind.rectTransform, 8, -95, -8, 18);
+            views.Add((instance, button, state));
             button.onClick.AddListener(() => { if (Application.isPlaying && reservationQueue != null) reservationQueue.TryReserve(instance); });
-            var hover = go.AddComponent<CardHoverInfo>();
-            hover.ShowInfo = () =>
+            go.AddComponent<CardHoverInfo>().ShowInfo = () =>
             {
                 if (detailLabel == null) return;
                 string keywords = string.Join(" · ", playerDeck.Database.keywords.Where(k => card.keywordIds.Contains(k.id)).Select(k => k.name));
-                detailLabel.text = card.name + " — " + card.ResolvedDescription() + (keywords.Length > 0 ? "\n" + keywords : "");
+                string reason = UnavailableReason(instance);
+                detailLabel.text = card.name + " — " + card.ResolvedDescription() + (keywords.Length > 0 ? " · " + keywords : "") + (reason == null ? "" : " · " + reason);
             };
         }
-
-        private static string ColoredValue(int value, Color color)
-            => "<color=#" + ColorUtility.ToHtmlStringRGBA(color) + ">" + value + "</color>";
-
-        private GameObject Make(string name, Transform parent)
-        {
-            var go = new GameObject(name, typeof(RectTransform)); go.transform.SetParent(parent, false); return go;
-        }
+        private static string ColoredValue(int value, Color color) => "<color=#" + ColorUtility.ToHtmlStringRGBA(color) + ">" + value + "</color>";
+        private static GameObject Make(string name, Transform parent) { var go = new GameObject(name, typeof(RectTransform)); go.transform.SetParent(parent, false); return go; }
         private Text Label(string name, Transform parent, string value, int size)
         {
-            var go = Make(name, parent); var text = go.AddComponent<Text>(); text.font = font; text.text = value;
-            text.fontSize = size; text.color = new Color(0.96f, 0.96f, 0.96f); text.alignment = TextAnchor.MiddleLeft;
-            text.raycastTarget = false; text.horizontalOverflow = HorizontalWrapMode.Wrap;
-            return text;
+            var text = Make(name, parent).AddComponent<Text>(); text.font = font; text.text = value; text.fontSize = size;
+            text.color = new Color(0.96f, 0.96f, 0.96f); text.alignment = TextAnchor.MiddleLeft; text.raycastTarget = false; text.horizontalOverflow = HorizontalWrapMode.Wrap; return text;
         }
         private static void Position(RectTransform rect, float left, float top, float right, float height)
         {

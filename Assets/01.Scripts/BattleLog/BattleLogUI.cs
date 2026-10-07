@@ -56,7 +56,9 @@ namespace DuelHero.Logging
                 BattleLogKind.CardExecuted => actor + " · " + card + " 실행",
                 BattleLogKind.ExecutionBlocked => actor + " · " + card + " 실행 불가 (미구현 효과)",
                 BattleLogKind.Movement => actor + " · " + action + (entry.Result == BattleLogResult.BoundaryBlocked ? ": 경계로 이동 실패 " + entry.From : ": " + entry.From + " → " + entry.To),
-                BattleLogKind.Damage => actor + " · " + card + (entry.Result == BattleLogResult.NoTarget ? ": 명중 대상 없음" : " → " + target + ": 피해 " + entry.Value),
+                BattleLogKind.Damage => actor + " · " + card + (entry.Result == BattleLogResult.NoTarget ? ": 명중 대상 없음" : " → " + target + ": 피해 " + entry.Value + (entry.ReducedDamage > 0 ? " (방어로 " + entry.ReducedDamage + " 감소)" : "")),
+                BattleLogKind.GuardApplied => actor + " · 방어 +" + entry.Value + " (현재 포함 " + entry.DurationSlots + "슬롯)",
+                BattleLogKind.GuardExpired => actor + " · 방어 " + entry.Value + " 만료",
                 _ => entry.Kind.ToString()
             });
         }

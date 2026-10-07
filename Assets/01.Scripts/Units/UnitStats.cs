@@ -9,6 +9,18 @@ namespace DuelHero.Units
         public int MaxHealth { get; private set; }
         public int Energy { get; private set; }
         public int MaxEnergy { get; private set; }
+        private readonly GuardState guard = new();
+        public int GuardReduction => guard.Reduction;
+        public void ApplyGuard(int amount, int durationSlots)
+        {
+            Validate(amount);
+            guard.Apply(amount, durationSlots);
+            Changed?.Invoke();
+        }
+        public void EndSlot()
+        {
+            if (guard.EndSlot()) Changed?.Invoke();
+        }
         public event Action Changed;
         public bool Initialize(int health, int maxHealth, int energy, int maxEnergy)
         {
@@ -21,6 +33,7 @@ namespace DuelHero.Units
         public void TakeDamage(int amount)
         {
             Validate(amount);
+            amount = guard.ReduceDamage(amount);
             int next = amount >= Health ? 0 : Health - amount;
             if (next == Health) return;
             Health = next; Changed?.Invoke();

@@ -32,6 +32,8 @@ namespace DuelHero.Logging
                 BattleActionKind.TurnStarted => BattleLogKind.TurnStarted,
                 BattleActionKind.TurnEnded => BattleLogKind.TurnEnded,
                 BattleActionKind.Damage => BattleLogKind.Damage,
+                BattleActionKind.GuardApplied => BattleLogKind.GuardApplied,
+                BattleActionKind.GuardExpired => BattleLogKind.GuardExpired,
                 _ => throw new ArgumentOutOfRangeException()
             };
             var outcome = result.Outcome switch
@@ -44,7 +46,7 @@ namespace DuelHero.Logging
             };
             int round = result.Round > 0 ? result.Round : turnSource != null ? turnSource.CurrentRound : 0;
             destination.Record(new BattleLogEntry(kind, round, result.ActorId, result.CardId, outcome,
-                result.From, result.To, result.Value, result.TargetId));
+                result.From, result.To, result.Value, result.TargetId, result.ReducedDamage, result.DurationSlots));
         }
     }
 }
