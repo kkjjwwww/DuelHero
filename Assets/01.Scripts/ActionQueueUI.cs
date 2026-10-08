@@ -42,7 +42,8 @@ public class ActionQueueUI : MonoBehaviour
     public void RefreshCards()
     {
         bool energyValid = reservationQueue != null && reservationQueue.HasEnoughEnergy(out _);
-        if (executeButton != null) executeButton.interactable = reservationQueue != null && !reservationQueue.IsExecuting && reservationQueue.Reservations.Count == 3 && energyValid;
+        bool battleEnded = actionExecutor != null && actionExecutor.Outcome != DuelHero.Battle.BattleOutcome.Running;
+        if (executeButton != null) executeButton.interactable = reservationQueue != null && !battleEnded && !reservationQueue.IsExecuting && reservationQueue.Reservations.Count == 3 && energyValid;
         if (reservationQueue == null) return;
         for (int i = 0; i < actionLabels.Length; i++)
         {
@@ -53,7 +54,12 @@ public class ActionQueueUI : MonoBehaviour
         if (executionStatus != null)
         {
             reservationQueue.HasEnoughEnergy(out string reason);
-            executionStatus.text = reservationQueue.IsExecuting ? "행동 실행 중" : energyValid ? "턴 " + reservationQueue.CurrentRound : reason;
+            executionStatus.text = battleEnded ? actionExecutor.Outcome switch
+            {
+                DuelHero.Battle.BattleOutcome.Victory => "승리",
+                DuelHero.Battle.BattleOutcome.Defeat => "패배",
+                _ => "무승부"
+            } : reservationQueue.IsExecuting ? "행동 실행 중" : energyValid ? "턴 " + reservationQueue.CurrentRound : reason;
         }
     }
     private void ExecuteCards()

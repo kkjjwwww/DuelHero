@@ -18,6 +18,38 @@ namespace DuelHero.Battle
         }
         [SerializeField] private UnitBinding[] units = Array.Empty<UnitBinding>();
         public event Action<BattleActionResult> ActionResolved;
+        public bool TryGetUnit(string actorId, out GridMovement movement, out UnitStats stats)
+        {
+            var unit = units.FirstOrDefault(u => u != null && u.id == actorId);
+            movement = unit?.movement; stats = unit?.stats;
+            return movement != null && stats != null && stats.IsInitialized;
+        }
+        public sealed class AttackRequest
+        {
+            public readonly string ActorId, CardId;
+            public readonly CardEffectDefinition Effect;
+            public readonly bool MirrorX;
+            public AttackRequest(string actorId, string cardId, CardEffectDefinition effect, bool mirrorX = false)
+            { ActorId = actorId; CardId = cardId; Effect = effect; MirrorX = mirrorX; }
+        }
+        public sealed class DamageBatch
+        {
+            internal readonly List<PendingDamage> Hits = new();
+            internal readonly List<BattleActionResult> Misses = new();
+            internal bool Applied;
+        }
+        internal sealed class PendingDamage
+        {
+            internal UnitStats Target;
+            internal int Amount, Reduced, Round;
+            internal string ActorId, CardId, TargetId;
+            internal Vector2Int From, To;
+        }
+        public static int DamageAfterGuard(int damage, int guard)
+        {
+            if (damage < 0 || guard < 0) throw new ArgumentOutOfRangeException(nameof(damage));
+            return Math.Max(0, damage - guard);
+        }
         public void ResolveGuard(string actorId, string cardId, CardEffectDefinition effect, int round)
         {
             if (!CanResolve(actorId)) throw new InvalidOperationException("방어 유닛 참조 또는 초기화 상태를 확인해주세요.");
@@ -50,24 +82,48 @@ namespace DuelHero.Battle
         }
         public void ResolveDamage(string actorId, string cardId, CardEffectDefinition effect, int round)
         {
-            if (!CanResolve(actorId)) throw new InvalidOperationException("공격 유닛 참조 또는 초기화 상태를 확인해주세요.");
-            if (effect.effectType != "damage" || effect.targetType != "적" || effect.value < 0) throw new ArgumentException("지원하지 않는 공격 효과입니다.");
-            var actor = units.Single(u => u.id == actorId);
-            var range = AttackRangeCalculator.Calculate(actor.movement.GridPosition, effect.rangeOffsets);
-            var hit = new HashSet<UnitStats>();
-            foreach (var target in units)
+            ApplyDamageBatch(CalculateDamageBatch(new[] { new AttackRequest(actorId, cardId, effect) }, round));
+        }
+        public DamageBatch CalculateDamageBatch(IEnumerable<AttackRequest> attacks, int round)
+        {
+            var batch = new DamageBatch();
+            foreach (var attack in attacks)
             {
-                if (target.side == actor.side || target.stats == actor.stats || !target.stats.gameObject.activeInHierarchy ||
-                    target.stats.Health <= 0 || !range.Contains(target.movement.GridPosition) || !hit.Add(target.stats)) continue;
-                int before = target.stats.Health;
-                int reduced = Math.Min(effect.value, target.stats.GuardReduction);
-                target.stats.TakeDamage(effect.value);
-                ActionResolved?.Invoke(new BattleActionResult(BattleActionKind.Damage, actorId, round, cardId,
-                    from: actor.movement.GridPosition, to: target.movement.GridPosition,
-                    value: before - target.stats.Health, targetId: target.id, reducedDamage: reduced));
+                if (!CanResolve(attack.ActorId)) throw new InvalidOperationException("공격 유닛 참조 또는 초기화 상태를 확인해주세요.");
+                var effect = attack.Effect;
+                if (effect == null || effect.effectType != "damage" || effect.targetType != "적" || effect.value < 0 || effect.rangeOffsets == null)
+                    throw new ArgumentException("지원하지 않는 공격 효과입니다.");
+                var actor = units.Single(u => u.id == attack.ActorId);
+                if (actor.stats.Health <= 0 || !actor.stats.gameObject.activeInHierarchy) continue;
+                var offsets = attack.MirrorX ? effect.rangeOffsets.Select(p => new Vector2Int(-p.x, p.y)).ToArray() : effect.rangeOffsets;
+                var range = AttackRangeCalculator.Calculate(actor.movement.GridPosition, offsets);
+                var hit = new HashSet<UnitStats>();
+                foreach (var target in units)
+                {
+                    if (target.side == actor.side || target.stats == actor.stats || !target.stats.gameObject.activeInHierarchy ||
+                        target.stats.Health <= 0 || !range.Contains(target.movement.GridPosition) || !hit.Add(target.stats)) continue;
+                    int amount = DamageAfterGuard(effect.value, target.stats.GuardReduction);
+                    batch.Hits.Add(new PendingDamage { Target = target.stats, Amount = amount, Reduced = effect.value - amount,
+                        ActorId = attack.ActorId, CardId = attack.CardId, TargetId = target.id, Round = round,
+                        From = actor.movement.GridPosition, To = target.movement.GridPosition });
+                }
+                if (hit.Count == 0) batch.Misses.Add(new BattleActionResult(BattleActionKind.Damage, attack.ActorId, round, attack.CardId, BattleActionOutcome.NoTarget));
             }
-            if (hit.Count == 0)
-                ActionResolved?.Invoke(new BattleActionResult(BattleActionKind.Damage, actorId, round, cardId, BattleActionOutcome.NoTarget));
+            return batch;
+        }
+        public void ApplyDamageBatch(DamageBatch batch)
+        {
+            if (batch == null || batch.Applied) throw new InvalidOperationException("피해 결과는 한 번만 적용할 수 있습니다.");
+            batch.Applied = true;
+            var results = new List<BattleActionResult>();
+            foreach (var hit in batch.Hits)
+            {
+                int before = hit.Target.Health;
+                hit.Target.ApplyResolvedDamage(hit.Amount);
+                results.Add(new BattleActionResult(BattleActionKind.Damage, hit.ActorId, hit.Round, hit.CardId,
+                    from: hit.From, to: hit.To, value: before - hit.Target.Health, targetId: hit.TargetId, reducedDamage: hit.Reduced));
+            }
+            foreach (var result in results.Concat(batch.Misses)) ActionResolved?.Invoke(result);
         }
     }
 }

@@ -47,10 +47,11 @@ namespace DuelHero.Cards
             IsExecuting = true; Notify(); return true;
         }
         public void SetActiveSlot(int slot) { ActiveSlot = slot; Notify(); }
-        public void CompleteExecution()
+        public void CompleteExecution(int executedSlots = 3)
         {
             if (!IsExecuting) return;
-            foreach (var card in reservations) card.MarkUsed(CurrentRound);
+            for (int i = 0; i < reservations.Count; i++)
+                if (i < executedSlots) reservations[i].MarkUsed(CurrentRound); else reservations[i].ClearReservation();
             reservations.Clear(); CurrentRound++; IsExecuting = false; ActiveSlot = -1; Notify();
         }
         public void AbortExecution()

@@ -7,6 +7,12 @@ public class GridMovement : MonoBehaviour, DuelHero.Battle.IBattleActionSource
 {
     [SerializeField] private Vector2Int gridPosition;
     public Vector2Int GridPosition => gridPosition;
+    public float CellSize => cellSize;
+    [SerializeField] private DuelHero.Battle.BoardOccupancy board;
+    public DuelHero.Battle.BoardOccupancy Board => board;
+    public void AttachBoard(DuelHero.Battle.BoardOccupancy value) => board = value;
+    private void OnEnable() { if (board != null) board.RegisterUnit(this); }
+    private void OnDisable() { if (board != null) board.UnregisterUnit(this); }
     [SerializeField] private string actorId;
     public event System.Action<DuelHero.Battle.BattleActionResult> ActionResolved;
     [SerializeField] private int width = 4;

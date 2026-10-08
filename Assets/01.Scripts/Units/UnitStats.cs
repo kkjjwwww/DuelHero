@@ -34,6 +34,12 @@ namespace DuelHero.Units
         {
             Validate(amount);
             amount = guard.ReduceDamage(amount);
+            ApplyResolvedDamage(amount);
+        }
+        // Damage captured for a shared slot already includes guard.
+        internal void ApplyResolvedDamage(int amount)
+        {
+            Validate(amount);
             int next = amount >= Health ? 0 : Health - amount;
             if (next == Health) return;
             Health = next; Changed?.Invoke();
