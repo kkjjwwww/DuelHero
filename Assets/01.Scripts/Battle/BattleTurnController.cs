@@ -19,6 +19,7 @@ namespace DuelHero.Battle
         public string LastError { get; private set; }
         public BattleOutcome Outcome { get; private set; }
         public event Action<BattleActionResult> ActionResolved;
+        public event Action<BattleOutcome> BattleFinished;
         private IEnemyActionPlan enemyPlan;
         private void Start() { if (playerQueue != null) Publish(BattleActionKind.TurnStarted); }
         private void Publish(BattleActionKind kind, string actorId = null, string cardId = null,
@@ -84,6 +85,7 @@ namespace DuelHero.Battle
             // Notify UI only after final outcome has been determined.
             playerQueue.CompleteExecution(executedSlots);
             if (Outcome == BattleOutcome.Running) Publish(BattleActionKind.TurnStarted);
+            else BattleFinished?.Invoke(Outcome);
         }
         private static void AddAttacks(List<CombatEffectResolver.AttackRequest> requests, string actor, CardDefinition card, bool mirror)
         {
