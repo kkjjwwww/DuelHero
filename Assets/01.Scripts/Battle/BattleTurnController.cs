@@ -21,6 +21,8 @@ namespace DuelHero.Battle
         public event Action<BattleActionResult> ActionResolved;
         public event Action<BattleOutcome> BattleFinished;
         private IEnemyActionPlan enemyPlan;
+        private int executedSlots;
+        private int executionRound;
         private void Start() { if (playerQueue != null) Publish(BattleActionKind.TurnStarted); }
         private void Publish(BattleActionKind kind, string actorId = null, string cardId = null,
             BattleActionOutcome outcome = BattleActionOutcome.Success) =>
@@ -46,14 +48,15 @@ namespace DuelHero.Battle
             if (!CardEnergyRules.CanExecute(energyCards, enemyStats.Energy, enemyStats.MaxEnergy, out reason)) { LastError = "적 " + reason; return false; }
             if (!playerQueue.BeginExecution()) return false;
             enemyPlan = provider; LastError = null;
+            executedSlots = 0;
+            executionRound = playerQueue.CurrentRound;
             StartCoroutine(Execute(playerCards, enemyCards)); return true;
         }
         private IEnumerator Execute(CardDefinition[] playerCards, CardDefinition[] enemyCards)
         {
             combatEffects.TryGetUnit(playerId, out _, out var playerStats);
             combatEffects.TryGetUnit(enemyId, out _, out var enemyStats);
-            int round = playerQueue.CurrentRound;
-            int executedSlots = 0;
+            int round = executionRound;
             for (int slot = 0; slot < 3; slot++)
             {
                 playerQueue.SetActiveSlot(slot);
@@ -61,7 +64,7 @@ namespace DuelHero.Battle
                 { Outcome = EvaluateOutcome(playerStats.Health, enemyStats.Health); break; }
                 var pc = playerCards[slot]; var ec = enemyCards[slot];
                 if (playerStats.Energy < (pc?.energyCost ?? 0) || enemyStats.Energy < (ec?.energyCost ?? 0))
-                { LastError = "실행 중 에너지가 부족해졌습니다."; enemyPlan.CompletePlan(round, executedSlots); playerQueue.AbortExecution(); yield break; }
+                { LastError = "실행 중 에너지가 부족해졌습니다."; FinishExecution(); yield break; }
                 playerStats.TrySpendEnergy(pc?.energyCost ?? 0); enemyStats.TrySpendEnergy(ec?.energyCost ?? 0);
                 if (pc != null) Publish(BattleActionKind.CardExecuted, playerId, pc.id);
                 if (ec != null) Publish(BattleActionKind.CardExecuted, enemyId, ec.id);
@@ -71,21 +74,27 @@ namespace DuelHero.Battle
                 AddAttacks(attacks, playerId, pc, false);
                 AddAttacks(attacks, enemyId, ec, true);
                 var damage = combatEffects.CalculateDamageBatch(attacks, round);
-                yield return new WaitForSeconds(slotDelay);
                 combatEffects.ApplyDamageBatch(damage);
                 // Once per shared slot, after BOTH attacks.
                 combatEffects.EndSlot(round);
                 executedSlots++;
                 Outcome = EvaluateOutcome(playerStats.Health, enemyStats.Health);
                 if (Outcome != BattleOutcome.Running) break;
+                // Yield only after the whole shared slot has committed.
+                yield return new WaitForSeconds(slotDelay);
             }
-            enemyPlan.CompletePlan(round, executedSlots);
+            FinishExecution();
+        }
+        private void FinishExecution()
+        {
+            if (playerQueue == null || !playerQueue.IsExecuting) return;
+            enemyPlan?.CompletePlan(executionRound, executedSlots);
             Publish(BattleActionKind.TurnEnded);
             if (Outcome != BattleOutcome.Running) Publish(BattleActionKind.BattleEnded);
             // Notify UI only after final outcome has been determined.
             playerQueue.CompleteExecution(executedSlots);
-            if (Outcome == BattleOutcome.Running) Publish(BattleActionKind.TurnStarted);
-            else BattleFinished?.Invoke(Outcome);
+            if (Outcome == BattleOutcome.Running && isActiveAndEnabled) Publish(BattleActionKind.TurnStarted);
+            else if (Outcome != BattleOutcome.Running) BattleFinished?.Invoke(Outcome);
         }
         private static void AddAttacks(List<CombatEffectResolver.AttackRequest> requests, string actor, CardDefinition card, bool mirror)
         {
@@ -99,7 +108,7 @@ namespace DuelHero.Battle
         private void OnDisable()
         {
             StopAllCoroutines();
-            if (playerQueue != null && playerQueue.IsExecuting) playerQueue.AbortExecution();
+            FinishExecution();
         }
     }
 }

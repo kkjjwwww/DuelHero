@@ -8,6 +8,8 @@ public class GridMovement : MonoBehaviour, DuelHero.Battle.IBattleActionSource
     [SerializeField] private Vector2Int gridPosition;
     public Vector2Int GridPosition => gridPosition;
     public float CellSize => cellSize;
+    public int Width => width;
+    public int Height => height;
     [SerializeField] private DuelHero.Battle.BoardOccupancy board;
     public DuelHero.Battle.BoardOccupancy Board => board;
     public void AttachBoard(DuelHero.Battle.BoardOccupancy value) => board = value;
@@ -83,7 +85,7 @@ public class GridMovement : MonoBehaviour, DuelHero.Battle.IBattleActionSource
         Vector2Int next = gridPosition + direction;
 
         // 전장 밖으로 이동하려 하면 현재 위치를 유지합니다.
-        if (next.x < 0 || next.x >= width || next.y < 0 || next.y >= height)
+        if (!DuelHero.Battle.GridRules.Contains(next, width, height))
         {
             ActionResolved?.Invoke(new DuelHero.Battle.BattleActionResult(DuelHero.Battle.BattleActionKind.Movement, actorId, round, cardId, DuelHero.Battle.BattleActionOutcome.BoundaryBlocked, from, from));
             return false;

@@ -95,8 +95,7 @@ namespace DuelHero.Battle
                     throw new ArgumentException("지원하지 않는 공격 효과입니다.");
                 var actor = units.Single(u => u.id == attack.ActorId);
                 if (actor.stats.Health <= 0 || !actor.stats.gameObject.activeInHierarchy) continue;
-                var offsets = attack.MirrorX ? effect.rangeOffsets.Select(p => new Vector2Int(-p.x, p.y)).ToArray() : effect.rangeOffsets;
-                var range = AttackRangeCalculator.Calculate(actor.movement.GridPosition, offsets);
+                var range = AttackRangeCalculator.Calculate(actor.movement.GridPosition, effect.rangeOffsets, attack.MirrorX);
                 var hit = new HashSet<UnitStats>();
                 foreach (var target in units)
                 {
