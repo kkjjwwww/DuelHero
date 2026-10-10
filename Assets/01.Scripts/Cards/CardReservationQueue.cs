@@ -37,7 +37,7 @@ namespace DuelHero.Cards
             reservations[slot].ClearReservation(); reservations.RemoveAt(slot);
             for (int i = slot; i < reservations.Count; i++)
             {
-                reservations[i].ClearReservation(); reservations[i].TryReserve(i, CurrentRound);
+                reservations[i].RelocateReservation(i);
             }
             Notify(); return true;
         }
@@ -45,6 +45,11 @@ namespace DuelHero.Cards
         {
             if (IsExecuting || reservations.Count != 3 || !HasEnoughEnergy(out _)) return false;
             IsExecuting = true; Notify(); return true;
+        }
+        public bool TrySetDirection(int slot, Vector2Int direction)
+        {
+            if (IsExecuting || slot < 0 || slot >= reservations.Count || !reservations[slot].SetDirection(direction)) return false;
+            Notify(); return true;
         }
         public void SetActiveSlot(int slot) { ActiveSlot = slot; Notify(); }
         public void CompleteExecution(int executedSlots = 3)

@@ -34,7 +34,7 @@ namespace DuelHero.Battle
                 }
                 if (!instance.CanReserve(round) || selected.Contains(instance) || energy < instance.Definition.energyCost) continue;
                 selected.Add(instance);
-                activePlan[slot] = instance; result[slot] = instance.Definition;
+                activePlan[slot] = instance; result[slot] = CardDirectionRules.ForExecution(instance.Definition, Vector2Int.left);
                 energy -= instance.Definition.energyCost;
                 foreach (var effect in instance.Definition.effects.OrderBy(e => e.resolutionOrder))
                     if (effect.effectType == "energyRestore" && effect.targetType == "자신")

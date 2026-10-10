@@ -58,6 +58,7 @@ namespace DuelHero.Cards
     {
         public CardDefinition Definition { get; }
         public int ReservedSlot { get; private set; } = -1;
+        public Vector2Int SelectedDirection { get; private set; } = Vector2Int.right;
         public int AvailableFromRound { get; private set; } = 1;
         public CardInstance(CardDefinition definition) => Definition = definition;
         public int RemainingCooldown(int round) => Definition.isBasicAction ? 0 : Mathf.Max(0, AvailableFromRound - round);
@@ -66,9 +67,17 @@ namespace DuelHero.Cards
         {
             if (slot < 0 || slot > 2 || !CanReserve(round)) return false;
             ReservedSlot = slot;
+            SelectedDirection = Vector2Int.right;
             return true;
         }
-        public void ClearReservation() => ReservedSlot = -1;
+        internal void RelocateReservation(int slot) => ReservedSlot = slot;
+        internal bool SetDirection(Vector2Int direction)
+        {
+            if (ReservedSlot < 0 || !CardDirectionRules.CanSelect(Definition) || !CardDirectionRules.IsCardinal(direction)) return false;
+            SelectedDirection = direction;
+            return true;
+        }
+        public void ClearReservation() { ReservedSlot = -1; SelectedDirection = Vector2Int.right; }
         public void MarkUsed(int round)
         {
             // Use in N: unavailable in N+1, available again in N+2.

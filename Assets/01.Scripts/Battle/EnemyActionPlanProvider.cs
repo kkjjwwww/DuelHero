@@ -25,7 +25,7 @@ namespace DuelHero.Battle
                 ?? throw new InvalidOperationException("적 AI 카드 ID 오류: " + id))).ToArray();
             var supported = cards.Where(c => effects.Supports(actorId, c.Definition)).ToArray();
             activePlan = planner.CreatePlan(supported, new EnemyPlanningState(movement.GridPosition, stats.Energy, stats.MaxEnergy, movement.Width, movement.Height), target.GridPosition, round);
-            return activePlan.Select(c => c.Definition).ToArray();
+            return activePlan.Select(c => CardDirectionRules.ForExecution(c.Definition, Vector2Int.left)).ToArray();
         }
         public void CompletePlan(int round, int executedSlots)
         {

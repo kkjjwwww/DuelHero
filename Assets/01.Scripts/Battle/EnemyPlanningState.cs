@@ -20,6 +20,7 @@ namespace DuelHero.Battle
         }
         public void Apply(CardDefinition card)
         {
+            card = CardDirectionRules.ForExecution(card, Vector2Int.left);
             if (card.energyCost < 0 || card.energyCost > Energy) throw new InvalidOperationException("적 AI 카드 비용이 부족합니다.");
             Energy -= card.energyCost;
             foreach (var effect in card.effects.OrderBy(e => e.resolutionOrder))

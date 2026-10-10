@@ -34,7 +34,7 @@ namespace DuelHero.Battle
                 !(enemyPlanSource is IEnemyActionPlan provider) || !enemyPlanSource.isActiveAndEnabled)
             { LastError = "양측 유닛과 실행기, 적 행동 계획을 연결해주세요."; return false; }
             if (!playerQueue.HasEnoughEnergy(out var reason)) { LastError = reason; return false; }
-            var playerCards = playerQueue.Reservations.Select(c => c.Definition).ToArray();
+            var playerCards = playerQueue.Reservations.Select(c => CardDirectionRules.ForExecution(c.Definition, c.SelectedDirection)).ToArray();
             CardDefinition[] enemyCards;
             try { enemyCards = provider.CreatePlan(playerQueue.CurrentRound).ToArray(); }
             catch (Exception error) { LastError = error.Message; return false; }
@@ -72,7 +72,7 @@ namespace DuelHero.Battle
                 effects.ExecutePreparation(enemyId, ec, round);
                 var attacks = new List<CombatEffectResolver.AttackRequest>();
                 AddAttacks(attacks, playerId, pc, false);
-                AddAttacks(attacks, enemyId, ec, true);
+                AddAttacks(attacks, enemyId, ec, false);
                 var damage = combatEffects.CalculateDamageBatch(attacks, round);
                 combatEffects.ApplyDamageBatch(damage);
                 // Once per shared slot, after BOTH attacks.

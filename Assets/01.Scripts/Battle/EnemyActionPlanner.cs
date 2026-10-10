@@ -41,6 +41,6 @@ namespace DuelHero.Battle
         private static int Distance(Vector2Int a, Vector2Int b) => Math.Abs(a.x - b.x) + Math.Abs(a.y - b.y);
         private static bool Has(CardInstance card, string type) => card.Definition.effects.Any(e => e.effectType == type);
         private static bool Hits(CardDefinition card, Vector2Int origin, Vector2Int target) =>
-            card.effects.Any(e => e.effectType == "damage" && AttackRangeCalculator.Calculate(origin, e.rangeOffsets, true).Contains(target));
+            CardDirectionRules.ForExecution(card, Vector2Int.left).effects.Any(e => e.effectType == "damage" && AttackRangeCalculator.Calculate(origin, e.rangeOffsets).Contains(target));
     }
 }
