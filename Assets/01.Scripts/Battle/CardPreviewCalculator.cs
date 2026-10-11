@@ -64,6 +64,11 @@ namespace DuelHero.Battle
         public static IReadOnlyList<CardPreviewResult> CalculateQueue(CardPreviewState initial, IReadOnlyList<CardInstance> reservations) =>
             Calculate(initial, reservations.Select(c => new CardPreviewRequest(c.Definition, c.SelectedDirection)).ToArray());
 
+        public static IReadOnlyList<CardPreviewResult> CalculateQueue(CardPreviewState initial, IReadOnlyList<CardInstance> reservations,
+            int previewSlot, Vector2Int previewDirection) =>
+            Calculate(initial, reservations.Select((card, slot) =>
+                new CardPreviewRequest(card.Definition, slot == previewSlot ? previewDirection : card.SelectedDirection)).ToArray());
+
         public static CardPreviewResult CalculateCandidate(CardPreviewState initial, IReadOnlyList<CardInstance> reservations,
             CardDefinition candidate, Vector2Int direction)
         {
