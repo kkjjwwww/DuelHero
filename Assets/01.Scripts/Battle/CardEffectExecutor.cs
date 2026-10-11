@@ -9,6 +9,10 @@ namespace DuelHero.Battle
         public bool Supports(string actorId, CardDefinition card)
         {
             if (combatEffects == null || !combatEffects.CanResolve(actorId)) return false;
+            return SupportsDefinition(card);
+        }
+        public static bool SupportsDefinition(CardDefinition card)
+        {
             if (card == null) return true;
             return card.energyCost >= 0 && card.effects != null && card.effects.Length > 0 && card.effects.All(effect =>
                 effect != null && effect.value >= 0 && (effect.effectType switch

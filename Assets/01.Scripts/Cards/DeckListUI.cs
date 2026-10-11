@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
+using DuelHero.Battle;
 
 namespace DuelHero.Cards
 {
@@ -14,6 +15,7 @@ namespace DuelHero.Cards
         [SerializeField] private CardReservationQueue reservationQueue;
         [SerializeField] private RectTransform content;
         [SerializeField] private Text detailLabel;
+        [SerializeField] private BattlePreviewPresenter battlePreview;
         [SerializeField] private float minimumCardWidth = 132f;
         [SerializeField] private float cardHeight = 118f;
         [Header("Effect Value Colors")]
@@ -134,13 +136,16 @@ namespace DuelHero.Cards
             var kind = Label("Kind", go.transform, card.isBasicAction ? "기본 행동" : "기술 · " + card.actionType, 11); Position(kind.rectTransform, 8, -95, -8, 18);
             views.Add((instance, button, state));
             button.onClick.AddListener(() => { if (Application.isPlaying && reservationQueue != null) reservationQueue.TryReserve(instance); });
-            go.AddComponent<CardHoverInfo>().ShowInfo = () =>
+            var hover = go.AddComponent<CardHoverInfo>();
+            hover.ShowInfo = () =>
             {
+                if (Application.isPlaying) battlePreview?.FocusCard(instance);
                 if (detailLabel == null) return;
                 string keywords = string.Join(" · ", playerDeck.Database.keywords.Where(k => card.keywordIds.Contains(k.id)).Select(k => k.name));
                 string reason = UnavailableReason(instance);
                 detailLabel.text = card.name + " — " + card.ResolvedDescription() + (keywords.Length > 0 ? " · " + keywords : "") + (reason == null ? "" : " · " + reason);
             };
+            hover.HideInfo = () => { if (Application.isPlaying) battlePreview?.ClearCard(instance); };
         }
         private static string ColoredValue(int value, Color color) => "<color=#" + ColorUtility.ToHtmlStringRGBA(color) + ">" + value + "</color>";
         private static GameObject Make(string name, Transform parent) { var go = new GameObject(name, typeof(RectTransform)); go.transform.SetParent(parent, false); return go; }

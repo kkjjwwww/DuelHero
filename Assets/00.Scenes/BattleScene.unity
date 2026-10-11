@@ -555,6 +555,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Cards.ButtonHoverScale
   hoverScale: 1.15
   transitionDuration: 0.1
+  transitionEase: 6
 --- !u!1 &90200233
 GameObject:
   m_ObjectHideFlags: 0
@@ -770,6 +771,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Cards.ButtonHoverScale
   hoverScale: 1.15
   transitionDuration: 0.1
+  transitionEase: 6
 --- !u!1 &119725046
 GameObject:
   m_ObjectHideFlags: 0
@@ -985,6 +987,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Cards.ButtonHoverScale
   hoverScale: 1.15
   transitionDuration: 0.1
+  transitionEase: 6
 --- !u!1 &124631262
 GameObject:
   m_ObjectHideFlags: 0
@@ -1121,39 +1124,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Cards.ButtonHoverScale
   hoverScale: 1.15
   transitionDuration: 0.1
---- !u!21 &135366944
-Material:
-  serializedVersion: 8
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: Malgun Gothic
-  m_Shader: {fileID: 10101, guid: 0000000000000000e000000000000000, type: 0}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords: []
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs:
-    - _MainTex:
-        m_Texture: {fileID: 1586245660}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    m_Ints: []
-    m_Floats: []
-    m_Colors:
-    - _Color: {r: 1, g: 1, b: 1, a: 1}
-  m_BuildTextureStacks: []
-  m_AllowLocking: 1
+  transitionEase: 6
 --- !u!1 &137462658
 GameObject:
   m_ObjectHideFlags: 0
@@ -1845,6 +1816,7 @@ GameObject:
   - component: {fileID: 255071238}
   - component: {fileID: 255071237}
   - component: {fileID: 255071239}
+  - component: {fileID: 255071240}
   m_Layer: 0
   m_Name: ActionSlot_1
   m_TagString: Untagged
@@ -1934,6 +1906,20 @@ MonoBehaviour:
   - {fileID: 1994521436}
   normalColor: {r: 0.18, g: 0.18, b: 0.18, a: 0.9}
   selectedColor: {r: 0.75, g: 0.75, b: 0.75, a: 1}
+--- !u!114 &255071240
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 255071235}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c129f73a7ab53e442b213955a5e95dd6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Battle.ActionSlotPreviewHover
+  preview: {fileID: 436457253}
+  slot: 0
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -2207,6 +2193,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Cards.ButtonHoverScale
   hoverScale: 1.15
   transitionDuration: 0.1
+  transitionEase: 6
 --- !u!1 &345899051
 GameObject:
   m_ObjectHideFlags: 0
@@ -2464,6 +2451,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Cards.ButtonHoverScale
   hoverScale: 1.15
   transitionDuration: 0.1
+  transitionEase: 6
 --- !u!21 &391006714
 Material:
   serializedVersion: 8
@@ -2702,7 +2690,122 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
+--- !u!1 &436457252
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 436457255}
+  - component: {fileID: 436457254}
+  - component: {fileID: 436457253}
+  m_Layer: 0
+  m_Name: BattlePreviewOverlay
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &436457253
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 436457252}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1a50608534b01d45b3cc29e076f4693, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Battle.BattlePreviewPresenter
+  queue: {fileID: 1243114847}
+  player: {fileID: 185798874}
+  playerStats: {fileID: 185798875}
+  renderer: {fileID: 436457254}
+--- !u!114 &436457254
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 436457252}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 935120db38afb394ca1afe7ea93c5545, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Battle.BattlePreviewRenderer
+  player: {fileID: 185798874}
+  playerSprite: {fileID: 185798872}
+  attackCellSize: 0.94
+  reservedAttackColor: {r: 1, g: 0.04, b: 0.04, a: 0.3}
+  focusedAttackColor: {r: 1, g: 0.02, b: 0.02, a: 0.6}
+  pathColor: {r: 1, g: 1, b: 1, a: 0.85}
+  ghostAlpha: 0.35
+  pulseHalfPeriod: 0.4
+--- !u!4 &436457255
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 436457252}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!28 &446695920
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Malgun Gothic
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 4
+  m_Width: 0
+  m_Height: 0
+  m_CompleteImageSize: 0
+  m_MipsStripped: 0
+  m_TextureFormat: 4
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMipmapLimit: 0
+  m_MipmapLimitGroupName: 
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 1
+  m_PlatformBlob: 
+  image data: 0
+  _typelessdata: 
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
+--- !u!28 &530767376
 Texture2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -2760,6 +2863,7 @@ GameObject:
   - component: {fileID: 545071683}
   - component: {fileID: 545071682}
   - component: {fileID: 545071684}
+  - component: {fileID: 545071685}
   m_Layer: 0
   m_Name: ActionSlot_3
   m_TagString: Untagged
@@ -2849,6 +2953,20 @@ MonoBehaviour:
   - {fileID: 1714382832}
   normalColor: {r: 0.18, g: 0.18, b: 0.18, a: 0.9}
   selectedColor: {r: 0.75, g: 0.75, b: 0.75, a: 1}
+--- !u!114 &545071685
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 545071680}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c129f73a7ab53e442b213955a5e95dd6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Battle.ActionSlotPreviewHover
+  preview: {fileID: 436457253}
+  slot: 2
 --- !u!1 &555139272
 GameObject:
   m_ObjectHideFlags: 0
@@ -3150,39 +3268,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 606178358}
   m_CullTransparentMesh: 1
---- !u!128 &637562549
-Font:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: Malgun Gothic
-  serializedVersion: 5
-  m_LineSpacing: 21.28125
-  m_DefaultMaterial: {fileID: 135366944}
-  m_FontSize: 16
-  m_Texture: {fileID: 1586245660}
-  m_AsciiStartOffset: 0
-  m_Tracking: 1
-  m_CharacterSpacing: 0
-  m_CharacterPadding: 1
-  m_ConvertCase: -2
-  m_CharacterRects: []
-  m_KerningValues: []
-  m_PixelScale: 0.1
-  m_FontData: 
-  m_Ascent: 17.414062
-  m_Descent: 0
-  m_DefaultStyle: 0
-  m_FontNames:
-  - Malgun Gothic
-  - Apple SD Gothic Neo
-  - Noto Sans CJK KR
-  - Arial
-  m_FallbackFonts: []
-  m_FontRenderingMode: 0
-  m_UseLegacyBoundsCalculation: 0
-  m_ShouldRoundAdvanceValue: 1
 --- !u!1 &652111009
 GameObject:
   m_ObjectHideFlags: 0
@@ -3241,7 +3326,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 637562549}
+    m_Font: {fileID: 826191730}
     m_FontSize: 13
     m_FontStyle: 0
     m_BestFit: 0
@@ -3985,6 +4070,40 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Cards.ButtonHoverScale
   hoverScale: 1.15
   transitionDuration: 0.1
+  transitionEase: 6
+--- !u!128 &826191730
+Font:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Malgun Gothic
+  serializedVersion: 5
+  m_LineSpacing: 21.28125
+  m_DefaultMaterial: {fileID: 993635180}
+  m_FontSize: 16
+  m_Texture: {fileID: 530767376}
+  m_AsciiStartOffset: 0
+  m_Tracking: 1
+  m_CharacterSpacing: 0
+  m_CharacterPadding: 1
+  m_ConvertCase: -2
+  m_CharacterRects: []
+  m_KerningValues: []
+  m_PixelScale: 0.1
+  m_FontData: 
+  m_Ascent: 17.414062
+  m_Descent: 0
+  m_DefaultStyle: 0
+  m_FontNames:
+  - Malgun Gothic
+  - Apple SD Gothic Neo
+  - Noto Sans CJK KR
+  - Arial
+  m_FallbackFonts: []
+  m_FontRenderingMode: 0
+  m_UseLegacyBoundsCalculation: 0
+  m_ShouldRoundAdvanceValue: 1
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
@@ -4627,6 +4746,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Cards.ButtonHoverScale
   hoverScale: 1.15
   transitionDuration: 0.1
+  transitionEase: 6
 --- !u!1 &932251425
 GameObject:
   m_ObjectHideFlags: 0
@@ -5026,6 +5146,39 @@ MonoBehaviour:
   - {fileID: 2024972214}
   - {fileID: 1243114848}
   - {fileID: 1243114849}
+--- !u!21 &993635180
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Malgun Gothic
+  m_Shader: {fileID: 10101, guid: 0000000000000000e000000000000000, type: 0}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _MainTex:
+        m_Texture: {fileID: 530767376}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats: []
+    m_Colors:
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1
 --- !u!1 &1009719666
 GameObject:
   m_ObjectHideFlags: 0
@@ -6099,6 +6252,7 @@ MonoBehaviour:
   reservationQueue: {fileID: 1243114847}
   content: {fileID: 2091511455}
   detailLabel: {fileID: 652111011}
+  battlePreview: {fileID: 436457253}
   minimumCardWidth: 132
   cardHeight: 118
   damageColor: {r: 1, g: 0.45, b: 0.45, a: 1}
@@ -7327,52 +7481,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1581352055}
   m_CullTransparentMesh: 1
---- !u!28 &1586245660
-Texture2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: Malgun Gothic
-  m_ImageContentsHash:
-    serializedVersion: 2
-    Hash: 00000000000000000000000000000000
-  m_IsAlphaChannelOptional: 0
-  serializedVersion: 4
-  m_Width: 0
-  m_Height: 0
-  m_CompleteImageSize: 0
-  m_MipsStripped: 0
-  m_TextureFormat: 4
-  m_MipCount: 1
-  m_IsReadable: 1
-  m_IsPreProcessed: 0
-  m_IgnoreMipmapLimit: 0
-  m_MipmapLimitGroupName: 
-  m_StreamingMipmaps: 0
-  m_StreamingMipmapsPriority: 0
-  m_VTOnly: 0
-  m_AlphaIsTransparency: 0
-  m_ImageCount: 1
-  m_TextureDimension: 2
-  m_TextureSettings:
-    serializedVersion: 2
-    m_FilterMode: 1
-    m_Aniso: 1
-    m_MipBias: 0
-    m_WrapU: 0
-    m_WrapV: 0
-    m_WrapW: 0
-  m_LightmapFormat: 0
-  m_ColorSpace: 1
-  m_PlatformBlob: 
-  image data: 0
-  _typelessdata: 
-  m_StreamData:
-    serializedVersion: 2
-    offset: 0
-    size: 0
-    path: 
 --- !u!1 &1608898357
 GameObject:
   m_ObjectHideFlags: 0
@@ -7588,6 +7696,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Cards.ButtonHoverScale
   hoverScale: 1.15
   transitionDuration: 0.1
+  transitionEase: 6
 --- !u!1 &1626922541
 GameObject:
   m_ObjectHideFlags: 0
@@ -8165,6 +8274,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Cards.ButtonHoverScale
   hoverScale: 1.15
   transitionDuration: 0.1
+  transitionEase: 6
 --- !u!1 &1733558872
 GameObject:
   m_ObjectHideFlags: 0
@@ -9593,6 +9703,7 @@ GameObject:
   - component: {fileID: 1963543220}
   - component: {fileID: 1963543219}
   - component: {fileID: 1963543221}
+  - component: {fileID: 1963543222}
   m_Layer: 0
   m_Name: ActionSlot_2
   m_TagString: Untagged
@@ -9682,6 +9793,20 @@ MonoBehaviour:
   - {fileID: 124631264}
   normalColor: {r: 0.18, g: 0.18, b: 0.18, a: 0.9}
   selectedColor: {r: 0.75, g: 0.75, b: 0.75, a: 1}
+--- !u!114 &1963543222
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1963543217}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c129f73a7ab53e442b213955a5e95dd6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Battle.ActionSlotPreviewHover
+  preview: {fileID: 436457253}
+  slot: 1
 --- !u!1 &1992332620
 GameObject:
   m_ObjectHideFlags: 0
@@ -9897,6 +10022,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Cards.ButtonHoverScale
   hoverScale: 1.15
   transitionDuration: 0.1
+  transitionEase: 6
 --- !u!1 &2024972209
 GameObject:
   m_ObjectHideFlags: 0
@@ -10203,6 +10329,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Cards.ButtonHoverScale
   hoverScale: 1.15
   transitionDuration: 0.1
+  transitionEase: 6
 --- !u!1 &2037817846
 GameObject:
   m_ObjectHideFlags: 0
@@ -10805,3 +10932,4 @@ SceneRoots:
   - {fileID: 909283344}
   - {fileID: 979334500}
   - {fileID: 1875561114}
+  - {fileID: 436457255}
