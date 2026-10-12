@@ -20,10 +20,39 @@ namespace DuelHero.Battle
         public BattleOutcome Outcome { get; private set; }
         public event Action<BattleActionResult> ActionResolved;
         public event Action<BattleOutcome> BattleFinished;
+        public event Action<IReadOnlyList<CardDefinition>> EnemyPlanPrepared;
+        public event Action<int> SlotStarted;
+        public event Action<int> SlotCompleted;
+        private CardDefinition[] preparedEnemyCards;
+        public IReadOnlyList<CardDefinition> PreparedEnemyCards =>
+            preparedEnemyCards == null ? Array.Empty<CardDefinition>() : Array.AsReadOnly(preparedEnemyCards);
+        public int CompletedSlots => executedSlots;
         private IEnemyActionPlan enemyPlan;
         private int executedSlots;
         private int executionRound;
-        private void Start() { if (playerQueue != null) Publish(BattleActionKind.TurnStarted); }
+        private void Start()
+        {
+            if (playerQueue == null) return;
+            PrepareEnemyPlan();
+            Publish(BattleActionKind.TurnStarted);
+        }
+        private bool PrepareEnemyPlan()
+        {
+            preparedEnemyCards = null;
+            if (!(enemyPlanSource is IEnemyActionPlan provider) || !enemyPlanSource.isActiveAndEnabled)
+            { LastError = "적 행동 계획을 연결해주세요."; return false; }
+            try
+            {
+                var cards = provider.CreatePlan(playerQueue.CurrentRound).ToArray();
+                if (cards.Length != 3) throw new InvalidOperationException("적 행동 계획은 세 슬롯이어야 합니다.");
+                enemyPlan = provider;
+                preparedEnemyCards = cards;
+                executedSlots = 0;
+                EnemyPlanPrepared?.Invoke(PreparedEnemyCards);
+                return true;
+            }
+            catch (Exception error) { LastError = error.Message; return false; }
+        }
         private void Publish(BattleActionKind kind, string actorId = null, string cardId = null,
             BattleActionOutcome outcome = BattleActionOutcome.Success) =>
             ActionResolved?.Invoke(new BattleActionResult(kind, actorId ?? playerId, playerQueue.CurrentRound, cardId, outcome));
@@ -35,9 +64,8 @@ namespace DuelHero.Battle
             { LastError = "양측 유닛과 실행기, 적 행동 계획을 연결해주세요."; return false; }
             if (!playerQueue.HasEnoughEnergy(out var reason)) { LastError = reason; return false; }
             var playerCards = playerQueue.Reservations.Select(c => CardDirectionRules.ForExecution(c.Definition, c.SelectedDirection)).ToArray();
-            CardDefinition[] enemyCards;
-            try { enemyCards = provider.CreatePlan(playerQueue.CurrentRound).ToArray(); }
-            catch (Exception error) { LastError = error.Message; return false; }
+            if (preparedEnemyCards == null && !PrepareEnemyPlan()) return false;
+            var enemyCards = preparedEnemyCards;
             if (enemyCards.Length != 3 || playerCards.Any(c => !effects.Supports(playerId, c)) || enemyCards.Any(c => !effects.Supports(enemyId, c)))
             {
                 LastError = "행동 계획에 지원하지 않는 효과가 있습니다.";
@@ -65,6 +93,7 @@ namespace DuelHero.Battle
                 var pc = playerCards[slot]; var ec = enemyCards[slot];
                 if (playerStats.Energy < (pc?.energyCost ?? 0) || enemyStats.Energy < (ec?.energyCost ?? 0))
                 { LastError = "실행 중 에너지가 부족해졌습니다."; FinishExecution(); yield break; }
+                SlotStarted?.Invoke(slot);
                 playerStats.TrySpendEnergy(pc?.energyCost ?? 0); enemyStats.TrySpendEnergy(ec?.energyCost ?? 0);
                 if (pc != null) Publish(BattleActionKind.CardExecuted, playerId, pc.id);
                 if (ec != null) Publish(BattleActionKind.CardExecuted, enemyId, ec.id);
@@ -78,6 +107,7 @@ namespace DuelHero.Battle
                 // Once per shared slot, after BOTH attacks.
                 combatEffects.EndSlot(round);
                 executedSlots++;
+                SlotCompleted?.Invoke(slot);
                 Outcome = EvaluateOutcome(playerStats.Health, enemyStats.Health);
                 if (Outcome != BattleOutcome.Running) break;
                 // Yield only after the whole shared slot has committed.
@@ -93,7 +123,11 @@ namespace DuelHero.Battle
             if (Outcome != BattleOutcome.Running) Publish(BattleActionKind.BattleEnded);
             // Notify UI only after final outcome has been determined.
             playerQueue.CompleteExecution(executedSlots);
-            if (Outcome == BattleOutcome.Running && isActiveAndEnabled) Publish(BattleActionKind.TurnStarted);
+            if (Outcome == BattleOutcome.Running && isActiveAndEnabled)
+            {
+                PrepareEnemyPlan();
+                Publish(BattleActionKind.TurnStarted);
+            }
             else if (Outcome != BattleOutcome.Running) BattleFinished?.Invoke(Outcome);
         }
         private static void AddAttacks(List<CombatEffectResolver.AttackRequest> requests, string actor, CardDefinition card, bool mirror)
