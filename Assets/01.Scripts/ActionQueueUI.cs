@@ -11,6 +11,7 @@ public class ActionQueueUI : MonoBehaviour
     [SerializeField] private Button executeButton;
     [SerializeField] private CardActionExecutor actionExecutor;
     [SerializeField] private Text executionStatus;
+    [SerializeField] private Color emptySlotColor = Color.clear;
     private readonly List<UnityEngine.Events.UnityAction> cancelListeners = new();
     private readonly List<Button> reservationButtons = new();
     public bool UsesCardReservations => reservationQueue != null;
@@ -47,8 +48,10 @@ public class ActionQueueUI : MonoBehaviour
         if (reservationQueue == null) return;
         for (int i = 0; i < actionLabels.Length; i++)
         {
-            if (actionLabels[i] != null) actionLabels[i].text = i < reservationQueue.Reservations.Count ? reservationQueue.Reservations[i].Definition.name : "--";
-            if (i < slotImages.Length && slotImages[i] != null) slotImages[i].color = i == reservationQueue.ActiveSlot ? executingColor : normalColor;
+            bool occupied = i < reservationQueue.Reservations.Count;
+            if (actionLabels[i] != null) actionLabels[i].text = occupied ? reservationQueue.Reservations[i].Definition.name : "";
+            if (i < slotImages.Length && slotImages[i] != null)
+                slotImages[i].color = i == reservationQueue.ActiveSlot ? executingColor : occupied ? normalColor : emptySlotColor;
         }
         foreach (var button in reservationButtons) button.interactable = !reservationQueue.IsExecuting;
         if (executionStatus != null)
