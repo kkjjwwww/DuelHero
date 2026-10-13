@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: CardDatabase
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Cards.CardDatabase
   sourceSpreadsheetId: 1pspfXZtUhTmSc9ZTL1iTzQDeBgvfbb_wqwCNs83EFQE
-  importedAtUtc: 2026-10-06T07:33:50.1113113Z
+  importedAtUtc: 2026-10-13T09:17:51.9743428Z
   cards:
   - id: move_up_001
     name: "\uC704 \uC774\uB3D9"
@@ -139,7 +139,7 @@ MonoBehaviour:
   - id: slash_001
     name: "\uBCA0\uAE30"
     description: "\uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574
-      {effect1.value}\uC744 \uC900\uB2E4."
+      {effect1.value}\uB97C(\uC744) \uC900\uB2E4.\r\n[\uBC29\uD5A5\uC9C0\uC815]"
     actionType: "\uACF5\uACA9"
     rarity: "\uC77C\uBC18"
     energyCost: 10
@@ -162,7 +162,7 @@ MonoBehaviour:
   - id: thrust_001
     name: "\uCC0C\uB974\uAE30"
     description: "\uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574
-      {effect1.value}\uC744 \uC900\uB2E4."
+      {effect1.value}\uB97C(\uC744) \uC900\uB2E4.\r\n[\uBC29\uD5A5\uC9C0\uC815]"
     actionType: "\uACF5\uACA9"
     rarity: "\uC77C\uBC18"
     energyCost: 15
@@ -186,7 +186,7 @@ MonoBehaviour:
   - id: sweep_001
     name: "\uD6A1\uBCA0\uAE30"
     description: "\uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574
-      {effect1.value}\uC744 \uC900\uB2E4."
+      {effect1.value}\uB97C(\uC744) \uC900\uB2E4.\r\n[\uBC29\uD5A5\uC9C0\uC815]"
     actionType: "\uACF5\uACA9"
     rarity: "\uC77C\uBC18"
     energyCost: 20
