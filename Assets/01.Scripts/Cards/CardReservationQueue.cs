@@ -10,7 +10,11 @@ namespace DuelHero.Cards
         public DuelHero.Units.UnitStats UnitStats => unitStats;
         private void OnEnable() { if (unitStats != null) unitStats.Changed += OnEnergyChanged; }
         private void OnDisable() { if (unitStats != null) unitStats.Changed -= OnEnergyChanged; }
-        private void OnEnergyChanged() => Changed?.Invoke();
+        private void OnEnergyChanged()
+        {
+            Changed?.Invoke();
+            playerDeck?.NotifyStateChanged();
+        }
         public bool HasEnoughEnergy(out string reason)
         {
             if (unitStats == null || !unitStats.IsInitialized) { reason = "유닛 에너지가 아직 초기화되지 않았습니다."; return false; }
@@ -28,8 +32,14 @@ namespace DuelHero.Cards
             if (IsExecuting || card == null || playerDeck == null || reservations.Count >= 3) return false;
             bool owned = false;
             foreach (var instance in playerDeck.Cards) if (ReferenceEquals(instance, card)) { owned = true; break; }
-            if (!owned || !card.TryReserve(reservations.Count, CurrentRound)) return false;
-            reservations.Add(card); Notify(); return true;
+            if (!owned || !card.CanReserve(CurrentRound)) return false;
+            reservations.Add(card);
+            if (!HasEnoughEnergy(out _) || !card.TryReserve(reservations.Count - 1, CurrentRound))
+            {
+                reservations.RemoveAt(reservations.Count - 1);
+                return false;
+            }
+            Notify(); return true;
         }
         public bool CancelAt(int slot)
         {

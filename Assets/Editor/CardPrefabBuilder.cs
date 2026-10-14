@@ -6,6 +6,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 namespace DuelHero.Editor
 {
@@ -63,10 +64,24 @@ namespace DuelHero.Editor
             Image frameImage = AddImage("Frame", frontRoot.transform, frame);
             Stretch(frameImage.rectTransform);
             frameImage.preserveAspect = true;
+            var reservationOutline = NewUI("ReservationOutline", frontRoot.transform).AddComponent<CardReservationOutline>();
+            SetRect(reservationOutline.rectTransform, new Vector2(0.075f, 0.045f), new Vector2(0.925f, 0.96f), Vector2.zero, Vector2.zero);
+            reservationOutline.color = Color.white;
+            reservationOutline.raycastTarget = false;
+            reservationOutline.enabled = false;
+            Text reservationSlot = AddText("ReservationSlot", frontRoot.transform, string.Empty, font, 16, TextAnchor.MiddleCenter);
+            reservationSlot.color = Color.white;
+            reservationSlot.fontStyle = FontStyle.Bold;
+            reservationSlot.horizontalOverflow = HorizontalWrapMode.Overflow;
+            reservationSlot.verticalOverflow = VerticalWrapMode.Overflow;
+            SetRect(reservationSlot.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(-12f, 4f), new Vector2(12f, 24f));
+            reservationSlot.gameObject.SetActive(false);
 
             RectTransform titleArea = (RectTransform)NewUI("TitleArea", frontRoot.transform).transform;
             SetRect(titleArea, new Vector2(0.285f, 0.825f), new Vector2(0.715f, 0.925f), Vector2.zero, Vector2.zero);
-            titleArea.gameObject.AddComponent<RectMask2D>();
+            Image titleMask = titleArea.gameObject.AddComponent<Image>();
+            titleMask.raycastTarget = false;
+            titleArea.gameObject.AddComponent<Mask>().showMaskGraphic = false;
             Text nameLabel = AddText("Name", titleArea, "베기", font, 12, TextAnchor.MiddleCenter);
             nameLabel.fontStyle = FontStyle.Bold;
             nameLabel.resizeTextForBestFit = true;
@@ -76,39 +91,33 @@ namespace DuelHero.Editor
 
             RectTransform descriptionArea = (RectTransform)NewUI("DescriptionArea", frontRoot.transform).transform;
             SetRect(descriptionArea, new Vector2(0.105f, 0.18f), new Vector2(0.895f, 0.45f), Vector2.zero, new Vector2(0f, -2f));
-            Text description = AddText("Description", descriptionArea, "범위 내 모든 적에게 피해 10을 줍니다.", font, 9, TextAnchor.MiddleCenter);
-            description.resizeTextForBestFit = true;
-            description.resizeTextMinSize = 8;
-            description.resizeTextMaxSize = 10;
-            description.horizontalOverflow = HorizontalWrapMode.Wrap;
-            description.verticalOverflow = VerticalWrapMode.Truncate;
-            SetRect(description.rectTransform, new Vector2(0f, 0.28f), Vector2.one, new Vector2(4f, 0f), new Vector2(-4f, -2f));
-            RectTransform keywordLinksRoot = (RectTransform)NewUI("KeywordLinksRoot", descriptionArea).transform;
-            SetRect(keywordLinksRoot, Vector2.zero, new Vector2(1f, 0.28f), new Vector2(4f, 0f), new Vector2(-4f, 0f));
-            HorizontalLayoutGroup keywordLayout = keywordLinksRoot.gameObject.AddComponent<HorizontalLayoutGroup>();
-            keywordLayout.childAlignment = TextAnchor.MiddleLeft;
-            keywordLayout.spacing = 2f;
-            keywordLayout.childControlWidth = true;
-            keywordLayout.childControlHeight = true;
-            keywordLayout.childForceExpandWidth = false;
-            keywordLayout.childForceExpandHeight = false;
-            Text keywordTemplate = AddText("KeywordLinkTemplate", keywordLinksRoot, "[방향지정]", font, 10, TextAnchor.MiddleLeft);
-            keywordTemplate.color = new Color(1f, 0.73f, 0.28f, 1f);
-            keywordTemplate.raycastTarget = true;
-            keywordTemplate.gameObject.AddComponent<KeywordHoverLink>();
-            LayoutElement keywordLayoutElement = keywordTemplate.gameObject.AddComponent<LayoutElement>();
-            keywordLayoutElement.preferredWidth = 58f;
-            keywordLayoutElement.preferredHeight = 16f;
-            keywordTemplate.gameObject.SetActive(false);
+            var description = NewUI("Description", descriptionArea).AddComponent<TextMeshProUGUI>();
+            description.font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/Art/UI/Fonts/NotoSansKR SDF.asset")
+                ?? throw new InvalidOperationException("Card description TMP font asset is missing.");
+            description.text = "범위 내 모든 적에게 피해 10을 줍니다. [방향지정]";
+            description.fontSize = 9f;
+            description.fontSizeMin = 8f; description.fontSizeMax = 10f;
+            description.enableAutoSizing = true;
+            description.alignment = TextAlignmentOptions.Center;
+            description.color = TextColor;
+            description.richText = true;
+            description.textWrappingMode = TextWrappingModes.Normal;
+            description.overflowMode = TextOverflowModes.Truncate;
+            description.raycastTarget = true;
+            SetRect(description.rectTransform, Vector2.zero, Vector2.one, new Vector2(4f, 2f), new Vector2(-4f, -2f));
+            description.gameObject.AddComponent<KeywordHoverLink>();
 
             RectTransform rangeArea = (RectTransform)NewUI("RangeArea", frontRoot.transform).transform;
-            SetRect(rangeArea, new Vector2(0.70f, 0.085f), new Vector2(0.895f, 0.18f), new Vector2(2f, 1f), new Vector2(-2f, -1f));
-            CardRangeGraphic rangeGraphic = rangeArea.gameObject.AddComponent<CardRangeGraphic>();
+            SetRect(rangeArea, new Vector2(0.70f, 0.085f), new Vector2(0.895f, 0.18f), new Vector2(-2f, 4f), new Vector2(-6f, 2f));
+            Image rangeBackground = AddImage("RangeBackground", rangeArea, null);
+            rangeBackground.color = new Color(0.035f, 0.045f, 0.06f, 0.95f);
+            rangeBackground.raycastTarget = false;
+            SetRect(rangeBackground.rectTransform, Vector2.zero, Vector2.one, new Vector2(-3f, -3f), new Vector2(3f, 3f));
+            RectTransform rangeDrawing = (RectTransform)NewUI("RangeGraphic", rangeArea).transform;
+            SetRect(rangeDrawing, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            CardRangeGraphic rangeGraphic = rangeDrawing.gameObject.AddComponent<CardRangeGraphic>();
             rangeGraphic.raycastTarget = false;
 
-            Text state = AddText("State", frontRoot.transform, "사용 가능 · 미예약", font, 8, TextAnchor.MiddleCenter);
-            state.color = new Color(0.72f, 0.75f, 0.78f, 1f);
-            SetRect(state.rectTransform, new Vector2(0.14f, 0.025f), new Vector2(0.86f, 0.075f), Vector2.zero, Vector2.zero);
 
             Image energyBadge = AddImage("EnergyBadge", frontRoot.transform, energy);
             SetRect(energyBadge.rectTransform, new Vector2(0.01f, 0.81f), new Vector2(0.27f, 0.995f), new Vector2(-4f, 0f), new Vector2(1f, 2f));
@@ -124,6 +133,14 @@ namespace DuelHero.Editor
             Image typeBadge = AddImage("TypeBadge", frontRoot.transform, attack);
             SetRect(typeBadge.rectTransform, new Vector2(0.73f, 0.81f), new Vector2(0.99f, 0.995f), new Vector2(-1f, 0f), new Vector2(4f, 2f));
             typeBadge.preserveAspect = true;
+            energyBadge.raycastTarget = true;
+            typeBadge.raycastTarget = true;
+            CardRaycastArea raycastArea = root.AddComponent<CardRaycastArea>();
+            SerializedObject hitSettings = new SerializedObject(raycastArea);
+            Set(hitSettings, "body", frameImage.rectTransform);
+            Set(hitSettings, "energyBadge", energyBadge);
+            Set(hitSettings, "typeBadge", typeBadge);
+            hitSettings.ApplyModifiedPropertiesWithoutUndo();
             Text cooldown = AddText("Cooldown", typeBadge.transform, "1", font, 28, TextAnchor.MiddleCenter);
             cooldown.fontStyle = FontStyle.Bold;
             cooldown.color = new Color(1f, 0.12f, 0.08f, 1f);
@@ -144,14 +161,13 @@ namespace DuelHero.Editor
             Set(serialized, "nameLabel", nameLabel);
             Set(serialized, "energyLabel", energyLabel);
             Set(serialized, "descriptionLabel", description);
-            Set(serialized, "keywordLinksRoot", keywordLinksRoot);
-            Set(serialized, "keywordLinkTemplate", keywordTemplate);
-            Set(serialized, "stateLabel", state);
             Set(serialized, "descriptionArea", descriptionArea);
             Set(serialized, "rangeArea", rangeArea);
             Set(serialized, "rangeGraphic", rangeGraphic);
             Set(serialized, "typeBadge", typeBadge);
             Set(serialized, "cooldownLabel", cooldown);
+            Set(serialized, "reservationOutline", reservationOutline);
+            Set(serialized, "reservationSlotLabel", reservationSlot);
             Set(serialized, "backRoot", backImage.gameObject);
             Set(serialized, "grayscaleMaterial", grayscale);
             Set(serialized, "attackBadge", attack);
@@ -160,7 +176,7 @@ namespace DuelHero.Editor
             Set(serialized, "specialBadge", special);
             Set(serialized, "moveBadge", move);
             SerializedProperty graphics = serialized.FindProperty("grayscaleGraphics");
-            Graphic[] grayscaleGraphics = { illustration, frameImage, rangeGraphic, energyBadge, typeBadge };
+            Graphic[] grayscaleGraphics = { illustration, frameImage, rangeBackground, rangeGraphic, energyBadge, typeBadge };
             graphics.arraySize = grayscaleGraphics.Length;
             for (int i = 0; i < grayscaleGraphics.Length; i++) graphics.GetArrayElementAtIndex(i).objectReferenceValue = grayscaleGraphics[i];
             serialized.ApplyModifiedPropertiesWithoutUndo();
@@ -208,6 +224,23 @@ namespace DuelHero.Editor
 
         private static void ConnectScene(CardView prefab)
         {
+            foreach (var enemySlot in UnityEngine.Object.FindObjectsByType<EnemyActionSlotView>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                SerializedObject enemySettings = new SerializedObject(enemySlot);
+                Set(enemySettings, "cardPrefab", prefab);
+                Set(enemySettings, "cardDatabase", AssetDatabase.LoadAssetAtPath<CardDatabase>("Assets/Data/CardDatabase.asset"));
+                enemySettings.ApplyModifiedPropertiesWithoutUndo();
+                EditorUtility.SetDirty(enemySlot);
+            }
+            ActionQueueUI actionQueue = UnityEngine.Object.FindFirstObjectByType<ActionQueueUI>(FindObjectsInactive.Include);
+            if (actionQueue != null)
+            {
+                SerializedObject queueSettings = new SerializedObject(actionQueue);
+                Set(queueSettings, "cardPrefab", prefab);
+                Set(queueSettings, "cardDatabase", AssetDatabase.LoadAssetAtPath<CardDatabase>("Assets/Data/CardDatabase.asset"));
+                queueSettings.ApplyModifiedPropertiesWithoutUndo();
+                EditorUtility.SetDirty(actionQueue);
+            }
             DeckListUI deckList = UnityEngine.Object.FindFirstObjectByType<DeckListUI>(FindObjectsInactive.Include);
             if (deckList == null) return;
             SerializedObject serialized = new SerializedObject(deckList);

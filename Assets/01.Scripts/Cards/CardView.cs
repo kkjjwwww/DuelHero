@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using TMPro;
 
 namespace DuelHero.Cards
 {
@@ -19,15 +20,14 @@ namespace DuelHero.Cards
         [SerializeField] private Image illustration;
         [SerializeField] private Text nameLabel;
         [SerializeField] private Text energyLabel;
-        [SerializeField] private Text descriptionLabel;
-        [SerializeField] private RectTransform keywordLinksRoot;
-        [SerializeField] private Text keywordLinkTemplate;
-        [SerializeField] private Text stateLabel;
+        [SerializeField] private TextMeshProUGUI descriptionLabel;
         [SerializeField] private RectTransform descriptionArea;
         [SerializeField] private RectTransform rangeArea;
         [SerializeField] private CardRangeGraphic rangeGraphic;
         [SerializeField] private Image typeBadge;
         [SerializeField] private Text cooldownLabel;
+        [SerializeField] private CardReservationOutline reservationOutline;
+        [SerializeField] private Text reservationSlotLabel;
 
         [Header("Back / State")]
         [SerializeField] private GameObject backRoot;
@@ -42,62 +42,94 @@ namespace DuelHero.Cards
         [SerializeField] private Sprite moveBadge;
 
         private readonly Dictionary<Text, Color> normalTextColors = new();
-        private readonly List<Text> keywordLinks = new();
-        private Action<KeywordDefinition> onKeywordEnter;
+        private Color normalDescriptionColor;
+        private KeywordHoverLink keywordHover;
+        private static readonly Regex KeywordToken = new Regex(@"\[([^\[\]\r\n]+)\]");
+        private Action<KeywordDefinition, Vector2> onKeywordEnter;
+        private Action<Vector2> onKeywordMove;
         private Action onKeywordExit;
+        private int displayedCooldown = int.MinValue;
+        private bool? displayedInteractable;
+        private int displayedReservationSlot = int.MinValue;
+        private static readonly string[] ReservationNumbers = { "1", "2", "3" };
 
         public Button Button => button;
-        public Text StateLabel => stateLabel;
         public RectTransform VisualRoot => visualRoot;
 
         public void Bind(CardDefinition card, IEnumerable<KeywordDefinition> keywords)
         {
             if (card == null) return;
+            displayedReservationSlot = int.MinValue;
+            SetReservationSlot(-1);
+            // A pooled view may still be grey from its previous owner.
+            foreach (var entry in normalTextColors)
+                if (entry.Key != null) entry.Key.color = entry.Value;
+            if (normalTextColors.Count > 0) descriptionLabel.color = normalDescriptionColor;
+            descriptionLabel.overrideColorTags = false;
             normalTextColors.Clear();
+            displayedCooldown = int.MinValue;
+            displayedInteractable = null;
+            SetIllustration(illustration.sprite);
             nameLabel.text = card.name;
             energyLabel.text = card.energyCost.ToString();
             string body = card.ResolvedDescription();
             HashSet<string> ids = new HashSet<string>(card.keywordIds ?? Array.Empty<string>());
-            KeywordDefinition[] linkedKeywords = (keywords ?? Enumerable.Empty<KeywordDefinition>())
-                .Where(keyword => ids.Contains(keyword.id) && body.Contains($"[{keyword.name}]"))
-                .ToArray();
-            foreach (KeywordDefinition keyword in linkedKeywords)
-                body = body.Replace($"[{keyword.name}]", string.Empty);
-            descriptionLabel.text = Regex.Replace(body, @"[ \t]*\r?\n[ \t]*$", string.Empty).TrimEnd();
-            BuildKeywordLinks(linkedKeywords);
+            var linkedKeywords = new Dictionary<string, KeywordDefinition>();
+            foreach (var keyword in keywords ?? Enumerable.Empty<KeywordDefinition>())
+                if (ids.Contains(keyword.id)) linkedKeywords[keyword.name] = keyword;
+            descriptionLabel.text = KeywordToken.Replace(body, match =>
+                linkedKeywords.TryGetValue(match.Groups[1].Value, out var keyword)
+                    ? $"<link=\"{keyword.id}\"><color=#FFBA47>{match.Value}</color></link>"
+                    : match.Value);
+            if (keywordHover == null) keywordHover = descriptionLabel.GetComponent<KeywordHoverLink>();
+            keywordHover.Initialize(this, descriptionLabel, linkedKeywords.Values);
             typeBadge.sprite = BadgeFor(card.actionType);
 
-            Vector2Int[] range = (card.effects ?? Array.Empty<CardEffectDefinition>())
+            var effects = card.effects ?? Array.Empty<CardEffectDefinition>();
+            bool selfOnly = effects.Length > 0 && effects.All(effect => effect.targetType == "자신");
+            Vector2Int[] range = effects
                 .Where(effect => effect.rangeOffsets != null)
                 .SelectMany(effect => effect.rangeOffsets)
                 .Distinct().ToArray();
-            bool hasRange = range.Length > 0;
+            bool hasRange = !selfOnly && range.Length > 0;
             rangeArea.gameObject.SetActive(hasRange);
             rangeGraphic.SetOffsets(range);
             descriptionArea.anchorMin = new Vector2(descriptionArea.anchorMin.x, hasRange ? 0.18f : 0.085f);
         }
 
-        public void SetKeywordHoverActions(Action<KeywordDefinition> enter, Action exit)
+        public void SetKeywordHoverActions(Action<KeywordDefinition, Vector2> enter, Action exit, Action<Vector2> move = null)
         {
             onKeywordEnter = enter;
             onKeywordExit = exit;
+            onKeywordMove = move;
         }
 
-        internal void NotifyKeywordEnter(KeywordDefinition keyword) => onKeywordEnter?.Invoke(keyword);
+        internal void NotifyKeywordEnter(KeywordDefinition keyword, Vector2 position) => onKeywordEnter?.Invoke(keyword, position);
+        internal void NotifyKeywordMove(Vector2 position) => onKeywordMove?.Invoke(position);
         internal void NotifyKeywordExit() => onKeywordExit?.Invoke();
 
         public void SetState(string state, int remainingCooldown, bool interactable)
         {
+            if (displayedCooldown == remainingCooldown && displayedInteractable == interactable) return;
             CacheTextColors();
-            stateLabel.text = state;
-            button.interactable = interactable;
+            if (displayedInteractable != interactable) button.interactable = interactable;
             bool coolingDown = remainingCooldown > 0;
-            cooldownLabel.gameObject.SetActive(coolingDown);
-            cooldownLabel.text = coolingDown ? remainingCooldown.ToString() : string.Empty;
-            foreach (Graphic graphic in grayscaleGraphics)
-                if (graphic != null) graphic.material = coolingDown ? grayscaleMaterial : null;
-            foreach (KeyValuePair<Text, Color> entry in normalTextColors)
-                if (entry.Key != null) entry.Key.color = coolingDown ? Grayscale(entry.Value) : entry.Value;
+            if (displayedCooldown != remainingCooldown)
+            {
+                cooldownLabel.gameObject.SetActive(coolingDown);
+                cooldownLabel.text = coolingDown ? remainingCooldown.ToString() : string.Empty;
+            }
+            if (displayedCooldown == int.MinValue || (displayedCooldown > 0) != coolingDown)
+            {
+                foreach (Graphic graphic in grayscaleGraphics)
+                    if (graphic != null) graphic.material = coolingDown ? grayscaleMaterial : null;
+                foreach (KeyValuePair<Text, Color> entry in normalTextColors)
+                    if (entry.Key != null) entry.Key.color = coolingDown ? Grayscale(entry.Value) : entry.Value;
+                descriptionLabel.color = coolingDown ? Grayscale(normalDescriptionColor) : normalDescriptionColor;
+                descriptionLabel.overrideColorTags = coolingDown;
+            }
+            displayedCooldown = remainingCooldown;
+            displayedInteractable = interactable;
         }
 
         public void SetFrontVisible(bool visible)
@@ -106,16 +138,36 @@ namespace DuelHero.Cards
             backRoot.SetActive(!visible);
         }
 
+        public void SetReservationSlot(int slotIndex)
+        {
+            if (displayedReservationSlot == slotIndex) return;
+            bool reserved = slotIndex >= 0 && slotIndex < ReservationNumbers.Length;
+            if (reservationOutline != null && reservationOutline.enabled != reserved)
+                reservationOutline.enabled = reserved;
+            if (reservationSlotLabel != null)
+            {
+                reservationSlotLabel.text = reserved ? ReservationNumbers[slotIndex] : string.Empty;
+                reservationSlotLabel.gameObject.SetActive(reserved);
+            }
+            displayedReservationSlot = slotIndex;
+        }
+
         public void SetIllustration(Sprite sprite)
         {
             illustration.sprite = sprite;
-            illustration.enabled = sprite != null;
+            illustration.enabled = true;
+            illustration.color = sprite != null ? Color.white : new Color(0.12f, 0.14f, 0.18f, 1f);
         }
 
         public void SetFont(Font font)
         {
             if (font == null) return;
-            foreach (Text label in GetComponentsInChildren<Text>(true)) label.font = font;
+            foreach (Text label in GetComponentsInChildren<Text>(true))
+            {
+                // Numeric badges keep the prefab font and its vertical metrics.
+                if (label == energyLabel || label == cooldownLabel || label == reservationSlotLabel) continue;
+                label.font = font;
+            }
         }
 
         public void SetClickAction(UnityAction action)
@@ -136,33 +188,10 @@ namespace DuelHero.Cards
             };
         }
 
-        private void BuildKeywordLinks(IEnumerable<KeywordDefinition> keywords)
-        {
-            foreach (Text link in keywordLinks)
-                if (link != null)
-                {
-                    if (Application.isPlaying) Destroy(link.gameObject);
-                    else DestroyImmediate(link.gameObject);
-                }
-            keywordLinks.Clear();
-
-            foreach (KeywordDefinition keyword in keywords)
-            {
-                Text link = Instantiate(keywordLinkTemplate, keywordLinksRoot, false);
-                link.name = "Keyword_" + keyword.id;
-                link.text = $"[{keyword.name}]";
-                link.raycastTarget = true;
-                link.gameObject.SetActive(true);
-                KeywordHoverLink hover = link.GetComponent<KeywordHoverLink>() ?? link.gameObject.AddComponent<KeywordHoverLink>();
-                hover.Initialize(this, keyword);
-                keywordLinks.Add(link);
-            }
-            keywordLinksRoot.gameObject.SetActive(keywordLinks.Count > 0);
-        }
-
         private void CacheTextColors()
         {
             if (normalTextColors.Count > 0) return;
+            normalDescriptionColor = descriptionLabel.color;
             foreach (Text label in GetComponentsInChildren<Text>(true))
                 if (label != cooldownLabel) normalTextColors[label] = label.color;
         }

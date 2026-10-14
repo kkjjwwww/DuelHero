@@ -64,14 +64,19 @@ namespace DuelHero.Cards
         public void Refresh()
         {
             var card = queue != null && slot < queue.Reservations.Count ? queue.Reservations[slot] : null;
-            bool visible = card != null && CardDirectionRules.CanSelect(card.Definition);
+            bool visible = card != null && !queue.IsExecuting && CardDirectionRules.CanSelect(card.Definition);
             if (arrowRoot != null) arrowRoot.SetActive(visible);
             for (int i = 0; i < buttons.Length && i < Directions.Length; i++)
             {
                 var button = buttons[i];
                 if (button == null) continue;
                 button.interactable = visible && !queue.IsExecuting;
-                button.GetComponent<ButtonHoverScale>()?.RefreshInteractability();
+                var scale = button.GetComponent<ButtonHoverScale>();
+                if (scale != null)
+                {
+                    scale.SetSelected(visible && card.SelectedDirection == Directions[i]);
+                    scale.RefreshInteractability();
+                }
             }
             RefreshColors();
         }

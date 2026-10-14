@@ -16,13 +16,23 @@ namespace DuelHero.Battle
         [SerializeField] private CardEffectExecutor effects;
         [SerializeField] private CombatEffectResolver combatEffects;
         [SerializeField, Min(0.01f)] private float slotDelay = 0.4f;
+        [SerializeField, Min(0f)] private float enemyCardRevealDuration = 0.4f;
+        [SerializeField, Min(0f)] private float postRevealDelay = 0.5f;
+        [SerializeField, Min(0f)] private float cardPresentationDuration = 0.12f;
+        public float CardPresentationDuration => cardPresentationDuration;
+        public float EnemyCardRevealDuration => enemyCardRevealDuration;
         public string LastError { get; private set; }
         public BattleOutcome Outcome { get; private set; }
         public event Action<BattleActionResult> ActionResolved;
         public event Action<BattleOutcome> BattleFinished;
         public event Action<IReadOnlyList<CardDefinition>> EnemyPlanPrepared;
         public event Action<int> SlotStarted;
+        public event Action<int> SlotPresenting;
+        public event Action<int> SlotRevealing;
         public event Action<int> SlotCompleted;
+        public event Action PhaseChanged;
+        public bool ResultsAvailable { get; private set; }
+        public bool AwaitingNextTurn => ResultsAvailable && Outcome == BattleOutcome.Running;
         private CardDefinition[] preparedEnemyCards;
         public IReadOnlyList<CardDefinition> PreparedEnemyCards =>
             preparedEnemyCards == null ? Array.Empty<CardDefinition>() : Array.AsReadOnly(preparedEnemyCards);
@@ -93,6 +103,11 @@ namespace DuelHero.Battle
                 var pc = playerCards[slot]; var ec = enemyCards[slot];
                 if (playerStats.Energy < (pc?.energyCost ?? 0) || enemyStats.Energy < (ec?.energyCost ?? 0))
                 { LastError = "실행 중 에너지가 부족해졌습니다."; FinishExecution(); yield break; }
+                SlotPresenting?.Invoke(slot);
+                if (cardPresentationDuration > 0f) yield return new WaitForSeconds(cardPresentationDuration);
+                SlotRevealing?.Invoke(slot);
+                if (enemyCardRevealDuration > 0f) yield return new WaitForSeconds(enemyCardRevealDuration);
+                if (postRevealDelay > 0f) yield return new WaitForSeconds(postRevealDelay);
                 SlotStarted?.Invoke(slot);
                 playerStats.TrySpendEnergy(pc?.energyCost ?? 0); enemyStats.TrySpendEnergy(ec?.energyCost ?? 0);
                 if (pc != null) Publish(BattleActionKind.CardExecuted, playerId, pc.id);
@@ -107,28 +122,37 @@ namespace DuelHero.Battle
                 // Once per shared slot, after BOTH attacks.
                 combatEffects.EndSlot(round);
                 executedSlots++;
-                SlotCompleted?.Invoke(slot);
                 Outcome = EvaluateOutcome(playerStats.Health, enemyStats.Health);
-                if (Outcome != BattleOutcome.Running) break;
-                // Yield only after the whole shared slot has committed.
+                // Keep the executed cards visible while the result is being shown.
                 yield return new WaitForSeconds(slotDelay);
+                SlotCompleted?.Invoke(slot);
+                if (Outcome != BattleOutcome.Running) break;
             }
             FinishExecution();
         }
         private void FinishExecution()
         {
-            if (playerQueue == null || !playerQueue.IsExecuting) return;
+            if (playerQueue == null || !playerQueue.IsExecuting || ResultsAvailable) return;
             enemyPlan?.CompletePlan(executionRound, executedSlots);
             Publish(BattleActionKind.TurnEnded);
             if (Outcome != BattleOutcome.Running) Publish(BattleActionKind.BattleEnded);
-            // Notify UI only after final outcome has been determined.
-            playerQueue.CompleteExecution(executedSlots);
-            if (Outcome == BattleOutcome.Running && isActiveAndEnabled)
+            ResultsAvailable = true;
+            playerQueue.SetActiveSlot(-1);
+            if (Outcome != BattleOutcome.Running)
             {
-                PrepareEnemyPlan();
-                Publish(BattleActionKind.TurnStarted);
+                playerQueue.CompleteExecution(executedSlots);
+                BattleFinished?.Invoke(Outcome);
             }
-            else if (Outcome != BattleOutcome.Running) BattleFinished?.Invoke(Outcome);
+            PhaseChanged?.Invoke();
+        }
+        public bool TryAdvanceTurn()
+        {
+            if (!isActiveAndEnabled || !AwaitingNextTurn) return false;
+            ResultsAvailable = false;
+            playerQueue.CompleteExecution(executedSlots);
+            if (PrepareEnemyPlan()) Publish(BattleActionKind.TurnStarted);
+            PhaseChanged?.Invoke();
+            return true;
         }
         private static void AddAttacks(List<CombatEffectResolver.AttackRequest> requests, string actor, CardDefinition card, bool mirror)
         {

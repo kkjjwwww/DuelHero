@@ -17,8 +17,20 @@ namespace DuelHero.Cards
         private Transform[] targets;
         private Vector3[] baseScales;
         private Tween[] scaleTweens;
+        private bool selected;
+        private bool hovered;
 
         private void Awake()
+        {
+            InitializeTargets();
+        }
+        public void ConfigureTargets(params Transform[] values)
+        {
+            ResetScale();
+            scaleTargets = values ?? new Transform[0];
+            InitializeTargets();
+        }
+        private void InitializeTargets()
         {
             button = GetComponent<Button>();
             var uniqueTargets = new System.Collections.Generic.List<Transform>();
@@ -32,19 +44,34 @@ namespace DuelHero.Cards
         }
         public void OnPointerEnter(PointerEventData eventData)
         {
+            hovered = true;
             if (CanAnimate()) AnimateTo(Mathf.Max(1f, hoverScale));
         }
         public void OnPointerExit(PointerEventData eventData)
         {
-            if (CanAnimate()) AnimateTo(1f);
+            hovered = false;
+            if (selected && isActiveAndEnabled) AnimateTo(Mathf.Max(1f, hoverScale));
+            else if (CanAnimate()) AnimateTo(1f);
             else ResetScale();
+        }
+        public void SetSelected(bool value)
+        {
+            if (selected == value) return;
+            selected = value;
+            if (targets == null || !isActiveAndEnabled) return;
+            AnimateTo(selected || (hovered && CanAnimate()) ? Mathf.Max(1f, hoverScale) : 1f);
         }
         private bool CanAnimate() => isActiveAndEnabled &&
             (button == null || (button.IsActive() && button.IsInteractable()));
         // The direction UI calls this when it changes button availability.
         public void RefreshInteractability()
         {
-            if (button != null && (!button.IsActive() || !button.IsInteractable())) ResetScale();
+            if (button != null && (!button.IsActive() || !button.IsInteractable()))
+            {
+                hovered = false;
+                if (selected && isActiveAndEnabled) AnimateTo(Mathf.Max(1f, hoverScale));
+                else ResetScale();
+            }
         }
         private void AnimateTo(float multiplier)
         {
@@ -74,6 +101,10 @@ namespace DuelHero.Cards
             for (int i = 0; i < targets.Length; i++)
                 if (targets[i] != null) targets[i].localScale = baseScales[i];
         }
-        private void OnDisable() => ResetScale();
+        private void OnDisable()
+        {
+            selected = hovered = false;
+            ResetScale();
+        }
     }
 }

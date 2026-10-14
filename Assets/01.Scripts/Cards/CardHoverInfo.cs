@@ -4,7 +4,7 @@ using UnityEngine.EventSystems;
 
 namespace DuelHero.Cards
 {
-    // Handle only hover; ScrollRect remains the scroll and drag event handler.
+    // Shared hover callbacks for player and enemy card views.
     public sealed class CardHoverInfo : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
         public Action ShowInfo { get; set; }

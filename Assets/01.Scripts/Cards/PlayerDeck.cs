@@ -13,6 +13,8 @@ namespace DuelHero.Cards
         public CardDatabase Database => database;
         public IReadOnlyList<CardInstance> Cards => readOnlyCards ??= cards.AsReadOnly();
         public event Action Changed;
+        public event Action CardsChanged;
+        public event Action StateChanged;
 
         private void Awake() => Initialize();
 
@@ -23,7 +25,7 @@ namespace DuelHero.Cards
             foreach (var definition in database.StarterCards)
                 cards.Add(new CardInstance(definition));
             initialized = true;
-            Changed?.Invoke();
+            NotifyCardsChanged();
         }
 
         public CardInstance AddCard(string cardId)
@@ -34,18 +36,28 @@ namespace DuelHero.Cards
             if (definition == null) throw new ArgumentException("존재하지 않는 카드 ID: " + cardId, nameof(cardId));
             var instance = new CardInstance(definition);
             cards.Add(instance);
-            Changed?.Invoke();
+            NotifyCardsChanged();
             return instance;
         }
 
         public bool RemoveCard(CardInstance instance)
         {
             if (instance == null || instance.ReservedSlot >= 0 || !cards.Remove(instance)) return false;
-            Changed?.Invoke();
+            NotifyCardsChanged();
             return true;
         }
 
         // Reservation/round systems can notify the UI after changing owned instances.
-        public void NotifyStateChanged() => Changed?.Invoke();
+        public void NotifyStateChanged()
+        {
+            StateChanged?.Invoke();
+            Changed?.Invoke();
+        }
+
+        private void NotifyCardsChanged()
+        {
+            CardsChanged?.Invoke();
+            Changed?.Invoke();
+        }
     }
 }

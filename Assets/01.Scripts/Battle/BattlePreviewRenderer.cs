@@ -19,7 +19,7 @@ namespace DuelHero.Battle
         private readonly List<SpriteRenderer> reservedCells = new();
         private readonly List<SpriteRenderer> focusedCells = new();
         private readonly List<SpriteRenderer> pathDots = new();
-        private readonly List<SpriteRenderer> ghosts = new();
+        private SpriteRenderer destinationGhost;
         private Tween pulse;
         private Sprite whiteSprite;
         private Texture2D whiteTexture;
@@ -36,16 +36,24 @@ namespace DuelHero.Battle
             if (whiteSprite == null || player == null || playerSprite == null) { Clear(); return; }
             Clear();
             var cells = new HashSet<Vector2Int>();
+            bool hasMovement = false;
+            Vector2Int? finalDestination = null;
             foreach (var card in reserved.Where(c => c.CanExecute))
             {
                 foreach (var cell in card.AttackCells) cells.Add(cell);
-                DrawMovement(card, false);
+                hasMovement |= DrawMovement(card, false);
+                finalDestination = card.EndPosition;
             }
             int index = 0;
             foreach (var cell in cells.OrderBy(c => c.y).ThenBy(c => c.x))
                 DrawCell(Get(reservedCells, index++, "ReservedAttack"), cell, reservedAttackColor, .012f);
+            if (focus != null && focus.CanExecute && focus.Slot >= reserved.Count)
+            {
+                hasMovement |= DrawMovement(focus, true);
+                finalDestination = focus.EndPosition;
+            }
+            if (hasMovement && finalDestination.HasValue) DrawDestination(finalDestination.Value);
             if (focus == null || !focus.CanExecute) return;
-            if (focus.Slot >= reserved.Count) DrawMovement(focus, true);
             index = 0;
             foreach (var cell in focus.AttackCells)
                 DrawCell(Get(focusedCells, index++, "FocusedAttack"), cell, focusedAttackColor, .018f);
@@ -61,10 +69,10 @@ namespace DuelHero.Battle
                 }, focusedAttackColor.a * .2f, pulseHalfPeriod).SetLoops(-1, LoopType.Yoyo).SetUpdate(true);
             }
         }
-        private void DrawMovement(CardPreviewResult card, bool focused)
+        private bool DrawMovement(CardPreviewResult card, bool focused)
         {
             var path = card.MovementPath;
-            if (path.Count < 2) return;
+            if (path.Count < 2) return false;
             float cellSize = player.CellSize;
             for (int step = 1; step < path.Count; step++)
             {
@@ -79,10 +87,21 @@ namespace DuelHero.Battle
                     sprite.color = focused ? Color.white : pathColor;
                 }
             }
-            var ghost = Get(ghosts, ActiveCount(ghosts), "DestinationGhost");
+            return true;
+        }
+        private void DrawDestination(Vector2Int destination)
+        {
+            if (destinationGhost == null)
+            {
+                var go = new GameObject("DestinationGhost");
+                go.transform.SetParent(transform, false);
+                destinationGhost = go.AddComponent<SpriteRenderer>();
+            }
+            var ghost = destinationGhost;
+            ghost.gameObject.SetActive(true);
             ghost.sprite = playerSprite.sprite;
             ghost.transform.rotation = playerSprite.transform.rotation;
-            ghost.transform.position = World(card.EndPosition, 0) + (playerSprite.transform.position - player.transform.position);
+            ghost.transform.position = World(destination, 0) + (playerSprite.transform.position - player.transform.position);
             ghost.transform.localScale = playerSprite.transform.lossyScale;
             ghost.flipX = playerSprite.flipX;
             ghost.sortingLayerID = playerSprite.sortingLayerID;
@@ -114,8 +133,9 @@ namespace DuelHero.Battle
         public void Clear()
         {
             pulse?.Kill(); pulse = null;
-            foreach (var pool in new[] { reservedCells, focusedCells, pathDots, ghosts })
+            foreach (var pool in new[] { reservedCells, focusedCells, pathDots })
                 foreach (var sprite in pool) if (sprite != null) sprite.gameObject.SetActive(false);
+            if (destinationGhost != null) destinationGhost.gameObject.SetActive(false);
         }
         private void OnDisable() => Clear();
         private void OnDestroy()

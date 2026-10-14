@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using DuelHero.Battle;
+using DG.Tweening;
 
 namespace DuelHero.Cards
 {
@@ -14,20 +15,41 @@ namespace DuelHero.Cards
         [SerializeField] private PlayerDeck playerDeck;
         [SerializeField] private CardReservationQueue reservationQueue;
         [SerializeField] private RectTransform content;
-        [SerializeField] private Text detailLabel;
         [SerializeField] private BattlePreviewPresenter battlePreview;
         [SerializeField] private CardView cardPrefab;
         [SerializeField] private float minimumCardWidth = 132f;
         [SerializeField] private float cardHeight = 184.38f;
-        [Header("Effect Value Colors")]
-        [SerializeField] private Color damageColor = new Color(1f, 0.45f, 0.45f);
-        [SerializeField] private Color guardColor = new Color(0.45f, 0.7f, 1f);
-        [SerializeField] private Color energyRestoreColor = new Color(0.45f, 0.9f, 0.6f);
-        [SerializeField] private Color moveColor = new Color(1f, 0.85f, 0.4f);
+        [Header("Category Animation")]
+        [SerializeField, Min(0.05f)] private float enterDuration = 0.32f;
+        [SerializeField, Min(0.05f)] private float exitDuration = 0.22f;
+        [SerializeField, Min(0f)] private float exitLift = 24f;
+        [SerializeField, Range(0.5f, 1f)] private float exitScale = 0.88f;
+        [SerializeField, Range(0f, 45f)] private float exitTilt = 20f;
+
+        private sealed class CachedCard
+        {
+            public CardInstance Instance;
+            public CardView View;
+        }
+
         private readonly List<CardInstance> deck = new();
-        private readonly List<(CardInstance card, CardView view)> views = new();
+        private readonly Dictionary<CardInstance, CachedCard> cachedCards = new();
+        private readonly Stack<CachedCard> pool = new();
+        private readonly List<CachedCard> visibleCards = new();
+        private readonly List<CardView> visibleViews = new();
+        private readonly HashSet<CardInstance> ownedCards = new();
+        private readonly List<CardInstance> removedCards = new();
+        private readonly List<CardView> outgoingViews = new();
+        private Sequence categoryTween;
+        private bool animateCategoryChange;
+        public bool IsTransitioning { get; private set; }
         private Font font;
         private CanvasGroup panelVisibility;
+        private CardFanLayout fanLayout;
+        private CachedCard hoveredCard;
+        private KeywordTooltip keywordTooltip;
+        private bool cacheInitialized;
+        private bool synchronizing;
         public IReadOnlyList<CardInstance> Deck => deck;
         public string SelectedCategory { get; private set; }
         public event Action ViewChanged;
@@ -36,17 +58,27 @@ namespace DuelHero.Cards
         {
             panelVisibility = GetComponent<CanvasGroup>();
             RefreshVisibility();
-            if (playerDeck != null) playerDeck.Changed += Rebuild;
-            if (reservationQueue != null) reservationQueue.Changed += RefreshStates;
+            if (playerDeck != null)
+            {
+                playerDeck.CardsChanged += SynchronizeDeck;
+                playerDeck.StateChanged += RefreshStates;
+            }
 #if UNITY_EDITOR
             if (!Application.isPlaying) { UnityEditor.EditorApplication.delayCall += EditorRebuild; return; }
 #endif
-            Rebuild();
+            SynchronizeDeck();
         }
+
         private void OnDisable()
         {
-            if (playerDeck != null) playerDeck.Changed -= Rebuild;
-            if (reservationQueue != null) reservationQueue.Changed -= RefreshStates;
+            CancelCategoryTransition();
+            ClearHover();
+            if (panelVisibility != null) panelVisibility.blocksRaycasts = panelVisibility.interactable = false;
+            if (playerDeck != null)
+            {
+                playerDeck.CardsChanged -= SynchronizeDeck;
+                playerDeck.StateChanged -= RefreshStates;
+            }
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.delayCall -= EditorRebuild;
 #endif
@@ -60,91 +92,296 @@ namespace DuelHero.Cards
         }
 #endif
         public int CountCategory(string category) => playerDeck == null ? 0 : playerDeck.Cards.Count(c => c.Definition.actionType == category);
+
         public void ToggleCategory(string category)
         {
-            if (!new[] { "공격", "이동", "방어", "회복", "특수" }.Contains(category)) return;
+            if (category != "공격" && category != "이동" && category != "방어" && category != "회복" && category != "특수") return;
             SelectedCategory = SelectedCategory == category ? null : category;
-            RefreshVisibility();
-            Rebuild();
-            var scroll = content == null ? null : content.GetComponentInParent<ScrollRect>();
-            if (scroll != null) scroll.horizontalNormalizedPosition = 0;
+            animateCategoryChange = Application.isPlaying && isActiveAndEnabled;
+            SynchronizeDeck();
         }
+
         private void RefreshVisibility()
         {
             if (panelVisibility == null) panelVisibility = GetComponent<CanvasGroup>();
             if (panelVisibility == null) return;
-            bool visible = SelectedCategory != null;
+            bool visible = SelectedCategory != null || IsTransitioning;
             panelVisibility.alpha = visible ? 1 : 0;
-            panelVisibility.interactable = visible;
-            panelVisibility.blocksRaycasts = visible;
+            panelVisibility.interactable = visible && !IsTransitioning;
+            panelVisibility.blocksRaycasts = visible && !IsTransitioning;
+            if (fanLayout != null) fanLayout.SetHoverEnabled(visible && !IsTransitioning && isActiveAndEnabled);
         }
-        [ContextMenu("Rebuild deck preview")]
+
+        // Explicit content refresh for Inspector edits and sheet imports. State changes never call this.
+        [ContextMenu("Refresh deck preview content")]
         public void Rebuild()
         {
             if (playerDeck == null || content == null) return;
-            Vector2 oldPosition = content.anchoredPosition;
-            playerDeck.Changed -= Rebuild;
-            playerDeck.Initialize();
-            if (isActiveAndEnabled) playerDeck.Changed += Rebuild;
-            deck.Clear(); deck.AddRange(playerDeck.Cards); views.Clear();
+            CancelCategoryTransition();
+            ClearHover();
+            foreach (var entry in cachedCards.Values)
+            {
+                if (entry.View == null) continue;
+                entry.View.SetFont(GetFont());
+                entry.View.Bind(entry.Instance.Definition, playerDeck.Database.keywords);
+                ConfigureCardSize(entry.View);
+            }
+            SynchronizeDeck();
+        }
+
+        private void SynchronizeDeck()
+        {
+            if (synchronizing || playerDeck == null || content == null || cardPrefab == null) return;
+            synchronizing = true;
+            try
+            {
+                ConfigureFan();
+                InitializeCache();
+                bool animate = animateCategoryChange;
+                animateCategoryChange = false;
+                CancelCategoryTransition();
+                playerDeck.Initialize();
+                deck.Clear(); deck.AddRange(playerDeck.Cards);
+                ownedCards.Clear();
+                foreach (var instance in deck) ownedCards.Add(instance);
+                removedCards.Clear();
+                foreach (var instance in cachedCards.Keys)
+                    if (!ownedCards.Contains(instance)) removedCards.Add(instance);
+
+                ClearHover();
+                fanLayout.SetCards(Array.Empty<CardView>());
+                foreach (var instance in removedCards)
+                {
+                    var entry = cachedCards[instance];
+                    entry.View.gameObject.SetActive(false);
+                    entry.Instance = null;
+                    cachedCards.Remove(instance);
+                    pool.Push(entry);
+                }
+                foreach (var entry in visibleCards)
+                    if (entry.View != null)
+                    {
+                        if (animate && entry.Instance != null) outgoingViews.Add(entry.View);
+                        else entry.View.gameObject.SetActive(false);
+                    }
+                visibleCards.Clear(); visibleViews.Clear();
+
+                foreach (var instance in deck.Where(c => c.Definition.actionType == SelectedCategory)
+                    .OrderByDescending(c => c.Definition.isBasicAction))
+                {
+                    if (!cachedCards.TryGetValue(instance, out var entry))
+                    {
+                        entry = AcquireCard(instance);
+                        cachedCards.Add(instance, entry);
+                    }
+                    entry.View.gameObject.SetActive(true);
+                    visibleCards.Add(entry);
+                    visibleViews.Add(entry.View);
+                }
+                RefreshStates();
+                fanLayout.SetCards(visibleViews);
+                if (animate && (visibleViews.Count > 0 || outgoingViews.Count > 0)) StartCategoryTransition();
+                RefreshVisibility();
+                ViewChanged?.Invoke();
+            }
+            finally { synchronizing = false; }
+        }
+
+        private void InitializeCache()
+        {
+            if (cacheInitialized) return;
+            // Recover from an Editor domain reload: previous preview objects have no runtime owners.
             foreach (Transform child in content.Cast<Transform>().ToArray())
             {
                 child.gameObject.SetActive(false);
                 if (Application.isPlaying) Destroy(child.gameObject); else DestroyImmediate(child.gameObject);
             }
-            if (font == null) font = Font.CreateDynamicFontFromOSFont(new[] { "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans CJK KR", "Arial" }, 16);
-            RefreshVisibility();
-            foreach (var instance in deck.Where(c => SelectedCategory != null && c.Definition.actionType == SelectedCategory)
-                .OrderByDescending(c => c.Definition.isBasicAction).ThenBy(c => c.Definition.actionType)) CreateCard(content, instance);
-            RefreshStates(); Canvas.ForceUpdateCanvases(); content.anchoredPosition = oldPosition;
-            if (detailLabel != null) { detailLabel.font = font; detailLabel.text = "카드에 마우스를 올리면 설명과 상태를 확인할 수 있습니다."; }
-            ViewChanged?.Invoke();
+            cacheInitialized = true;
         }
-        private string UnavailableReason(CardInstance instance)
-        {
-            if (reservationQueue == null) return "예약 관리자 미연결";
-            if (reservationQueue.IsExecuting) return "행동 실행 중";
-            if (instance.ReservedSlot >= 0) return "예약 슬롯 " + (instance.ReservedSlot + 1);
-            int cooldown = instance.RemainingCooldown(reservationQueue.CurrentRound);
-            if (cooldown > 0) return "재사용 대기 " + cooldown + "턴";
-            if (reservationQueue.Reservations.Count >= 3) return "행동 슬롯 가득 참";
-            return null;
-        }
+
         private void RefreshStates()
         {
-            foreach (var view in views)
+            foreach (var entry in visibleCards)
             {
-                string reason = UnavailableReason(view.card);
-                int cooldown = reservationQueue == null ? 0 : view.card.RemainingCooldown(reservationQueue.CurrentRound);
-                view.view.SetState(reason ?? "사용 가능 · 미예약", cooldown, reason == null);
+                int cooldown = reservationQueue == null ? 0 : entry.Instance.RemainingCooldown(reservationQueue.CurrentRound);
+                bool interactable = reservationQueue != null && !reservationQueue.IsExecuting &&
+                    reservationQueue.Reservations.Count < 3 && entry.Instance.ReservedSlot < 0 && cooldown == 0;
+                entry.View.SetState(string.Empty, cooldown, interactable);
+                entry.View.SetReservationSlot(entry.Instance.ReservedSlot);
             }
         }
-        private void CreateCard(Transform parent, CardInstance instance)
+
+        private CachedCard AcquireCard(CardInstance instance)
         {
-            if (cardPrefab == null) return;
-            var card = instance.Definition;
-            CardView view = Instantiate(cardPrefab, parent, false);
-            view.name = "Card_" + card.id;
-            LayoutElement layout = view.GetComponent<LayoutElement>();
-            layout.preferredWidth = minimumCardWidth;
-            layout.preferredHeight = cardHeight;
-            view.SetFont(font);
-            view.Bind(card, playerDeck.Database.keywords);
-            views.Add((instance, view));
-            view.SetClickAction(() => { if (Application.isPlaying && reservationQueue != null) reservationQueue.TryReserve(instance); });
-            var hover = view.gameObject.GetComponent<CardHoverInfo>() ?? view.gameObject.AddComponent<CardHoverInfo>();
-            Action showCardInfo = () =>
+            CachedCard entry;
+            if (pool.Count > 0) entry = pool.Pop();
+            else
             {
-                if (Application.isPlaying) battlePreview?.FocusCard(instance);
-                if (detailLabel == null) return;
-                string reason = UnavailableReason(instance);
-                detailLabel.text = card.name + " — " + card.ResolvedDescription() + (reason == null ? "" : " · " + reason);
-            };
-            hover.ShowInfo = showCardInfo;
-            hover.HideInfo = () => { if (Application.isPlaying) battlePreview?.ClearCard(instance); };
-            view.SetKeywordHoverActions(
-                keyword => { if (detailLabel != null) detailLabel.text = $"[{keyword.name}] — {keyword.description}"; },
-                showCardInfo);
+                entry = new CachedCard { View = Instantiate(cardPrefab, content, false) };
+                ConfigureCardSize(entry.View);
+                entry.View.SetFont(GetFont());
+                ConfigureCallbacks(entry);
+            }
+            entry.Instance = instance;
+            entry.View.name = "Card_" + instance.Definition.id;
+            entry.View.SetFrontVisible(true);
+            entry.View.Bind(instance.Definition, playerDeck.Database.keywords);
+            return entry;
+        }
+
+        private void ConfigureCallbacks(CachedCard entry)
+        {
+            CardView view = entry.View;
+            view.SetClickAction(() =>
+            {
+                if (Application.isPlaying && !IsTransitioning && entry.Instance != null && reservationQueue != null)
+                    reservationQueue.TryReserve(entry.Instance);
+            });
+            var hover = view.GetComponent<CardHoverInfo>() ?? view.gameObject.AddComponent<CardHoverInfo>();
+            // Fan selection uses stable layout geometry, not enter/exit events from animated cards.
+            hover.ShowInfo = null;
+            hover.HideInfo = null;
+            view.SetKeywordHoverActions((keyword, position) =>
+            {
+                if (IsTransitioning || fanLayout.Focused != view) return;
+                if (keywordTooltip == null) keywordTooltip = KeywordTooltip.Create(GetComponentInParent<Canvas>().rootCanvas, GetFont());
+                keywordTooltip.Show(keyword, position);
+            }, () => { if (keywordTooltip != null) keywordTooltip.Hide(); },
+            position => { if (keywordTooltip != null) keywordTooltip.Move(position); });
+        }
+        private void HandleFanFocusChanged(CardView view)
+        {
+            if (keywordTooltip != null) keywordTooltip.Hide();
+            if (Application.isPlaying && hoveredCard?.Instance != null) battlePreview?.ClearCard(hoveredCard.Instance);
+            hoveredCard = null;
+            if (view == null) return;
+            foreach (var entry in visibleCards)
+                if (entry.View == view) { hoveredCard = entry; break; }
+            if (Application.isPlaying && hoveredCard?.Instance != null) battlePreview?.FocusCard(hoveredCard.Instance);
+        }
+
+        private static CanvasGroup TransitionGroup(CardView view)
+        {
+            var group = view.GetComponent<CanvasGroup>();
+            if (group == null) group = view.gameObject.AddComponent<CanvasGroup>();
+            return group;
+        }
+
+        private static void ResetTransitionAppearance(CardView view)
+        {
+            if (view == null) return;
+            view.VisualRoot.DOKill();
+            view.VisualRoot.anchoredPosition = Vector2.zero;
+            view.VisualRoot.localScale = Vector3.one;
+            view.VisualRoot.localRotation = Quaternion.identity;
+            var group = view.GetComponent<CanvasGroup>();
+            if (group != null) group.alpha = 1f;
+        }
+
+        private void StartCategoryTransition()
+        {
+            IsTransitioning = true;
+            categoryTween = DOTween.Sequence().SetUpdate(true).SetTarget(this);
+            foreach (var view in outgoingViews)
+            {
+                var group = TransitionGroup(view);
+                var visual = view.VisualRoot;
+                // Incoming cards are ordered above this group by CardFanLayout.
+                categoryTween.Insert(0f, group.DOFade(0f, exitDuration).SetEase(Ease.InQuad));
+                categoryTween.Insert(0f, visual.DOAnchorPosY(exitLift, exitDuration).SetEase(Ease.InQuad));
+                categoryTween.Insert(0f, visual.DOScale(exitScale, exitDuration).SetEase(Ease.InQuad));
+                categoryTween.Insert(0f, visual.DOLocalRotate(new Vector3(exitTilt, 0f, 0f), exitDuration).SetEase(Ease.InQuad));
+            }
+            foreach (var view in visibleViews)
+            {
+                ResetTransitionAppearance(view);
+                var group = TransitionGroup(view);
+                var visual = view.VisualRoot;
+                visual.anchoredPosition = Vector2.down * (cardHeight * 1.5f + 32f);
+                group.alpha = 0f;
+                categoryTween.Insert(0f, visual.DOAnchorPos(Vector2.zero, enterDuration).SetEase(Ease.OutCubic));
+                categoryTween.Insert(0f, group.DOFade(1f, enterDuration * 0.65f).SetEase(Ease.OutQuad));
+            }
+            categoryTween.OnComplete(() =>
+            {
+                foreach (var view in outgoingViews)
+                {
+                    if (view == null) continue;
+                    view.gameObject.SetActive(false);
+                    ResetTransitionAppearance(view);
+                }
+                outgoingViews.Clear();
+                foreach (var view in visibleViews) ResetTransitionAppearance(view);
+                IsTransitioning = false;
+                categoryTween = null;
+                RefreshVisibility();
+            });
+        }
+
+        private void CancelCategoryTransition()
+        {
+            if (!IsTransitioning && categoryTween == null) return;
+            categoryTween?.Kill();
+            categoryTween = null;
+            foreach (var view in outgoingViews)
+            {
+                if (view == null) continue;
+                view.gameObject.SetActive(false);
+                ResetTransitionAppearance(view);
+            }
+            outgoingViews.Clear();
+            foreach (var view in visibleViews) ResetTransitionAppearance(view);
+            IsTransitioning = false;
+        }
+
+        private Font GetFont()
+        {
+            if (font == null) font = Font.CreateDynamicFontFromOSFont(new[] { "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans CJK KR", "Arial" }, 16);
+            return font;
+        }
+
+        private void ConfigureCardSize(CardView view)
+        {
+            var layout = view.GetComponent<LayoutElement>();
+            if (layout != null) { layout.preferredWidth = minimumCardWidth; layout.preferredHeight = cardHeight; }
+            ((RectTransform)view.transform).sizeDelta = new Vector2(minimumCardWidth, cardHeight);
+        }
+
+        private void ClearHover()
+        {
+            if (fanLayout != null)
+            {
+                fanLayout.ResetFocus();
+            }
+            if (keywordTooltip != null) keywordTooltip.Hide();
+        }
+
+        private void ConfigureFan()
+        {
+            var background = GetComponent<Image>();
+            if (background != null) background.enabled = false;
+            var scroll = GetComponent<ScrollRect>();
+            if (scroll != null) scroll.enabled = false;
+            var mask = content.parent.GetComponent<RectMask2D>();
+            if (mask != null) mask.enabled = false;
+            var group = content.GetComponent<HorizontalLayoutGroup>();
+            if (group != null) group.enabled = false;
+            var fitter = content.GetComponent<ContentSizeFitter>();
+            if (fitter != null) fitter.enabled = false;
+            content.anchorMin = Vector2.zero; content.anchorMax = Vector2.one;
+            content.offsetMin = content.offsetMax = Vector2.zero;
+            content.pivot = new Vector2(0.5f, 0f);
+            fanLayout = content.GetComponent<CardFanLayout>() ?? content.gameObject.AddComponent<CardFanLayout>();
+            fanLayout.FocusChanged -= HandleFanFocusChanged;
+            fanLayout.FocusChanged += HandleFanFocusChanged;
+        }
+
+        private void OnDestroy()
+        {
+            if (fanLayout != null) fanLayout.FocusChanged -= HandleFanFocusChanged;
+            CancelCategoryTransition();
+            if (keywordTooltip == null) return;
+            if (Application.isPlaying) Destroy(keywordTooltip.gameObject); else DestroyImmediate(keywordTooltip.gameObject);
         }
     }
 }
