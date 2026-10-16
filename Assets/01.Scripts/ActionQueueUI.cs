@@ -70,6 +70,7 @@ public class ActionQueueUI : MonoBehaviour
     }
     public void RefreshCards()
     {
+        if (actionExecutor != null && actionExecutor.IsInputLocked && keywordTooltip != null) keywordTooltip.Hide();
         bool energyValid = reservationQueue != null && reservationQueue.HasEnoughEnergy(out _);
         bool battleEnded = actionExecutor != null && actionExecutor.Outcome != DuelHero.Battle.BattleOutcome.Running;
         bool nextTurn = actionExecutor != null && actionExecutor.AwaitingNextTurn;
@@ -162,6 +163,7 @@ public class ActionQueueUI : MonoBehaviour
             view.SetClickAction(() => { if (!reservationQueue.IsExecuting) reservationQueue.CancelAt(slot); });
             view.SetKeywordHoverActions((keyword, position) =>
             {
+                if (actionExecutor != null && actionExecutor.IsInputLocked) return;
                 if (keywordTooltip == null) keywordTooltip = KeywordTooltip.Create(GetComponentInParent<Canvas>().rootCanvas, cardFont);
                 keywordTooltip.Show(keyword, position);
             }, () => { if (keywordTooltip != null) keywordTooltip.Hide(); },

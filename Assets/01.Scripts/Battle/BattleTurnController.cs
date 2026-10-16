@@ -15,6 +15,9 @@ namespace DuelHero.Battle
         [SerializeField] private MonoBehaviour enemyPlanSource;
         [SerializeField] private CardEffectExecutor effects;
         [SerializeField] private CombatEffectResolver combatEffects;
+        [SerializeField] private BattlePresentation presentation;
+        public bool IsInputLocked => (playerQueue != null && playerQueue.IsExecuting) ||
+            (presentation != null && presentation.IsActive);
         [SerializeField, Min(0.01f)] private float slotDelay = 0.4f;
         [SerializeField, Min(0f)] private float enemyCardRevealDuration = 0.4f;
         [SerializeField, Min(0f)] private float postRevealDelay = 0.5f;
@@ -40,6 +43,7 @@ namespace DuelHero.Battle
         private IEnemyActionPlan enemyPlan;
         private int executedSlots;
         private int executionRound;
+        private bool restoring;
         private void Start()
         {
             if (playerQueue == null) return;
@@ -92,6 +96,7 @@ namespace DuelHero.Battle
         }
         private IEnumerator Execute(CardDefinition[] playerCards, CardDefinition[] enemyCards)
         {
+            if (presentation != null) yield return presentation.Animate(true);
             combatEffects.TryGetUnit(playerId, out _, out var playerStats);
             combatEffects.TryGetUnit(enemyId, out _, out var enemyStats);
             int round = executionRound;
@@ -132,7 +137,7 @@ namespace DuelHero.Battle
         }
         private void FinishExecution()
         {
-            if (playerQueue == null || !playerQueue.IsExecuting || ResultsAvailable) return;
+            if (playerQueue == null || !playerQueue.IsExecuting || ResultsAvailable || restoring) return;
             enemyPlan?.CompletePlan(executionRound, executedSlots);
             Publish(BattleActionKind.TurnEnded);
             if (Outcome != BattleOutcome.Running) Publish(BattleActionKind.BattleEnded);
@@ -148,11 +153,19 @@ namespace DuelHero.Battle
         public bool TryAdvanceTurn()
         {
             if (!isActiveAndEnabled || !AwaitingNextTurn) return false;
+            restoring = true;
             ResultsAvailable = false;
+            PhaseChanged?.Invoke();
+            StartCoroutine(AdvanceTurn());
+            return true;
+        }
+        private IEnumerator AdvanceTurn()
+        {
+            if (presentation != null) yield return presentation.Animate(false);
+            restoring = false;
             playerQueue.CompleteExecution(executedSlots);
             if (PrepareEnemyPlan()) Publish(BattleActionKind.TurnStarted);
             PhaseChanged?.Invoke();
-            return true;
         }
         private static void AddAttacks(List<CombatEffectResolver.AttackRequest> requests, string actor, CardDefinition card)
         {

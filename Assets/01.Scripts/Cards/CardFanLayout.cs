@@ -25,6 +25,9 @@ namespace DuelHero.Cards
         private CardView focused;
         private Vector2 lastSize;
         public CardView Focused => focused;
+        public float GetHideDistance(float hiddenRatio) => cards.Count == 0 ? 0f :
+            ((RectTransform)cards[cards.Count / 2].transform).rect.height *
+            Mathf.Max(0f, hiddenRatio - 0.45f * hiddenDescriptionRatio);
         public event System.Action<CardView> FocusChanged;
 
         public void SetCards(IEnumerable<CardView> views)

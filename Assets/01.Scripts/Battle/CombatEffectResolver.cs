@@ -94,12 +94,15 @@ namespace DuelHero.Battle
                     throw new ArgumentException("지원하지 않는 공격 효과입니다.");
                 var actor = units.Single(u => u.id == attack.ActorId);
                 if (actor.stats.Health <= 0 || !actor.stats.gameObject.activeInHierarchy) continue;
+
                 var range = AttackRangeCalculator.Calculate(actor.movement.GridPosition, effect.rangeOffsets);
+
                 var hit = new HashSet<UnitStats>();
                 foreach (var target in units)
                 {
                     if (target.side == actor.side || target.stats == actor.stats || !target.stats.gameObject.activeInHierarchy ||
                         target.stats.Health <= 0 || !range.Contains(target.movement.GridPosition) || !hit.Add(target.stats)) continue;
+
                     int amount = DamageAfterGuard(effect.value, target.stats.GuardReduction);
                     batch.Hits.Add(new PendingDamage { Target = target.stats, Amount = amount, Reduced = effect.value - amount,
                         ActorId = attack.ActorId, CardId = attack.CardId, TargetId = target.id, Round = round,

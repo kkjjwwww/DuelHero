@@ -206,8 +206,7 @@ namespace DuelHero.Cards
 
         private void RefreshStates()
         {
-            bool locked = reservationQueue != null && reservationQueue.IsExecuting &&
-                turnController != null && !turnController.ResultsAvailable;
+            bool locked = turnController != null && turnController.IsInputLocked;
             if (IsInputLocked != locked)
             {
                 IsInputLocked = locked;
