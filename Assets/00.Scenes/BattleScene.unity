@@ -8730,6 +8730,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Cards.DeckListUI
   playerDeck: {fileID: 1243114846}
   reservationQueue: {fileID: 1243114847}
+  turnController: {fileID: 910000001}
   content: {fileID: 2091511455}
   battlePreview: {fileID: 436457253}
   cardPrefab: {fileID: 6403934370426295413, guid: 17b8247d91cf50047946601446045288, type: 3}

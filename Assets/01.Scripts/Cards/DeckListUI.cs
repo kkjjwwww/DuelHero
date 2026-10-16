@@ -14,6 +14,7 @@ namespace DuelHero.Cards
     {
         [SerializeField] private PlayerDeck playerDeck;
         [SerializeField] private CardReservationQueue reservationQueue;
+        [SerializeField] private BattleTurnController turnController;
         [SerializeField] private RectTransform content;
         [SerializeField] private BattlePreviewPresenter battlePreview;
         [SerializeField] private CardView cardPrefab;
@@ -43,6 +44,7 @@ namespace DuelHero.Cards
         private Sequence categoryTween;
         private bool animateCategoryChange;
         public bool IsTransitioning { get; private set; }
+        public bool IsInputLocked { get; private set; }
         private Font font;
         private CanvasGroup panelVisibility;
         private CardFanLayout fanLayout;
@@ -58,6 +60,7 @@ namespace DuelHero.Cards
         {
             panelVisibility = GetComponent<CanvasGroup>();
             RefreshVisibility();
+            if (turnController != null) turnController.PhaseChanged += RefreshStates;
             if (playerDeck != null)
             {
                 playerDeck.CardsChanged += SynchronizeDeck;
@@ -73,6 +76,7 @@ namespace DuelHero.Cards
         {
             CancelCategoryTransition();
             ClearHover();
+            if (turnController != null) turnController.PhaseChanged -= RefreshStates;
             if (panelVisibility != null) panelVisibility.blocksRaycasts = panelVisibility.interactable = false;
             if (playerDeck != null)
             {
@@ -95,6 +99,7 @@ namespace DuelHero.Cards
 
         public void ToggleCategory(string category)
         {
+            if (IsInputLocked) return;
             if (category != "공격" && category != "이동" && category != "방어" && category != "회복" && category != "특수") return;
             SelectedCategory = SelectedCategory == category ? null : category;
             animateCategoryChange = Application.isPlaying && isActiveAndEnabled;
@@ -107,9 +112,9 @@ namespace DuelHero.Cards
             if (panelVisibility == null) return;
             bool visible = SelectedCategory != null || IsTransitioning;
             panelVisibility.alpha = visible ? 1 : 0;
-            panelVisibility.interactable = visible && !IsTransitioning;
-            panelVisibility.blocksRaycasts = visible && !IsTransitioning;
-            if (fanLayout != null) fanLayout.SetHoverEnabled(visible && !IsTransitioning && isActiveAndEnabled);
+            bool interactive = visible && !IsTransitioning && !IsInputLocked;
+            panelVisibility.interactable = panelVisibility.blocksRaycasts = interactive;
+            if (fanLayout != null) fanLayout.SetHoverEnabled(interactive && isActiveAndEnabled);
         }
 
         // Explicit content refresh for Inspector edits and sheet imports. State changes never call this.
@@ -201,6 +206,15 @@ namespace DuelHero.Cards
 
         private void RefreshStates()
         {
+            bool locked = reservationQueue != null && reservationQueue.IsExecuting &&
+                turnController != null && !turnController.ResultsAvailable;
+            if (IsInputLocked != locked)
+            {
+                IsInputLocked = locked;
+                ClearHover();
+                RefreshVisibility();
+                ViewChanged?.Invoke();
+            }
             foreach (var entry in visibleCards)
             {
                 int cooldown = reservationQueue == null ? 0 : entry.Instance.RemainingCooldown(reservationQueue.CurrentRound);
@@ -234,16 +248,12 @@ namespace DuelHero.Cards
             CardView view = entry.View;
             view.SetClickAction(() =>
             {
-                if (Application.isPlaying && !IsTransitioning && entry.Instance != null && reservationQueue != null)
+                if (Application.isPlaying && !IsInputLocked && !IsTransitioning && entry.Instance != null && reservationQueue != null)
                     reservationQueue.TryReserve(entry.Instance);
             });
-            var hover = view.GetComponent<CardHoverInfo>() ?? view.gameObject.AddComponent<CardHoverInfo>();
-            // Fan selection uses stable layout geometry, not enter/exit events from animated cards.
-            hover.ShowInfo = null;
-            hover.HideInfo = null;
             view.SetKeywordHoverActions((keyword, position) =>
             {
-                if (IsTransitioning || fanLayout.Focused != view) return;
+                if (IsInputLocked || IsTransitioning || fanLayout.Focused != view) return;
                 if (keywordTooltip == null) keywordTooltip = KeywordTooltip.Create(GetComponentInParent<Canvas>().rootCanvas, GetFont());
                 keywordTooltip.Show(keyword, position);
             }, () => { if (keywordTooltip != null) keywordTooltip.Hide(); },

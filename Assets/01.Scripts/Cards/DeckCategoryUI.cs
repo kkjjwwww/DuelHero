@@ -35,7 +35,11 @@ namespace DuelHero.Cards
             if (deckList == null) return;
             for (int i = 0; i < buttons.Length && i < Categories.Length; i++)
             {
-                if (buttons[i] != null) buttons[i].targetGraphic.color = deckList.SelectedCategory == Categories[i] ? new Color(0.65f, 0.65f, 0.65f, 0.95f) : new Color(0.16f, 0.16f, 0.16f, 0.85f);
+                if (buttons[i] != null)
+                {
+                    buttons[i].interactable = !deckList.IsInputLocked;
+                    buttons[i].targetGraphic.color = deckList.SelectedCategory == Categories[i] ? new Color(0.65f, 0.65f, 0.65f, 0.95f) : new Color(0.16f, 0.16f, 0.16f, 0.85f);
+                }
                 if (i < labels.Length && labels[i] != null) labels[i].text = Categories[i] + "\n" + deckList.CountCategory(Categories[i]);
             }
             if (centerLabel != null) centerLabel.text = deckList.SelectedCategory == null ? "카테고리\n선택" : deckList.SelectedCategory + "\n" + deckList.CountCategory(deckList.SelectedCategory);

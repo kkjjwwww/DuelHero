@@ -115,8 +115,8 @@ namespace DuelHero.Battle
                 effects.ExecutePreparation(playerId, pc, round);
                 effects.ExecutePreparation(enemyId, ec, round);
                 var attacks = new List<CombatEffectResolver.AttackRequest>();
-                AddAttacks(attacks, playerId, pc, false);
-                AddAttacks(attacks, enemyId, ec, false);
+                AddAttacks(attacks, playerId, pc);
+                AddAttacks(attacks, enemyId, ec);
                 var damage = combatEffects.CalculateDamageBatch(attacks, round);
                 combatEffects.ApplyDamageBatch(damage);
                 // Once per shared slot, after BOTH attacks.
@@ -154,11 +154,11 @@ namespace DuelHero.Battle
             PhaseChanged?.Invoke();
             return true;
         }
-        private static void AddAttacks(List<CombatEffectResolver.AttackRequest> requests, string actor, CardDefinition card, bool mirror)
+        private static void AddAttacks(List<CombatEffectResolver.AttackRequest> requests, string actor, CardDefinition card)
         {
             if (card == null) return;
             foreach (var effect in card.effects.OrderBy(e => e.resolutionOrder))
-                if (effect.effectType == "damage") requests.Add(new CombatEffectResolver.AttackRequest(actor, card.id, effect, mirror));
+                if (effect.effectType == "damage") requests.Add(new CombatEffectResolver.AttackRequest(actor, card.id, effect));
         }
         public static BattleOutcome EvaluateOutcome(int playerHealth, int enemyHealth) => playerHealth <= 0
             ? BattleOutcome.Defeat

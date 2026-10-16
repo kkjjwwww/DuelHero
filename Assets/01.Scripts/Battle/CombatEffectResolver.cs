@@ -28,9 +28,8 @@ namespace DuelHero.Battle
         {
             public readonly string ActorId, CardId;
             public readonly CardEffectDefinition Effect;
-            public readonly bool MirrorX;
-            public AttackRequest(string actorId, string cardId, CardEffectDefinition effect, bool mirrorX = false)
-            { ActorId = actorId; CardId = cardId; Effect = effect; MirrorX = mirrorX; }
+            public AttackRequest(string actorId, string cardId, CardEffectDefinition effect)
+            { ActorId = actorId; CardId = cardId; Effect = effect; }
         }
         public sealed class DamageBatch
         {
@@ -95,7 +94,7 @@ namespace DuelHero.Battle
                     throw new ArgumentException("지원하지 않는 공격 효과입니다.");
                 var actor = units.Single(u => u.id == attack.ActorId);
                 if (actor.stats.Health <= 0 || !actor.stats.gameObject.activeInHierarchy) continue;
-                var range = AttackRangeCalculator.Calculate(actor.movement.GridPosition, effect.rangeOffsets, attack.MirrorX);
+                var range = AttackRangeCalculator.Calculate(actor.movement.GridPosition, effect.rangeOffsets);
                 var hit = new HashSet<UnitStats>();
                 foreach (var target in units)
                 {
