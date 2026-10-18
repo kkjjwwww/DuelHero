@@ -13,6 +13,7 @@ namespace DuelHero.Cards
         [SerializeField, Range(0f, 35f)] private float maximumAngle = 18f;
         [SerializeField, Min(1f)] private float hoverScale = 1.55f;
         [SerializeField] private float hoverLift = 70f;
+        [SerializeField, Min(0f)] private float hoverNeighborVisibleWidth = 32f;
         [SerializeField, Range(0f, 0.5f)] private float hiddenDescriptionRatio = 0.30f;
         [SerializeField, Min(0f)] private float edgeDrop = 32f;
         private readonly List<CardView> cards = new();
@@ -60,6 +61,16 @@ namespace DuelHero.Cards
             CardView candidate = null;
             // Keep the enlarged card until the pointer leaves its final visible shape.
             if (focused != null && ContainsAtPose(focused, local, true)) candidate = focused;
+            else if (focused != null)
+            {
+                int index = cards.IndexOf(focused);
+                var rect = (RectTransform)focused.transform;
+                Vector2 anchor = area.rect.min + Vector2.Scale(area.rect.size, rect.anchorMin);
+                GetPose(focused, true, out var pose, out _, out _);
+                int step = local.x >= anchor.x + pose.x ? 1 : -1;
+                for (int i = index + step; i >= 0 && i < cards.Count; i += step)
+                    if (ContainsAtPose(cards[i], local, false)) { candidate = cards[i]; break; }
+            }
             else
                 for (int i = cards.Count - 1; i >= 0; i--)
                     if (ContainsAtPose(cards[i], local, false)) { candidate = cards[i]; break; }
@@ -102,13 +113,17 @@ namespace DuelHero.Cards
             {
                 var card = cards[i];
                 if (card == null) continue;
-                var rect = (RectTransform)card.transform;
                 float t = cards.Count == 1 ? 0f : (2f * i / (cards.Count - 1) - 1f);
                 angles[card] = -t * angle;
                 // Keep the centre high and let both ends fall below the screen edge.
                 float hiddenHeight = height * 0.45f * hiddenDescriptionRatio;
                 positions[card] = new Vector2((i - (cards.Count - 1) * 0.5f) * spacing,
                     screen.yMin + height * 0.5f - hiddenHeight - edgeDrop * t * t);
+            }
+            foreach (var card in cards)
+            {
+                if (card == null) continue;
+                var rect = (RectTransform)card.transform;
                 rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0f);
                 rect.pivot = new Vector2(0.5f, 0.5f);
                 Apply(card, card == focused, true);
@@ -119,10 +134,9 @@ namespace DuelHero.Cards
         public void Focus(CardView card)
         {
             if (focused == card || !positions.ContainsKey(card)) return;
-            if (focused != null) Apply(focused, false, false);
             focused = card;
             RestoreOrder();
-            Apply(card, true, false);
+            foreach (var view in cards) if (view != null) Apply(view, view == focused, false);
             FocusChanged?.Invoke(focused);
         }
 
@@ -130,7 +144,7 @@ namespace DuelHero.Cards
         {
             if (focused != card) return;
             focused = null;
-            if (card != null && positions.ContainsKey(card)) Apply(card, false, false);
+            foreach (var view in cards) if (view != null) Apply(view, false, false);
             RestoreOrder();
             FocusChanged?.Invoke(null);
         }
@@ -167,7 +181,28 @@ namespace DuelHero.Cards
                 float halfHeight = rect.rect.height * scale * 0.5f;
                 position.y = Mathf.Clamp(position.y, screen.yMin + halfHeight + 8f, Mathf.Max(screen.yMin + halfHeight + 8f, screen.yMax - halfHeight - 8f));
             }
+            else if (focused != null && card != focused) position.x += NeighborShift(card);
             angle = hover ? 0 : angles[card];
+        }
+
+        private float NeighborShift(CardView card)
+        {
+            int focusIndex = cards.IndexOf(focused);
+            int index = cards.IndexOf(card);
+            int direction = index < focusIndex ? -1 : 1;
+            int sideCount = direction < 0 ? focusIndex : cards.Count - focusIndex - 1;
+            if (sideCount < 2) return 0f;
+
+            var neighbor = cards[focusIndex + direction];
+            GetPose(focused, true, out var focusPosition, out _, out var scale);
+            float focusEdge = focusPosition.x + direction * ((RectTransform)focused.transform).rect.width * scale * 0.5f;
+            float neighborEdge = positions[neighbor].x + direction * ((RectTransform)neighbor.transform).rect.width * 0.5f;
+            float needed = Mathf.Max(0f, hoverNeighborVisibleWidth + direction * (focusEdge - neighborEdge));
+            float spacing = Mathf.Abs(positions[neighbor].x - positions[focused].x);
+            float shift = Mathf.Min(needed, (sideCount - 1) * spacing * 0.35f);
+            float weight = direction < 0 ? (float)index / (focusIndex - 1) :
+                (float)(cards.Count - 1 - index) / (cards.Count - focusIndex - 2);
+            return direction * shift * weight;
         }
 
         private void RestoreOrder()

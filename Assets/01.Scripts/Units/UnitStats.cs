@@ -51,6 +51,15 @@ namespace DuelHero.Units
             if (next == Health) return;
             Health = next; Changed?.Invoke();
         }
+#if UNITY_EDITOR
+        public void SetHealthForDebug(int value)
+        {
+            Validate(0);
+            if (value < 0 || value > MaxHealth) throw new ArgumentOutOfRangeException(nameof(value));
+            if (value == Health) return;
+            Health = value; Changed?.Invoke();
+        }
+#endif
         public bool TrySpendEnergy(int amount)
         {
             Validate(amount);
