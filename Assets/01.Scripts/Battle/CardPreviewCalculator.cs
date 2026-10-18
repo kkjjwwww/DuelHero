@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using DuelHero.Cards;
+using DuelHero.Units;
 using UnityEngine;
 
 namespace DuelHero.Battle
@@ -45,16 +46,19 @@ namespace DuelHero.Battle
         public int EnergyAfter { get; }
         public int EnergyCost { get; }
         public int MaxEnergy { get; }
+        public int GuardPreviewGain { get; }
         public bool CanExecute => Status == CardPreviewStatus.Ready;
         // Absolute values on the energy bar, before recovery from this card.
         public int CostSegmentMin => Math.Max(0, EnergyBefore - EnergyCost);
         public int CostSegmentMax => EnergyBefore;
         internal CardPreviewResult(string cardId, int slot, CardPreviewStatus status, Vector2Int start, Vector2Int end,
-            List<Vector2Int> path, HashSet<Vector2Int> attacks, int before, int afterCost, int after, int cost, int maximum)
+            List<Vector2Int> path, HashSet<Vector2Int> attacks, int before, int afterCost, int after, int cost, int maximum,
+            int guardGain)
         {
             CardId = cardId; Slot = slot; Status = status; StartPosition = start; EndPosition = end;
             MovementPath = path.AsReadOnly(); AttackCells = Array.AsReadOnly(attacks.OrderBy(c => c.y).ThenBy(c => c.x).ToArray());
             EnergyBefore = before; EnergyAfterCost = afterCost; EnergyAfter = after; EnergyCost = cost; MaxEnergy = maximum;
+            GuardPreviewGain = guardGain;
         }
     }
 
@@ -82,6 +86,8 @@ namespace DuelHero.Battle
             var results = new List<CardPreviewResult>();
             var position = initial.Position;
             int energy = initial.Energy;
+            var plannedGuard = new GuardState();
+            int guardGain = 0;
             bool blocked = false;
             for (int slot = 0; slot < requests.Count; slot++)
             {
@@ -113,13 +119,18 @@ namespace DuelHero.Battle
                         }
                         else if (effect.effectType == "energyRestore")
                             energy = CardEnergyRules.Restore(energy, effect.value, initial.MaxEnergy);
+                        else if (effect.effectType == "guard")
+                            plannedGuard.Apply(effect.value, effect.durationSlots);
                     }
                     foreach (var effect in card.effects.Where(e => e.effectType == "damage"))
                         foreach (var cell in AttackRangeCalculator.Calculate(position, effect.rangeOffsets))
                             if (GridRules.Contains(cell, initial.Width, initial.Height)) attacks.Add(cell);
                 }
+                // Show the peak planned shield during a slot, not the expired value at turn end.
+                guardGain = Math.Max(guardGain, plannedGuard.Reduction);
                 results.Add(new CardPreviewResult(card.id, slot, status, start, position, path, attacks,
-                    before, afterCost, energy, card.energyCost, initial.MaxEnergy));
+                    before, afterCost, energy, card.energyCost, initial.MaxEnergy, guardGain));
+                plannedGuard.EndSlot();
             }
             return results.AsReadOnly();
         }

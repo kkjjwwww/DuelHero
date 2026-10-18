@@ -33,15 +33,16 @@ namespace DuelHero.Units
         public void TakeDamage(int amount)
         {
             Validate(amount);
-            amount = guard.ReduceDamage(amount);
-            ApplyResolvedDamage(amount);
+            ApplyResolvedDamage(Math.Max(0, amount - GuardReduction), Math.Min(amount, GuardReduction));
         }
-        // Damage captured for a shared slot already includes guard.
-        internal void ApplyResolvedDamage(int amount)
+        // Shared-slot hits have already allocated each target's available shield.
+        internal void ApplyResolvedDamage(int amount, int absorbed = 0)
         {
             Validate(amount);
+            int beforeGuard = GuardReduction;
+            guard.ReduceDamage(absorbed);
             int next = amount >= Health ? 0 : Health - amount;
-            if (next == Health) return;
+            if (next == Health && beforeGuard == GuardReduction) return;
             Health = next; Changed?.Invoke();
         }
         public void Heal(int amount)

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace DuelHero.Units
 {
-    // Each application expires independently; taking damage does not consume guard.
+    // Each application expires independently; consume the earliest-expiring shield first.
     public sealed class GuardState
     {
         private sealed class Effect
@@ -26,11 +26,20 @@ namespace DuelHero.Units
             if (amount < 0) throw new ArgumentOutOfRangeException(nameof(amount));
             if (durationSlots <= 0) throw new ArgumentOutOfRangeException(nameof(durationSlots));
             effects.Add(new Effect { Amount = amount, RemainingSlots = durationSlots });
+            effects.Sort((a, b) => a.RemainingSlots.CompareTo(b.RemainingSlots));
         }
         public int ReduceDamage(int amount)
         {
             if (amount < 0) throw new ArgumentOutOfRangeException(nameof(amount));
-            return Math.Max(0, amount - Reduction);
+            foreach (var effect in effects)
+            {
+                int absorbed = Math.Min(amount, effect.Amount);
+                effect.Amount -= absorbed;
+                amount -= absorbed;
+                if (amount == 0) break;
+            }
+            effects.RemoveAll(effect => effect.Amount == 0);
+            return amount;
         }
         public bool EndSlot()
         {

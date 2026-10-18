@@ -86,6 +86,7 @@ namespace DuelHero.Battle
         public DamageBatch CalculateDamageBatch(IEnumerable<AttackRequest> attacks, int round)
         {
             var batch = new DamageBatch();
+            var remainingGuard = new Dictionary<UnitStats, int>();
             foreach (var attack in attacks)
             {
                 if (!CanResolve(attack.ActorId)) throw new InvalidOperationException("공격 유닛 참조 또는 초기화 상태를 확인해주세요.");
@@ -103,7 +104,9 @@ namespace DuelHero.Battle
                     if (target.side == actor.side || target.stats == actor.stats || !target.stats.gameObject.activeInHierarchy ||
                         target.stats.Health <= 0 || !range.Contains(target.movement.GridPosition) || !hit.Add(target.stats)) continue;
 
-                    int amount = DamageAfterGuard(effect.value, target.stats.GuardReduction);
+                    if (!remainingGuard.TryGetValue(target.stats, out int shield)) shield = target.stats.GuardReduction;
+                    int amount = DamageAfterGuard(effect.value, shield);
+                    remainingGuard[target.stats] = shield - (effect.value - amount);
                     batch.Hits.Add(new PendingDamage { Target = target.stats, Amount = amount, Reduced = effect.value - amount,
                         ActorId = attack.ActorId, CardId = attack.CardId, TargetId = target.id, Round = round,
                         From = actor.movement.GridPosition, To = target.movement.GridPosition });
@@ -120,7 +123,7 @@ namespace DuelHero.Battle
             foreach (var hit in batch.Hits)
             {
                 int before = hit.Target.Health;
-                hit.Target.ApplyResolvedDamage(hit.Amount);
+                hit.Target.ApplyResolvedDamage(hit.Amount, hit.Reduced);
                 results.Add(new BattleActionResult(BattleActionKind.Damage, hit.ActorId, hit.Round, hit.CardId,
                     from: hit.From, to: hit.To, value: before - hit.Target.Health, targetId: hit.TargetId, reducedDamage: hit.Reduced));
             }

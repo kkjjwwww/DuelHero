@@ -97,8 +97,8 @@ MonoBehaviour:
       - {x: 1, y: 0}
   - id: guard_001
     name: "\uBC29\uC5B4"
-    description: "{effect1.durationSlots}\uAC1C \uD589\uB3D9 \uC2AC\uB86F \uB3D9\uC548
-      \uBC1B\uB294 \uD53C\uD574\uB97C {effect1.value} \uAC10\uC18C\uC2DC\uD0A8\uB2E4."
+    description: "{effect1.durationSlots}\uAC1C \uC2AC\uB86F \uB3D9\uC548 \uC9C0\uC18D\uB418\uB294
+      \uBCF4\uD638\uB9C9\uC744 {effect1.value} \uC5BB\uC2B5\uB2C8\uB2E4."
     actionType: "\uBC29\uC5B4"
     rarity: "\uC77C\uBC18"
     energyCost: 0

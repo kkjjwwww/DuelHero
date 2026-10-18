@@ -38,6 +38,8 @@ namespace DuelHero.Battle
         private Vector2Int hoveredDirection = Vector2Int.right;
         public TurnEnergyPreview EnergyPreview { get; private set; }
         public event Action<TurnEnergyPreview> EnergyPreviewChanged;
+        public CardPreviewResult GuardPreview { get; private set; }
+        public event Action<CardPreviewResult> GuardPreviewChanged;
 
         private void OnEnable()
         {
@@ -52,6 +54,7 @@ namespace DuelHero.Battle
             if (playerStats != null) playerStats.Changed -= Refresh;
             renderer?.Clear();
             PublishEnergy(null);
+            PublishGuard(null);
             hoveredDirectionSlot = -1;
         }
         public void FocusCard(CardInstance card) { hoveredCard = card; hoveredSlot = -1; hoveredDirectionSlot = -1; Refresh(); }
@@ -82,7 +85,7 @@ namespace DuelHero.Battle
         public void Refresh()
         {
             if (renderer == null || queue == null || player == null || playerStats == null || !playerStats.IsInitialized || queue.IsExecuting)
-            { renderer?.Clear(); PublishEnergy(null); return; }
+            { renderer?.Clear(); PublishEnergy(null); PublishGuard(null); return; }
             try
             {
                 var initial = new CardPreviewState(player.GridPosition, playerStats.Energy, playerStats.MaxEnergy, player.Width, player.Height);
@@ -105,11 +108,14 @@ namespace DuelHero.Battle
                 PublishEnergy(finalEnergy != initial.Energy
                     ? new TurnEnergyPreview(initial.Energy, finalEnergy, initial.MaxEnergy)
                     : null);
+                var guardResult = hoveredCandidate ? focus : reserved.Count > 0 ? reserved[reserved.Count - 1] : null;
+                PublishGuard(guardResult != null && guardResult.GuardPreviewGain > 0 ? guardResult : null);
             }
             catch (ArgumentException error)
             {
                 renderer.Clear();
                 PublishEnergy(null);
+                PublishGuard(null);
                 Debug.LogWarning("카드 프리뷰를 표시할 수 없습니다: " + error.Message, this);
             }
         }
@@ -117,6 +123,11 @@ namespace DuelHero.Battle
         {
             EnergyPreview = result;
             EnergyPreviewChanged?.Invoke(result);
+        }
+        private void PublishGuard(CardPreviewResult result)
+        {
+            GuardPreview = result;
+            GuardPreviewChanged?.Invoke(result);
         }
     }
 }
