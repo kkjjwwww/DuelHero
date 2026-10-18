@@ -8865,7 +8865,7 @@ MonoBehaviour:
   progressButton: {fileID: 1096368657}
   duration: 0.35
   hiddenCardRatio: 0.7
-  slotDrop: 100
+  slotDrop: 110
   slotScale: 1.5
   cameraZoom: 1.2
   cameraPositionOffset: {x: 0, y: 0, z: 1}
