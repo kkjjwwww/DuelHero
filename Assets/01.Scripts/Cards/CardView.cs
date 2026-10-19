@@ -72,7 +72,7 @@ namespace DuelHero.Cards
             SetIllustration(illustration.sprite);
             nameLabel.text = card.name;
             energyLabel.text = card.energyCost.ToString();
-            string body = card.ResolvedDescription();
+            string body = card.ResolvedDescription(FormatEffectValue);
             HashSet<string> ids = new HashSet<string>(card.keywordIds ?? Array.Empty<string>());
             var linkedKeywords = new Dictionary<string, KeywordDefinition>();
             foreach (var keyword in keywords ?? Enumerable.Empty<KeywordDefinition>())
@@ -95,6 +95,19 @@ namespace DuelHero.Cards
             rangeArea.gameObject.SetActive(hasRange);
             rangeGraphic.SetOffsets(range);
             descriptionArea.anchorMin = new Vector2(descriptionArea.anchorMin.x, hasRange ? 0.18f : 0.085f);
+        }
+
+        private static string FormatEffectValue(CardEffectDefinition effect, int value)
+        {
+            string color = effect.effectType switch
+            {
+                "damage" => "#FF5A5A",
+                "guard" => "#5AA9FF",
+                "energyRestore" => "#FFD54F",
+                "healthRestore" => "#66CC7A",
+                _ => null
+            };
+            return color == null ? value.ToString() : $"<color={color}>{value}</color>";
         }
 
         public void SetKeywordHoverActions(Action<KeywordDefinition, Vector2> enter, Action exit, Action<Vector2> move = null)

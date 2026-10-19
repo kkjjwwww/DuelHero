@@ -82,7 +82,7 @@ namespace DuelHero.Battle
                     var sprite = Get(pathDots, ActiveCount(pathDots), "PathDot");
                     sprite.sprite = whiteSprite;
                     sprite.transform.position = Vector3.Lerp(from, to, dot / 6f);
-                    sprite.transform.rotation = Quaternion.Euler(-90, 0, 0);
+                    sprite.transform.rotation = player.Grid.transform.rotation * Quaternion.Euler(-90, 0, 0);
                     sprite.transform.localScale = Vector3.one * cellSize * .075f;
                     sprite.color = focused ? Color.white : pathColor;
                 }
@@ -112,13 +112,12 @@ namespace DuelHero.Battle
         {
             sprite.sprite = whiteSprite;
             sprite.transform.position = World(cell, elevation);
-            sprite.transform.rotation = Quaternion.Euler(-90, 0, 0);
+            sprite.transform.rotation = player.Grid.transform.rotation * Quaternion.Euler(-90, 0, 0);
             sprite.transform.localScale = new Vector3(player.CellSize * attackCellSize, player.CellSize * attackCellSize, 1);
             sprite.color = color;
         }
         private Vector3 World(Vector2Int cell, float elevation) =>
-            player.transform.position - new Vector3(player.GridPosition.x * player.CellSize, 0, player.GridPosition.y * player.CellSize)
-            + new Vector3(cell.x * player.CellSize, elevation, cell.y * player.CellSize);
+            player.Grid.CellToWorld(cell, elevation);
         private SpriteRenderer Get(List<SpriteRenderer> pool, int index, string name)
         {
             while (pool.Count <= index)

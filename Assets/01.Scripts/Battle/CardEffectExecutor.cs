@@ -14,6 +14,7 @@ namespace DuelHero.Battle
         public static bool SupportsDefinition(CardDefinition card)
         {
             if (card == null) return true;
+            if (WaitCard.IsWait(card)) return card.energyCost == 0 && card.effects != null && card.effects.Length == 0;
             return card.energyCost >= 0 && card.effects != null && card.effects.Length > 0 && card.effects.All(effect =>
                 effect != null && effect.value >= 0 && (effect.effectType switch
                 {

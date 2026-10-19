@@ -11,6 +11,7 @@ namespace DuelHero.Cards
         private IReadOnlyList<CardInstance> readOnlyCards;
         [NonSerialized] private bool initialized;
         public CardDatabase Database => database;
+        public CardInstance WaitAction { get; } = new(WaitCard.Definition);
         public IReadOnlyList<CardInstance> Cards => readOnlyCards ??= cards.AsReadOnly();
         public event Action Changed;
         public event Action CardsChanged;

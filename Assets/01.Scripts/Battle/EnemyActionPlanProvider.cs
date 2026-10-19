@@ -38,7 +38,7 @@ namespace DuelHero.Battle
             InitializeCards();
             var supported = cards.Where(c => effects.Supports(actorId, c.Definition)).ToArray();
             var context = new EnemyDecisionContext(supported,
-                new EnemyPlanningState(movement.GridPosition, stats.Energy, stats.MaxEnergy, movement.Width, movement.Height),
+                new EnemyPlanningState(movement.GridPosition, stats.Energy, stats.MaxEnergy, movement.Grid.Map),
                 target.GridPosition, round);
             activePlan = planner.CreatePlan(context);
             return activePlan.Select(action => action.ForExecution()).ToArray();

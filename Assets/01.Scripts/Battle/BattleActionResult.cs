@@ -3,7 +3,7 @@ using UnityEngine;
 namespace DuelHero.Battle
 {
     public enum BattleActionKind { Movement, CardExecuted, ExecutionBlocked, TurnStarted, TurnEnded, Damage, GuardApplied, GuardExpired, BattleEnded }
-    public enum BattleActionOutcome { Success, BoundaryBlocked, UnsupportedEffect, NoTarget, CellFull }
+    public enum BattleActionOutcome { Success, BoundaryBlocked, UnsupportedEffect, NoTarget, CellFull, ObstacleBlocked }
     public interface IBattleActionSource
     {
         event Action<BattleActionResult> ActionResolved;

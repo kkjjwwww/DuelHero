@@ -7,9 +7,9 @@ public class GridMovement : MonoBehaviour, DuelHero.Battle.IBattleActionSource
 {
     [SerializeField] private Vector2Int gridPosition;
     public Vector2Int GridPosition => gridPosition;
-    public float CellSize => cellSize;
-    public int Width => width;
-    public int Height => height;
+    public DuelHero.Battle.BattleGrid Grid => Board.Grid;
+    public float CellSize => Grid.CellSize;
+
     [SerializeField] private DuelHero.Battle.BoardOccupancy board;
     public DuelHero.Battle.BoardOccupancy Board => board;
     public void AttachBoard(DuelHero.Battle.BoardOccupancy value) => board = value;
@@ -17,9 +17,6 @@ public class GridMovement : MonoBehaviour, DuelHero.Battle.IBattleActionSource
     private void OnDisable() { if (board != null) board.UnregisterUnit(this); }
     [SerializeField] private string actorId;
     public event System.Action<DuelHero.Battle.BattleActionResult> ActionResolved;
-    [SerializeField] private int width = 4;
-    [SerializeField] private int height = 3;
-    [SerializeField] private float cellSize = 1f;
     [SerializeField] private ActionQueueUI queueUI;
 
     private readonly List<Vector2Int> moveQueue = new();
@@ -43,6 +40,7 @@ public class GridMovement : MonoBehaviour, DuelHero.Battle.IBattleActionSource
     }
     private void Start()
     {
+        if (!Grid.CanEnter(gridPosition)) throw new System.InvalidOperationException("Unit starts outside the battle grid.");
         UpdateWorldPosition();
         queueUI?.Refresh(moveQueue);
     }
@@ -85,9 +83,9 @@ public class GridMovement : MonoBehaviour, DuelHero.Battle.IBattleActionSource
         Vector2Int next = gridPosition + direction;
 
         // 전장 밖으로 이동하려 하면 현재 위치를 유지합니다.
-        if (!DuelHero.Battle.GridRules.Contains(next, width, height))
+        if (!Grid.CanEnter(next))
         {
-            ActionResolved?.Invoke(new DuelHero.Battle.BattleActionResult(DuelHero.Battle.BattleActionKind.Movement, actorId, round, cardId, DuelHero.Battle.BattleActionOutcome.BoundaryBlocked, from, from));
+            ActionResolved?.Invoke(new DuelHero.Battle.BattleActionResult(DuelHero.Battle.BattleActionKind.Movement, actorId, round, cardId, (Grid.Contains(next) ? DuelHero.Battle.BattleActionOutcome.ObstacleBlocked : DuelHero.Battle.BattleActionOutcome.BoundaryBlocked), from, from));
             return false;
         }
 
@@ -97,8 +95,10 @@ public class GridMovement : MonoBehaviour, DuelHero.Battle.IBattleActionSource
         return true;
     }
 
+    private void LateUpdate() => UpdateWorldPosition();
+
     private void UpdateWorldPosition()
     {
-        transform.position = new Vector3(gridPosition.x * cellSize, 0f, gridPosition.y * cellSize);
+        transform.position = Grid.CellToWorld(gridPosition);
     }
 }

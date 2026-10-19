@@ -30,9 +30,12 @@ namespace DuelHero.Cards
         public bool TryReserve(CardInstance card)
         {
             if (IsExecuting || card == null || playerDeck == null || reservations.Count >= 3) return false;
-            bool owned = false;
+            bool systemWait = ReferenceEquals(card, playerDeck.WaitAction);
+            bool owned = systemWait;
             foreach (var instance in playerDeck.Cards) if (ReferenceEquals(instance, card)) { owned = true; break; }
             if (!owned || !card.CanReserve(CurrentRound)) return false;
+            // Keep the hand's wait action available; each slot owns its reservation state.
+            if (systemWait) card = new CardInstance(WaitCard.Definition);
             reservations.Add(card);
             if (!HasEnoughEnergy(out _) || !card.TryReserve(reservations.Count - 1, CurrentRound))
             {

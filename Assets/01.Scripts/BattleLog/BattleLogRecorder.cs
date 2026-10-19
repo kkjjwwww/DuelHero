@@ -41,6 +41,7 @@ namespace DuelHero.Logging
             {
                 BattleActionOutcome.Success => BattleLogResult.Success,
                 BattleActionOutcome.BoundaryBlocked => BattleLogResult.BoundaryBlocked,
+                BattleActionOutcome.ObstacleBlocked => BattleLogResult.ObstacleBlocked,
                 BattleActionOutcome.UnsupportedEffect => BattleLogResult.UnsupportedEffect,
                 BattleActionOutcome.NoTarget => BattleLogResult.NoTarget,
                 BattleActionOutcome.CellFull => BattleLogResult.CellFull,

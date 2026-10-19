@@ -9,24 +9,23 @@ namespace DuelHero.Battle
         public Vector2Int Position { get; private set; }
         public int Energy { get; private set; }
         public int MaxEnergy { get; }
-        public int Width { get; }
-        public int Height { get; }
-        public EnemyPlanningState(Vector2Int position, int energy, int maxEnergy, int width, int height)
-        { Position = position; Energy = energy; MaxEnergy = maxEnergy; Width = width; Height = height; }
-        public EnemyPlanningState Predict(CardDefinition card)
+        public GridMap Map { get; }
+        public EnemyPlanningState(Vector2Int position, int energy, int maxEnergy, GridMap map)
+        { Position = position; Energy = energy; MaxEnergy = maxEnergy; Map = map; }
+        public EnemyPlanningState Predict(CardDefinition card, Vector2Int direction)
         {
-            var next = new EnemyPlanningState(Position, Energy, MaxEnergy, Width, Height);
-            next.Apply(card); return next;
+            var next = new EnemyPlanningState(Position, Energy, MaxEnergy, Map);
+            next.Apply(card, direction); return next;
         }
-        public void Apply(CardDefinition card)
+        public void Apply(CardDefinition card, Vector2Int direction)
         {
-            card = CardDirectionRules.ForExecution(card, Vector2Int.left);
+            card = CardDirectionRules.ForExecution(card, direction);
             if (card.energyCost < 0 || card.energyCost > Energy) throw new InvalidOperationException("적 AI 카드 비용이 부족합니다.");
             Energy -= card.energyCost;
             foreach (var effect in card.effects.OrderBy(e => e.resolutionOrder))
             {
-                if (effect.effectType == "move" && CardEffectExecutor.TryDirection(effect.rangeOffsets, out var direction))
-                    Position = GridRules.Move(Position, direction, effect.value, Width, Height);
+                if (effect.effectType == "move" && CardEffectExecutor.TryDirection(effect.rangeOffsets, out var moveDirection))
+                    Position = Map.Move(Position, moveDirection, effect.value);
                 else if (effect.effectType == "energyRestore") Energy += Math.Min(effect.value, MaxEnergy - Energy);
             }
         }

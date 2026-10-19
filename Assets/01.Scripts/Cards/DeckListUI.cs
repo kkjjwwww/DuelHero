@@ -95,7 +95,7 @@ namespace DuelHero.Cards
             UnityEditor.EditorApplication.delayCall += EditorRebuild;
         }
 #endif
-        public int CountCategory(string category) => playerDeck == null ? 0 : playerDeck.Cards.Count(c => c.Definition.actionType == category);
+        public int CountCategory(string category) => playerDeck == null ? 0 : 1 + playerDeck.Cards.Count(c => c.Definition.actionType == category);
 
         public void ToggleCategory(string category)
         {
@@ -146,7 +146,7 @@ namespace DuelHero.Cards
                 animateCategoryChange = false;
                 CancelCategoryTransition();
                 playerDeck.Initialize();
-                deck.Clear(); deck.AddRange(playerDeck.Cards);
+                deck.Clear(); deck.Add(playerDeck.WaitAction); deck.AddRange(playerDeck.Cards);
                 ownedCards.Clear();
                 foreach (var instance in deck) ownedCards.Add(instance);
                 removedCards.Clear();
@@ -171,14 +171,17 @@ namespace DuelHero.Cards
                     }
                 visibleCards.Clear(); visibleViews.Clear();
 
-                foreach (var instance in deck.Where(c => c.Definition.actionType == SelectedCategory)
-                    .OrderByDescending(c => c.Definition.isBasicAction))
+                foreach (var instance in deck.Where(c => WaitCard.IsWait(c.Definition) || c.Definition.actionType == SelectedCategory)
+                    .OrderByDescending(c => WaitCard.IsWait(c.Definition))
+                    .ThenByDescending(c => c.Definition.isBasicAction))
                 {
                     if (!cachedCards.TryGetValue(instance, out var entry))
                     {
                         entry = AcquireCard(instance);
                         cachedCards.Add(instance, entry);
                     }
+                    // A shared card (wait) belongs to the incoming hand, not the outgoing animation.
+                    outgoingViews.Remove(entry.View);
                     entry.View.gameObject.SetActive(true);
                     visibleCards.Add(entry);
                     visibleViews.Add(entry.View);

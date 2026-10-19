@@ -23,14 +23,16 @@ namespace DuelHero.Cards
         public bool isObtainable, isBasicAction, isStarterCard;
         public CardEffectDefinition[] effects;
 
-        public string ResolvedDescription()
+        public string ResolvedDescription(Func<CardEffectDefinition, int, string> formatValue = null)
         {
             return Regex.Replace(description, @"\{effect(\d+)\.(value|durationSlots)\}", match =>
             {
                 int index = int.Parse(match.Groups[1].Value) - 1;
                 if (index < 0 || index >= effects.Length)
                     throw new InvalidOperationException($"{id}: invalid description placeholder {match.Value}");
-                return (match.Groups[2].Value == "value" ? effects[index].value : effects[index].durationSlots).ToString();
+                var effect = effects[index];
+                if (match.Groups[2].Value == "durationSlots") return effect.durationSlots.ToString();
+                return formatValue != null ? formatValue(effect, effect.value) : effect.value.ToString();
             });
         }
 

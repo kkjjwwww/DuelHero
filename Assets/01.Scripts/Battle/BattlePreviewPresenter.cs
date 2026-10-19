@@ -88,7 +88,7 @@ namespace DuelHero.Battle
             { renderer?.Clear(); PublishEnergy(null); PublishGuard(null); return; }
             try
             {
-                var initial = new CardPreviewState(player.GridPosition, playerStats.Energy, playerStats.MaxEnergy, player.Width, player.Height);
+                var initial = new CardPreviewState(player.GridPosition, playerStats.Energy, playerStats.MaxEnergy, player.Grid.Map);
                 IReadOnlyList<CardPreviewResult> reserved = hoveredDirectionSlot >= 0 && hoveredDirectionSlot < queue.Reservations.Count
                     ? CardPreviewCalculator.CalculateQueue(initial, queue.Reservations, hoveredDirectionSlot, hoveredDirection)
                     : CardPreviewCalculator.CalculateQueue(initial, queue.Reservations);

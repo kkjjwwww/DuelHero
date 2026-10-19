@@ -14,13 +14,12 @@ namespace DuelHero.Battle
         public Vector2Int Position { get; }
         public int Energy { get; }
         public int MaxEnergy { get; }
-        public int Width { get; }
-        public int Height { get; }
-        public CardPreviewState(Vector2Int position, int energy, int maxEnergy, int width, int height)
+        public GridMap Map { get; }
+        public CardPreviewState(Vector2Int position, int energy, int maxEnergy, GridMap map)
         {
-            if (width <= 0 || height <= 0 || !GridRules.Contains(position, width, height) || energy < 0 || maxEnergy < energy)
+            if (map == null || !map.CanEnter(position) || energy < 0 || maxEnergy < energy)
                 throw new ArgumentException("프리뷰의 위치·전장 크기·에너지 상태를 확인해주세요.");
-            Position = position; Energy = energy; MaxEnergy = maxEnergy; Width = width; Height = height;
+            Position = position; Energy = energy; MaxEnergy = maxEnergy; Map = map;
         }
     }
 
@@ -112,7 +111,7 @@ namespace DuelHero.Battle
                             CardEffectExecutor.TryDirection(effect.rangeOffsets, out var direction);
                             for (int step = 0; step < effect.value; step++)
                             {
-                                var next = GridRules.Move(position, direction, 1, initial.Width, initial.Height);
+                                var next = initial.Map.Move(position, direction, 1);
                                 if (next == position) break;
                                 position = next; path.Add(position);
                             }
@@ -124,7 +123,7 @@ namespace DuelHero.Battle
                     }
                     foreach (var effect in card.effects.Where(e => e.effectType == "damage"))
                         foreach (var cell in AttackRangeCalculator.Calculate(position, effect.rangeOffsets))
-                            if (GridRules.Contains(cell, initial.Width, initial.Height)) attacks.Add(cell);
+                            if (initial.Map.Contains(cell)) attacks.Add(cell);
                 }
                 // Show the peak planned shield during a slot, not the expired value at turn end.
                 guardGain = Math.Max(guardGain, plannedGuard.Reduction);

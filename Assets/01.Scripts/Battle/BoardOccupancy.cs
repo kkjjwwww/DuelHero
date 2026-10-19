@@ -7,6 +7,9 @@ namespace DuelHero.Battle
     public sealed class BoardOccupancy : MonoBehaviour
     {
         public const int MaxUnits = 4;
+        [SerializeField] private BattleGrid grid;
+        public BattleGrid Grid => grid != null ? grid :
+            throw new System.InvalidOperationException("전장의 BattleGrid를 연결해주세요.");
         [SerializeField] private GridMovement[] initialUnits = new GridMovement[0];
         private readonly List<GridMovement> units = new();
         private bool initialized;
