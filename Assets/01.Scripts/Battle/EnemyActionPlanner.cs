@@ -5,30 +5,41 @@ using DuelHero.Cards;
 using UnityEngine;
 namespace DuelHero.Battle
 {
+    public enum EnemyTacticState { Approach, Engage, Recover }
+
     // Pure planning: does not access the player's reservations or mutate live units/cards.
     public sealed class EnemyActionPlanner
     {
+        public EnemyTacticState CurrentState { get; private set; } = EnemyTacticState.Approach;
+
         public CardInstance[] CreatePlan(IReadOnlyList<CardInstance> cards, EnemyPlanningState state, Vector2Int target, int round)
         {
             var selected = new HashSet<CardInstance>();
             var plan = new CardInstance[3];
             // Work on a copy, so even the supplied planning snapshot stays unchanged.
             state = new EnemyPlanningState(state.Position, state.Energy, state.MaxEnergy, state.Width, state.Height);
+            // Decide the tactic once from the round-start snapshot; keep it for all three slots.
+            var ready = cards.Where(c => c.CanReserve(round)).ToArray();
+            var affordableAtStart = ready.Where(c => c.Definition.energyCost <= state.Energy).ToArray();
+            if (NeedsEnergy(ready, state.Energy) && affordableAtStart.Any(c => Has(c, "energyRestore")))
+                CurrentState = EnemyTacticState.Recover;
+            else if (affordableAtStart.Any(c => Hits(c.Definition, state.Predict(c.Definition).Position, target)))
+                CurrentState = EnemyTacticState.Engage;
+            else
+                CurrentState = EnemyTacticState.Approach;
             for (int slot = 0; slot < 3; slot++)
             {
                 // 재사용 대기 중이거나 앞 슬롯에서 선택한 카드 인스턴스는 제외한다.
                 var available = cards.Where(c => c.CanReserve(round) && !selected.Contains(c)).ToArray();
                 // 앞 슬롯의 소비·회복까지 반영한 예상 에너지로 비용을 감당할 수 있어야 한다.
                 var affordable = available.Where(c => c.Definition.energyCost <= state.Energy).ToArray();
-                // 1순위: 카드의 이동 효과까지 예측한 위치에서 명중 가능한 공격 중 비용이 가장 낮은 카드.
-                var choice = affordable.Where(c => Hits(c.Definition, state.Predict(c.Definition).Position, target))
+                // 회복 상태는 최저 공격 비용이 부족한 동안 회복을 우선한다.
+                CardInstance choice = CurrentState == EnemyTacticState.Recover && NeedsEnergy(available, state.Energy)
+                    ? affordable.FirstOrDefault(c => Has(c, "energyRestore")) : null;
+                // 접근·교전의 공통 규칙. 회복 후에도 가상 위치·에너지로 공격 가능 여부를 다시 검사한다.
+                if (choice == null) choice = affordable.Where(c => Hits(c.Definition, state.Predict(c.Definition).Position, target))
                     .OrderBy(c => c.Definition.energyCost).FirstOrDefault();
-                // 사거리와 무관하게, 현재 예상 에너지보다 비싼 공격이 하나라도 있는지 검사한다.
-                bool needsEnergy = available.Any(c => c.Definition.effects.Any(e => e.effectType == "damage") && c.Definition.energyCost > state.Energy);
-                // 이후 조건은 choice == null일 때만 검사하므로 앞에서 선택한 카드를 덮어쓰지 않는다.
-                // 2순위: 비싼 공격을 위한 에너지 회복.
-                if (choice == null && needsEnergy) choice = affordable.FirstOrDefault(c => Has(c, "energyRestore"));
-                // 3순위: 플레이어와의 거리를 줄이는 이동 중 도착 후 거리가 가장 짧은 카드.
+                // 접근 후 사거리에 들어오면 다음 슬롯에서 공격할 수 있다.
                 if (choice == null)
                 {
                     int currentDistance = Distance(state.Position, target);
@@ -52,6 +63,8 @@ namespace DuelHero.Battle
             }
             return plan;
         }
+        private static bool NeedsEnergy(IEnumerable<CardInstance> cards, int energy) =>
+            cards.Where(c => Has(c, "damage")).Select(c => c.Definition.energyCost).DefaultIfEmpty(0).Min() > energy;
         private static int Distance(Vector2Int a, Vector2Int b) => Math.Abs(a.x - b.x) + Math.Abs(a.y - b.y);
         private static bool Has(CardInstance card, string type) => card.Definition.effects.Any(e => e.effectType == type);
         private static bool Hits(CardDefinition card, Vector2Int origin, Vector2Int target) =>
