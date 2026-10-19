@@ -15,8 +15,9 @@ namespace DuelHero.Battle
         [SerializeField] private string actorId;
         [SerializeField] private string[] cardIds = { "move_up_001", "move_down_001", "move_left_001", "move_right_001", "guard_001", "breathing_001", "slash_001", "thrust_001", "sweep_001" };
         private CardInstance[] cards;
-        private CardInstance[] activePlan;
-        private readonly EnemyActionPlanner planner = new();
+        private EnemyPlannedAction[] activePlan;
+        private readonly IEnemyActionPlanner planner =
+            new EnemyActionPlanner<EnemyTacticState>(new StandardEnemyFsm(), new PriorityPlanSelector());
         public event Action CardsChanged;
         public CardDatabase Database => database;
         public System.Collections.Generic.IReadOnlyList<CardInstance> Cards
@@ -36,13 +37,16 @@ namespace DuelHero.Battle
                 throw new InvalidOperationException("적 AI의 유닛·카드·효과 실행기를 연결해주세요.");
             InitializeCards();
             var supported = cards.Where(c => effects.Supports(actorId, c.Definition)).ToArray();
-            activePlan = planner.CreatePlan(supported, new EnemyPlanningState(movement.GridPosition, stats.Energy, stats.MaxEnergy, movement.Width, movement.Height), target.GridPosition, round);
-            return activePlan.Select(c => CardDirectionRules.ForExecution(c.Definition, Vector2Int.left)).ToArray();
+            var context = new EnemyDecisionContext(supported,
+                new EnemyPlanningState(movement.GridPosition, stats.Energy, stats.MaxEnergy, movement.Width, movement.Height),
+                target.GridPosition, round);
+            activePlan = planner.CreatePlan(context);
+            return activePlan.Select(action => action.ForExecution()).ToArray();
         }
         public void CompletePlan(int round, int executedSlots)
         {
             if (activePlan == null) return;
-            for (int i = 0; i < Math.Min(executedSlots, activePlan.Length); i++) activePlan[i].MarkUsed(round);
+            for (int i = 0; i < Math.Min(executedSlots, activePlan.Length); i++) activePlan[i].Card.MarkUsed(round);
             activePlan = null;
             CardsChanged?.Invoke();
         }
