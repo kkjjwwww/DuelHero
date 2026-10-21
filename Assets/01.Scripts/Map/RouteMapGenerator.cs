@@ -20,7 +20,7 @@ namespace DuelHero.Map
                 utilityStages[lane] = 2 + random.Next(3);
 
             var nodes = new List<RouteNode>();
-            var start = new RouteNode("stage-1", 1, RouteNodeType.Battle, 0);
+            var start = new RouteNode("stage-1", 1, RouteNodeType.Battle);
             nodes.Add(start);
             var lanes = new RouteNode[laneCount, 3];
             for (int stage = 2; stage <= 4; stage++)
@@ -31,14 +31,13 @@ namespace DuelHero.Map
                     RouteNodeType type = utility
                         ? (random.Next(2) == 0 ? RouteNodeType.Rest : RouteNodeType.Shop)
                         : RouteNodeType.Battle;
-                    var node = new RouteNode($"stage-{stage}-lane-{lane + 1}", stage, type,
-                        utilityStages[lane] < stage ? 1 : 0);
+                    var node = new RouteNode($"stage-{stage}-lane-{lane + 1}", stage, type);
                     lanes[lane, stage - 2] = node;
                     nodes.Add(node);
                 }
             }
 
-            var boss = new RouteNode("stage-5", 5, RouteNodeType.Boss, 1);
+            var boss = new RouteNode("stage-5", 5, RouteNodeType.Boss);
             nodes.Add(boss);
             for (int lane = 0; lane < laneCount; lane++)
             {
@@ -59,7 +58,9 @@ namespace DuelHero.Map
                         if (fromLane == toLane || random.Next(2) == 0) continue;
                         var source = lanes[fromLane, stage - 2];
                         var target = lanes[toLane, stage - 1];
-                        if (source.UtilityVisitsAfter == target.UtilityVisitsBefore)
+                        bool sourceVisitedUtility = utilityStages[fromLane] <= stage;
+                        bool targetRequiresUtilityVisit = utilityStages[toLane] < stage + 1;
+                        if (sourceVisitedUtility == targetRequiresUtilityVisit)
                             source.ConnectTo(target);
                     }
                 }

@@ -119,12 +119,14 @@ namespace DuelHero.Battle
                 if (ec != null) Publish(BattleActionKind.CardExecuted, enemyId, ec.id);
                 effects.ExecutePreparation(playerId, pc, round);
                 effects.ExecutePreparation(enemyId, ec, round);
+
                 var attacks = new List<CombatEffectResolver.AttackRequest>();
                 AddAttacks(attacks, playerId, pc);
                 AddAttacks(attacks, enemyId, ec);
+
                 var damage = combatEffects.CalculateDamageBatch(attacks, round);
                 combatEffects.ApplyDamageBatch(damage);
-                // Once per shared slot, after BOTH attacks.
+                
                 combatEffects.EndSlot(round);
                 executedSlots++;
                 Outcome = EvaluateOutcome(playerStats.Health, enemyStats.Health);
@@ -171,7 +173,10 @@ namespace DuelHero.Battle
         {
             if (card == null) return;
             foreach (var effect in card.effects.OrderBy(e => e.resolutionOrder))
+            {
                 if (effect.effectType == "damage") requests.Add(new CombatEffectResolver.AttackRequest(actor, card.id, effect));
+
+            }
         }
         public static BattleOutcome EvaluateOutcome(int playerHealth, int enemyHealth) => playerHealth <= 0
             ? BattleOutcome.Defeat

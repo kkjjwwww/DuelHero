@@ -14,24 +14,17 @@ namespace DuelHero.Map
         public RouteNodeType Type { get; }
         public IReadOnlyList<string> NextNodeIds => nextNodeIds;
 
-        // Used while generating links. A route may only join another route with
-        // the same number of rest/shop visits at that point.
-        internal int UtilityVisitsBefore { get; }
-        internal int UtilityVisitsAfter => UtilityVisitsBefore +
-            (Type == RouteNodeType.Rest || Type == RouteNodeType.Shop ? 1 : 0);
-
-        internal RouteNode(string id, int stage, RouteNodeType type, int utilityVisitsBefore)
+        internal RouteNode(string id, int stage, RouteNodeType type)
         {
             Id = id;
             Stage = stage;
             Type = type;
-            UtilityVisitsBefore = utilityVisitsBefore;
         }
 
         internal void ConnectTo(RouteNode target)
         {
-            if (target.Stage != Stage + 1 || UtilityVisitsAfter != target.UtilityVisitsBefore)
-                throw new InvalidOperationException("경로의 단계 또는 휴식·상점 방문 횟수가 맞지 않습니다.");
+            if (target.Stage != Stage + 1)
+                throw new InvalidOperationException("인접한 다음 단계의 노드만 연결할 수 있습니다.");
             if (!nextNodeIds.Contains(target.Id)) nextNodeIds.Add(target.Id);
         }
     }

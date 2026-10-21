@@ -89,7 +89,7 @@ namespace DuelHero.Battle
             var remainingGuard = new Dictionary<UnitStats, int>();
             foreach (var attack in attacks)
             {
-                if (!CanResolve(attack.ActorId)) throw new InvalidOperationException("공격 유닛 참조 또는 초기화 상태를 확인해주세요.");
+                if (!CanResolve(attack.ActorId)) throw new InvalidOperationException("공격 유닛 참조 또는 초기화 상태 오류");
                 var effect = attack.Effect;
                 if (effect == null || effect.effectType != "damage" || effect.targetType != "적" || effect.value < 0 || effect.rangeOffsets == null)
                     throw new ArgumentException("지원하지 않는 공격 효과입니다.");
@@ -117,7 +117,7 @@ namespace DuelHero.Battle
         }
         public void ApplyDamageBatch(DamageBatch batch)
         {
-            if (batch == null || batch.Applied) throw new InvalidOperationException("피해 결과는 한 번만 적용할 수 있습니다.");
+            if (batch == null || batch.Applied) throw new InvalidOperationException("피해 결과는 두번이상 적용될 수 없음");
             batch.Applied = true;
             var results = new List<BattleActionResult>();
             foreach (var hit in batch.Hits)
