@@ -69,6 +69,60 @@ internal static class RouteMapValidation
     private static string Signature(RouteMap map) => string.Join("|", map.Nodes.Select(node =>
         $"{node.Id}:{node.Stage}:{node.Type}:{string.Join(",", node.NextNodeIds)}"));
 
+    [MenuItem("Tools/Duel Hero/Map/Validate progress")]
+    private static void ValidateProgress()
+    {
+        int prefixes = 0;
+        for (uint seed = 0; seed < 1000; seed++)
+        {
+            var map = RouteMapGenerator.Generate(seed);
+            string before = Signature(map);
+            VisitProgress(map, new List<string>(), ref prefixes);
+            Require(Signature(map) == before, seed, "진행 처리 중 경로 데이터가 변경되었습니다.");
+        }
+        Debug.Log($"맵 진행 검증 완료: 시드 1,000개, 진행 상태 {prefixes}개가 통과했습니다.");
+    }
+
+    private static void VisitProgress(RouteMap map, List<string> path, ref int prefixes)
+    {
+        // Reconstruct each possible path prefix independently, including merges.
+        var progress = new RouteMapProgress(map);
+        foreach (var id in path)
+            Require(progress.TrySelect(id), map.Seed, $"유효한 노드를 선택하지 못했습니다: {id}");
+
+        string current = path.Count == 0 ? null : path[path.Count - 1];
+        bool complete = current == map.BossNodeId;
+        Require(progress.CurrentNodeId == current && progress.IsComplete == complete,
+            map.Seed, "현재 위치 또는 완주 상태가 다릅니다.");
+        Require(progress.CompletedNodeIds.SequenceEqual(path), map.Seed, "완료 기록이 다릅니다.");
+
+        var expected = complete ? new string[0]
+            : current == null ? new[] { map.StartNodeId }
+            : map.GetNode(current).NextNodeIds.ToArray();
+        foreach (var node in map.Nodes)
+        {
+            bool allowed = expected.Contains(node.Id);
+            Require(progress.CanSelect(node.Id) == allowed, map.Seed,
+                $"선택 가능 판정이 다릅니다: {node.Id}");
+            if (!allowed)
+                Require(!progress.TrySelect(node.Id), map.Seed, $"금지된 선택이 허용되었습니다: {node.Id}");
+        }
+        Require(!progress.CanSelect(null) && !progress.TrySelect(null) &&
+                !progress.CanSelect("missing-node") && !progress.TrySelect("missing-node"),
+            map.Seed, "존재하지 않는 노드 선택이 허용되었습니다.");
+        Require(progress.CurrentNodeId == current && progress.IsComplete == complete &&
+                progress.CompletedNodeIds.SequenceEqual(path),
+            map.Seed, "거부된 선택이 진행 상태를 변경했습니다.");
+        prefixes++;
+
+        foreach (var nextId in expected)
+        {
+            path.Add(nextId);
+            VisitProgress(map, path, ref prefixes);
+            path.RemoveAt(path.Count - 1);
+        }
+    }
+
     private static void Require(bool condition, uint seed, string message)
     {
         if (!condition) throw new InvalidOperationException($"시드 {seed}: {message}");

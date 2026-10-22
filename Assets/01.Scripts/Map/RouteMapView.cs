@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -12,7 +13,27 @@ namespace DuelHero.Map
         [SerializeField] private RouteMapConnections connections;
         [SerializeField] private Font labelFont;
         [SerializeField] private Text seedLabel;
+        [SerializeField] private Text clearLabel;
+        [SerializeField] private Button restartButton;
         [SerializeField] private Color stageLabelColor = new Color(.58f, .63f, .65f);
+
+        private readonly Dictionary<string, RouteNodeView> nodeViews = new Dictionary<string, RouteNodeView>();
+        public event Action<string> NodeClicked;
+        public event Action RestartRequested;
+
+        private void OnEnable() => restartButton.onClick.AddListener(HandleRestartClicked);
+        private void OnDisable() => restartButton.onClick.RemoveListener(HandleRestartClicked);
+
+        private void HandleRestartClicked() => RestartRequested?.Invoke();
+
+        public void SetCleared(bool cleared) => clearLabel.gameObject.SetActive(cleared);
+
+        private void HandleNodeClicked(string nodeId) => NodeClicked?.Invoke(nodeId);
+
+        public void SetNodeState(string nodeId, RouteNodeState state)
+        {
+            nodeViews[nodeId].SetState(state);
+        }
 
         public void Render(RouteMap map)
         {
@@ -60,7 +81,9 @@ namespace DuelHero.Map
             instance.name = node.Id;
             var rect = (RectTransform)instance.transform;
             rect.anchorMin = rect.anchorMax = position;
-            instance.Render(node.Type);
+            instance.Bind(node.Id, node.Type);
+            instance.Clicked += HandleNodeClicked;
+            nodeViews.Add(node.Id, instance);
 #if UNITY_EDITOR
             if (!Application.isPlaying)
             {
@@ -90,6 +113,10 @@ namespace DuelHero.Map
 
         private void ClearNodes()
         {
+            foreach (var nodeView in nodeViews.Values)
+                if (nodeView != null) nodeView.Clicked -= HandleNodeClicked;
+            nodeViews.Clear();
+
             for (int index = nodeLayer.childCount - 1; index >= 0; index--)
             {
                 var child = nodeLayer.GetChild(index).gameObject;

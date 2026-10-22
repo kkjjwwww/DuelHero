@@ -34,7 +34,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: 5}
+  m_AnchoredPosition: {x: 0, y: 14}
   m_SizeDelta: {x: 24, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &553142835868813798
@@ -311,11 +311,11 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 6
+    m_FontSize: 17
     m_FontStyle: 1
     m_BestFit: 1
-    m_MinSize: 6
-    m_MaxSize: 12
+    m_MinSize: 10
+    m_MaxSize: 17
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
@@ -579,7 +579,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_text: "\uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574 10\uC744
-    \uC90D\uB2C8\uB2E4."
+    \uC90D\uB2C8\uB2E4. [\uBC29\uD5A5\uC9C0\uC815]"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 1665d7ae8f0927a4793d050fc3948579, type: 2}
   m_sharedMaterial: {fileID: -6738607696219728078, guid: 1665d7ae8f0927a4793d050fc3948579, type: 2}
@@ -730,10 +730,10 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 16
+    m_FontSize: 28
     m_FontStyle: 1
     m_BestFit: 0
-    m_MinSize: 1
+    m_MinSize: 10
     m_MaxSize: 40
     m_Alignment: 4
     m_AlignByGeometry: 0
@@ -751,7 +751,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2730550506923605514}
-  - component: {fileID: 3947829496658825180}
   m_Layer: 0
   m_Name: RangeArea
   m_TagString: Untagged
@@ -780,14 +779,6 @@ RectTransform:
   m_AnchoredPosition: {x: -4, y: 3}
   m_SizeDelta: {x: -4, y: -2}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!222 &3947829496658825180
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5129571370996226805}
-  m_CullTransparentMesh: 1
 --- !u!1 &5162181965310385219
 GameObject:
   m_ObjectHideFlags: 0
@@ -1028,10 +1019,10 @@ MonoBehaviour:
   grayscaleGraphics:
   - {fileID: 7171595111309188714}
   - {fileID: 3740800705786619956}
+  - {fileID: 6992955989418242913}
   - {fileID: 8792521739746883172}
   - {fileID: 5378625721614739773}
   - {fileID: 3727230103481254137}
-  - {fileID: 6992955989418242913}
   attackBadge: {fileID: 21300000, guid: ab02e8202e9a66c47b15721a146761ce, type: 3}
   defenseBadge: {fileID: 21300000, guid: aa59d1c9dd0fc2b4ba9dbe645d7d441d, type: 3}
   recoveryBadge: {fileID: 21300000, guid: 787d6e579d7098144b85c7ced5615c8f, type: 3}
@@ -1068,12 +1059,12 @@ RectTransform:
   - {fileID: 5521910958691447290}
   - {fileID: 7841043939035633749}
   - {fileID: 6089973223180343787}
+  - {fileID: 6427724529628297434}
   - {fileID: 4386538158548149152}
   - {fileID: 4478732313889203230}
   - {fileID: 2730550506923605514}
   - {fileID: 2449416209475228932}
   - {fileID: 3653834405869750892}
-  - {fileID: 6427724529628297434}
   m_Father: {fileID: 975557892545466948}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -1296,7 +1287,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  thickness: 3
+  thickness: 1.5
   cornerCut: 4
 --- !u!1 &8488287943482434175
 GameObject:

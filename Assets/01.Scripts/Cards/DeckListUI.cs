@@ -40,7 +40,7 @@ namespace DuelHero.Cards
         private readonly List<CardView> visibleViews = new();
         private readonly HashSet<CardInstance> ownedCards = new();
         private readonly List<CardInstance> removedCards = new();
-        private readonly List<CardView> outgoingViews = new();
+        private readonly List<CachedCard> outgoingCards = new();
         private Sequence categoryTween;
         private bool animateCategoryChange;
         public bool IsTransitioning { get; private set; }
@@ -166,29 +166,28 @@ namespace DuelHero.Cards
                 foreach (var entry in visibleCards)
                     if (entry.View != null)
                     {
-                        if (animate && entry.Instance != null) outgoingViews.Add(entry.View);
+                        if (animate && entry.Instance != null) outgoingCards.Add(entry);
                         else entry.View.gameObject.SetActive(false);
                     }
                 visibleCards.Clear(); visibleViews.Clear();
 
-                foreach (var instance in deck.Where(c => WaitCard.IsWait(c.Definition) || c.Definition.actionType == SelectedCategory)
+                foreach (var instance in deck.Where(c => SelectedCategory != null &&
+                    (WaitCard.IsWait(c.Definition) || c.Definition.actionType == SelectedCategory))
                     .OrderByDescending(c => WaitCard.IsWait(c.Definition))
                     .ThenByDescending(c => c.Definition.isBasicAction))
                 {
-                    if (!cachedCards.TryGetValue(instance, out var entry))
+                    if (!cachedCards.TryGetValue(instance, out var entry) || outgoingCards.Contains(entry))
                     {
                         entry = AcquireCard(instance);
-                        cachedCards.Add(instance, entry);
+                        cachedCards[instance] = entry;
                     }
-                    // A shared card (wait) belongs to the incoming hand, not the outgoing animation.
-                    outgoingViews.Remove(entry.View);
                     entry.View.gameObject.SetActive(true);
                     visibleCards.Add(entry);
                     visibleViews.Add(entry.View);
                 }
                 RefreshStates();
                 fanLayout.SetCards(visibleViews);
-                if (animate && (visibleViews.Count > 0 || outgoingViews.Count > 0)) StartCategoryTransition();
+                if (animate && (visibleViews.Count > 0 || outgoingCards.Count > 0)) StartCategoryTransition();
                 RefreshVisibility();
                 ViewChanged?.Invoke();
             }
@@ -294,8 +293,9 @@ namespace DuelHero.Cards
         {
             IsTransitioning = true;
             categoryTween = DOTween.Sequence().SetUpdate(true).SetTarget(this);
-            foreach (var view in outgoingViews)
+            foreach (var entry in outgoingCards)
             {
+                var view = entry.View;
                 var group = TransitionGroup(view);
                 var visual = view.VisualRoot;
                 // Incoming cards are ordered above this group by CardFanLayout.
@@ -316,13 +316,7 @@ namespace DuelHero.Cards
             }
             categoryTween.OnComplete(() =>
             {
-                foreach (var view in outgoingViews)
-                {
-                    if (view == null) continue;
-                    view.gameObject.SetActive(false);
-                    ResetTransitionAppearance(view);
-                }
-                outgoingViews.Clear();
+                ReleaseOutgoingCards();
                 foreach (var view in visibleViews) ResetTransitionAppearance(view);
                 IsTransitioning = false;
                 categoryTween = null;
@@ -335,15 +329,26 @@ namespace DuelHero.Cards
             if (!IsTransitioning && categoryTween == null) return;
             categoryTween?.Kill();
             categoryTween = null;
-            foreach (var view in outgoingViews)
+            ReleaseOutgoingCards();
+            foreach (var view in visibleViews) ResetTransitionAppearance(view);
+            IsTransitioning = false;
+        }
+
+        private void ReleaseOutgoingCards()
+        {
+            foreach (var entry in outgoingCards)
             {
+                var view = entry.View;
                 if (view == null) continue;
                 view.gameObject.SetActive(false);
                 ResetTransitionAppearance(view);
+                if (!cachedCards.TryGetValue(entry.Instance, out var current) || !ReferenceEquals(current, entry))
+                {
+                    entry.Instance = null;
+                    pool.Push(entry);
+                }
             }
-            outgoingViews.Clear();
-            foreach (var view in visibleViews) ResetTransitionAppearance(view);
-            IsTransitioning = false;
+            outgoingCards.Clear();
         }
 
         private Font GetFont()

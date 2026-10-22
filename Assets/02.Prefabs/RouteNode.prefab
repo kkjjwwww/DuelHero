@@ -352,7 +352,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 0.76, g: 0.57, b: 0.35, a: 1}
-  m_RaycastTarget: 0
+  m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -399,6 +399,7 @@ GameObject:
   - component: {fileID: 9035547648101666482}
   - component: {fileID: 887203416132665841}
   - component: {fileID: 9088957469546574035}
+  - component: {fileID: 627400034234598001}
   m_Layer: 0
   m_Name: RouteNode
   m_TagString: Untagged
@@ -441,7 +442,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d94c7bb178abb74db58ecf4aeedc6a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Map.RouteNodeView
+  button: {fileID: 627400034234598001}
   border: {fileID: 2735019367093555184}
+  background: {fileID: 4561198922977196160}
   icon: {fileID: 5966846135942144037}
   label: {fileID: 8813109968914387411}
   battleIcon: {fileID: 0}
@@ -452,6 +455,8 @@ MonoBehaviour:
   restColor: {r: 0.42, g: 0.75, b: 0.67, a: 1}
   shopColor: {r: 0.9, g: 0.77, b: 0.47, a: 1}
   bossColor: {r: 0.71, g: 0.57, b: 0.88, a: 1}
+  backgroundColor: {r: 0.075, g: 0.105, b: 0.135, a: 1}
+  currentColor: {r: 1, g: 0.88, b: 0.55, a: 1}
 --- !u!114 &9088957469546574035
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -478,3 +483,28 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!114 &627400034234598001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4346361739972046895}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
+  m_Navigation:
+    m_Mode: 0
+    m_WrapAround: 0
+    m_SelectOnUp: {fileID: 0}
+    m_SelectOnDown: {fileID: 0}
+    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnRight: {fileID: 0}
+  m_Transition: 0
+  m_Interactable: 1
+  m_TargetGraphic: {fileID: 2735019367093555184}
+  m_OnClick:
+    m_PersistentCalls:
+      m_Calls: []
