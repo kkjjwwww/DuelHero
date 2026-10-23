@@ -73,7 +73,7 @@ namespace DuelHero.Cards
             {
                 frontCard = Instantiate(cardPrefab, frontFace.transform, false);
                 frontCard.name = "EnemyCardFront";
-                var font = cardFont = Font.CreateDynamicFontFromOSFont(new[] { "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans CJK KR", "Arial" }, 16);
+                var font = cardFont = DuelHero.UI.GameFonts.UI;
                 frontCard.SetFont(font);
                 frontCard.SetClickAction(OpenCardList);
                 var hover = frontCard.GetComponent<CardHoverInfo>() ?? frontCard.gameObject.AddComponent<CardHoverInfo>();

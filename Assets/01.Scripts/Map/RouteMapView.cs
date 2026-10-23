@@ -11,11 +11,9 @@ namespace DuelHero.Map
         [SerializeField] private RectTransform nodeLayer;
         [SerializeField] private RouteNodeView nodePrefab;
         [SerializeField] private RouteMapConnections connections;
-        [SerializeField] private Font labelFont;
         [SerializeField] private Text seedLabel;
         [SerializeField] private Text clearLabel;
         [SerializeField] private Button restartButton;
-        [SerializeField] private Color stageLabelColor = new Color(.58f, .63f, .65f);
 
         private readonly Dictionary<string, RouteNodeView> nodeViews = new Dictionary<string, RouteNodeView>();
         public event Action<string> NodeClicked;
@@ -27,6 +25,8 @@ namespace DuelHero.Map
         private void HandleRestartClicked() => RestartRequested?.Invoke();
 
         public void SetCleared(bool cleared) => clearLabel.gameObject.SetActive(cleared);
+
+        public void SetRestartInteractable(bool interactable) => restartButton.interactable = interactable;
 
         private void HandleNodeClicked(string nodeId) => NodeClicked?.Invoke(nodeId);
 
@@ -43,9 +43,6 @@ namespace DuelHero.Map
             {
                 var nodes = map.Nodes.Where(node => node.Stage == stage).ToList();
                 float y = (stage - 1) / 4f;
-                CreateText("Stage " + stage, nodeLayer, new Vector2(0f, y),
-                    new Vector2(-72f, 0f), new Vector2(90f, 32f),
-                    stage.ToString("00"), 22, stageLabelColor);
                 for (int index = 0; index < nodes.Count; index++)
                 {
                     var node = nodes[index];
@@ -66,7 +63,7 @@ namespace DuelHero.Map
                 }
             }
             connections.SetConnections(segments);
-            seedLabel.text = $"시드 {map.Seed}  ·  규칙 {map.RulesVersion}";
+            seedLabel.text = $"시드 {map.Seed}";
         }
 
         private void CreateNode(RouteNode node, Vector2 position)
@@ -91,24 +88,6 @@ namespace DuelHero.Map
                 UnityEditor.PrefabUtility.RecordPrefabInstancePropertyModifications(rect);
             }
 #endif
-        }
-
-        private void CreateText(string name, Transform parent, Vector2 anchor, Vector2 offset,
-            Vector2 size, string value, int fontSize, Color color)
-        {
-            var label = new GameObject(name, typeof(RectTransform), typeof(Text));
-            var rect = (RectTransform)label.transform;
-            rect.SetParent(parent, false);
-            rect.anchorMin = rect.anchorMax = anchor;
-            rect.anchoredPosition = offset;
-            rect.sizeDelta = size;
-            var text = label.GetComponent<Text>();
-            text.font = labelFont;
-            text.text = value;
-            text.fontSize = fontSize;
-            text.alignment = TextAnchor.MiddleCenter;
-            text.color = color;
-            text.raycastTarget = false;
         }
 
         private void ClearNodes()

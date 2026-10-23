@@ -12,7 +12,6 @@ namespace DuelHero.Cards
         [SerializeField, Range(0.1f, 1f)] private float spacingRatio = 0.78f;
         [SerializeField, Range(0f, 35f)] private float maximumAngle = 18f;
         [SerializeField, Min(1f)] private float hoverScale = 1.55f;
-        [SerializeField] private float hoverLift = 70f;
         [SerializeField, Min(0f)] private float hoverNeighborVisibleWidth = 32f;
         [SerializeField, Range(0f, 0.5f)] private float hiddenDescriptionRatio = 0.30f;
         [SerializeField, Min(0f)] private float edgeDrop = 32f;
@@ -59,8 +58,9 @@ namespace DuelHero.Cards
             if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(area, position, camera, out var local))
             { if (focused != null) Release(focused); return; }
             CardView candidate = null;
-            // Keep the enlarged card until the pointer leaves its final visible shape.
-            if (focused != null && ContainsAtPose(focused, local, true)) candidate = focused;
+            // Retain both poses so lifting a card cannot move its hover area away from the pointer.
+            if (focused != null && (ContainsAtPose(focused, local, true) ||
+                ContainsAtPose(focused, local, false))) candidate = focused;
             else if (focused != null)
             {
                 int index = cards.IndexOf(focused);
@@ -170,7 +170,7 @@ namespace DuelHero.Cards
         private void GetPose(CardView card, bool hover, out Vector2 position, out float angle, out float scale)
         {
             var rect = (RectTransform)card.transform;
-            position = positions[card] + (hover ? Vector2.up * hoverLift : Vector2.zero);
+            position = positions[card];
             scale = hover ? hoverScale : 1f;
             if (hover)
             {
@@ -179,7 +179,7 @@ namespace DuelHero.Cards
                 position.x = Mathf.Clamp(position.x, -Mathf.Max(0, available - half), Mathf.Max(0, available - half));
                 Rect screen = CanvasBounds();
                 float halfHeight = rect.rect.height * scale * 0.5f;
-                position.y = Mathf.Clamp(position.y, screen.yMin + halfHeight + 8f, Mathf.Max(screen.yMin + halfHeight + 8f, screen.yMax - halfHeight - 8f));
+                position.y = screen.yMin + halfHeight;
             }
             else if (focused != null && card != focused) position.x += NeighborShift(card);
             angle = hover ? 0 : angles[card];

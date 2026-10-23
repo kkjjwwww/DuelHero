@@ -353,7 +353,7 @@ namespace DuelHero.Cards
 
         private Font GetFont()
         {
-            if (font == null) font = Font.CreateDynamicFontFromOSFont(new[] { "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans CJK KR", "Arial" }, 16);
+            if (font == null) font = DuelHero.UI.GameFonts.UI;
             return font;
         }
 

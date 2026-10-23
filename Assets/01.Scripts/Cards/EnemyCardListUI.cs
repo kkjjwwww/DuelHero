@@ -89,7 +89,7 @@ namespace DuelHero.Cards
         private void Initialize()
         {
             if (initialized) return;
-            if (font == null) font = Font.CreateDynamicFontFromOSFont(new[] { "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans CJK KR", "Arial" }, 16);
+            if (font == null) font = DuelHero.UI.GameFonts.UI;
             inspection = CardInspectionPresenter.GetOrCreate(GetComponentInParent<Canvas>().rootCanvas);
             if (detailLabel != null) detailLabel.gameObject.SetActive(false);
             var vertical = content.GetComponent<VerticalLayoutGroup>() ?? content.gameObject.AddComponent<VerticalLayoutGroup>();

@@ -157,7 +157,7 @@ public class ActionQueueUI : MonoBehaviour
             view.name = "ReservedCard";
             view.transform.SetAsFirstSibling();
             slotCards[index] = view;
-            if (cardFont == null) cardFont = Font.CreateDynamicFontFromOSFont(new[] { "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans CJK KR", "Arial" }, 16);
+            if (cardFont == null) cardFont = DuelHero.UI.GameFonts.UI;
             view.SetFont(cardFont);
             int slot = index;
             view.SetClickAction(() => { if (!reservationQueue.IsExecuting) reservationQueue.CancelAt(slot); });

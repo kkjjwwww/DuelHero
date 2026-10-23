@@ -1,5 +1,6 @@
 using System;
 using DuelHero.Data;
+using DuelHero.Run;
 using UnityEngine;
 namespace DuelHero.Units
 {
@@ -22,7 +23,12 @@ namespace DuelHero.Units
             var definitions = dataKind == UnitDataKind.Player ? database.players : database.enemies;
             var definition = Array.Find(definitions, unit => unit.id == unitId);
             if (definition == null) { LastError = "유닛 ID를 찾을 수 없습니다: " + unitId; return false; }
-            try { stats.Initialize(definition.startingHealth, definition.maxHealth, definition.startingEnergy, definition.maxEnergy); LastError = null; return true; }
+            var run = Application.isPlaying && dataKind == UnitDataKind.Player ? RunSessionStore.Current : null;
+            bool fromRun = run?.PendingBattleNodeId != null;
+            int health = fromRun ? run.PlayerHealth : definition.startingHealth;
+            int maxHealth = fromRun ? run.PlayerMaxHealth : definition.maxHealth;
+            int energy = fromRun ? definition.maxEnergy : definition.startingEnergy;
+            try { stats.Initialize(health, maxHealth, energy, definition.maxEnergy); LastError = null; return true; }
             catch (ArgumentOutOfRangeException) { LastError = unitId + ": 시작·최대 체력/에너지 값이 올바르지 않습니다."; return false; }
         }
     }

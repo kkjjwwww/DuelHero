@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using DuelHero.Run;
 using UnityEngine;
 
 namespace DuelHero.Cards
@@ -23,8 +24,19 @@ namespace DuelHero.Cards
         public void Initialize()
         {
             if (initialized || database == null) return;
-            foreach (var definition in database.StarterCards)
-                cards.Add(new CardInstance(definition));
+            var run = Application.isPlaying ? RunSessionStore.Current : null;
+            var initialCards = new List<CardInstance>();
+            if (run?.PendingBattleNodeId != null)
+            {
+                // Resolve the full snapshot before committing; duplicates own separate runtime state.
+                foreach (var id in run.CardIds) initialCards.Add(CreateCard(id));
+            }
+            else
+            {
+                foreach (var definition in database.StarterCards)
+                    initialCards.Add(new CardInstance(definition));
+            }
+            cards.AddRange(initialCards);
             initialized = true;
             NotifyCardsChanged();
         }
@@ -32,13 +44,18 @@ namespace DuelHero.Cards
         public CardInstance AddCard(string cardId)
         {
             Initialize();
-            if (database == null) throw new InvalidOperationException("PlayerDeck에 CardDatabase를 지정해주세요.");
-            var definition = Array.Find(database.cards, card => card.id == cardId);
-            if (definition == null) throw new ArgumentException("존재하지 않는 카드 ID: " + cardId, nameof(cardId));
-            var instance = new CardInstance(definition);
+            var instance = CreateCard(cardId);
             cards.Add(instance);
             NotifyCardsChanged();
             return instance;
+        }
+
+        private CardInstance CreateCard(string cardId)
+        {
+            if (database == null) throw new InvalidOperationException("PlayerDeck에 CardDatabase를 지정해주세요.");
+            var definition = Array.Find(database.cards, card => card != null && card.id == cardId);
+            if (definition == null) throw new ArgumentException("존재하지 않는 카드 ID: " + cardId, nameof(cardId));
+            return new CardInstance(definition);
         }
 
         public bool RemoveCard(CardInstance instance)

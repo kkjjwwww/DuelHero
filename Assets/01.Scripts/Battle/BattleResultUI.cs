@@ -1,26 +1,24 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 namespace DuelHero.Battle
 {
     public sealed class BattleResultUI : MonoBehaviour
     {
-        [SerializeField] private BattleTurnController source;
         [SerializeField] private CanvasGroup panel;
         [SerializeField] private Text resultLabel;
         [SerializeField] private Button restartButton;
-        [SerializeField] private BattleRestartController restartController;
+        [SerializeField] private Text actionLabel;
+        public event Action ActionRequested;
         private void OnEnable()
         {
-            if (source != null) source.BattleFinished += Show;
-            if (restartButton != null) restartButton.onClick.AddListener(Restart);
-            Show(source == null ? BattleOutcome.Running : source.Outcome);
+            if (restartButton != null) restartButton.onClick.AddListener(RequestAction);
         }
         private void OnDisable()
         {
-            if (source != null) source.BattleFinished -= Show;
-            if (restartButton != null) restartButton.onClick.RemoveListener(Restart);
+            if (restartButton != null) restartButton.onClick.RemoveListener(RequestAction);
         }
-        private void Show(BattleOutcome outcome)
+        public void Show(BattleOutcome outcome, string buttonText, bool actionEnabled)
         {
             bool visible = outcome != BattleOutcome.Running;
             if (panel != null)
@@ -31,14 +29,10 @@ namespace DuelHero.Battle
                 if (visible) panel.transform.SetAsLastSibling();
             }
             if (resultLabel != null) resultLabel.text = outcome == BattleOutcome.Victory ? "승리" : "패배";
-            if (restartButton != null) restartButton.interactable = visible && restartController != null;
+            if (actionLabel != null) actionLabel.text = buttonText;
+            if (restartButton != null) restartButton.interactable = visible && actionEnabled;
         }
-        private void Restart()
-        {
-            if (restartController == null) return;
-            if (restartButton != null) restartButton.interactable = false;
-            restartController.Restart();
-        }
+        private void RequestAction() => ActionRequested?.Invoke();
     }
 }
 
