@@ -10,8 +10,6 @@ namespace DuelHero.Battle
 
         public EnemyPlannedAction(CardInstance card, Vector2Int direction)
         { Card = card; Direction = direction; }
-
-        public CardDefinition ForExecution() => CardDirectionRules.ForExecution(Card.Definition, Direction);
     }
 }
 

@@ -19,14 +19,23 @@ namespace DuelHero.Cards
     {
         public string id, name, description, actionType, rarity;
         public int energyCost;
+        public int cooldownTurns = 1;
+        public int EffectiveCooldownTurns => isBasicAction ? 0 : cooldownTurns;
         public string[] keywordIds;
         public bool isObtainable, isBasicAction, isStarterCard;
         public CardEffectDefinition[] effects;
 
-        public string ResolvedDescription(Func<CardEffectDefinition, int, string> formatValue = null)
+        public string ResolvedDescription(Func<CardEffectDefinition, int, string> formatValue = null,
+            Func<int, string> formatCooldown = null)
         {
-            return Regex.Replace(description, @"\{effect(\d+)\.(value|durationSlots)\}", match =>
+            return Regex.Replace(description, @"\[\{cooldownTurns\}턴\]|\{cooldownTurns\}|\{effect(\d+)\.(value|durationSlots)\}", match =>
             {
+                if (match.Value == "{cooldownTurns}") return EffectiveCooldownTurns.ToString();
+                if (match.Value == "[{cooldownTurns}턴]")
+                {
+                    int turns = EffectiveCooldownTurns;
+                    return turns <= 0 ? string.Empty : formatCooldown != null ? formatCooldown(turns) : $"[{turns}턴]";
+                }
                 int index = int.Parse(match.Groups[1].Value) - 1;
                 if (index < 0 || index >= effects.Length)
                     throw new InvalidOperationException($"{id}: invalid description placeholder {match.Value}");
@@ -82,8 +91,7 @@ namespace DuelHero.Cards
         public void ClearReservation() { ReservedSlot = -1; SelectedDirection = Vector2Int.right; }
         public void MarkUsed(int round)
         {
-            // Use in N: unavailable in N+1, available again in N+2.
-            if (!Definition.isBasicAction) AvailableFromRound = round + 2;
+            if (!Definition.isBasicAction) AvailableFromRound = round + Definition.EffectiveCooldownTurns + 1;
             ClearReservation();
         }
     }

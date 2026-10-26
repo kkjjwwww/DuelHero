@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: CardDatabase
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Cards.CardDatabase
   sourceSpreadsheetId: 1pspfXZtUhTmSc9ZTL1iTzQDeBgvfbb_wqwCNs83EFQE
-  importedAtUtc: 2026-10-23T04:55:09.0553076Z
+  importedAtUtc: 2026-10-26T08:58:46.5548139Z
   cards:
   - id: move_up_001
     name: "\uC704 \uC774\uB3D9"
@@ -21,6 +21,7 @@ MonoBehaviour:
     actionType: "\uC774\uB3D9"
     rarity: "\uC77C\uBC18"
     energyCost: 0
+    cooldownTurns: 0
     keywordIds: []
     isObtainable: 0
     isBasicAction: 1
@@ -41,6 +42,7 @@ MonoBehaviour:
     actionType: "\uC774\uB3D9"
     rarity: "\uC77C\uBC18"
     energyCost: 0
+    cooldownTurns: 0
     keywordIds: []
     isObtainable: 0
     isBasicAction: 1
@@ -61,6 +63,7 @@ MonoBehaviour:
     actionType: "\uC774\uB3D9"
     rarity: "\uC77C\uBC18"
     energyCost: 0
+    cooldownTurns: 0
     keywordIds: []
     isObtainable: 0
     isBasicAction: 1
@@ -81,6 +84,7 @@ MonoBehaviour:
     actionType: "\uC774\uB3D9"
     rarity: "\uC77C\uBC18"
     energyCost: 0
+    cooldownTurns: 0
     keywordIds: []
     isObtainable: 0
     isBasicAction: 1
@@ -102,6 +106,7 @@ MonoBehaviour:
     actionType: "\uBC29\uC5B4"
     rarity: "\uC77C\uBC18"
     energyCost: 0
+    cooldownTurns: 0
     keywordIds: []
     isObtainable: 0
     isBasicAction: 1
@@ -122,6 +127,7 @@ MonoBehaviour:
     actionType: "\uD68C\uBCF5"
     rarity: "\uC77C\uBC18"
     energyCost: 0
+    cooldownTurns: 0
     keywordIds: []
     isObtainable: 0
     isBasicAction: 1
@@ -139,10 +145,11 @@ MonoBehaviour:
   - id: slash_001
     name: "\uBCA0\uAE30"
     description: "\uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574
-      {effect1.value}\uB97C(\uC744) \uC900\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815]"
+      {effect1.value}\uB97C(\uC744) \uC900\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
     actionType: "\uACF5\uACA9"
     rarity: "\uC77C\uBC18"
     energyCost: 10
+    cooldownTurns: 1
     keywordIds:
     - direction_select
     isObtainable: 0
@@ -162,10 +169,11 @@ MonoBehaviour:
   - id: thrust_001
     name: "\uCC0C\uB974\uAE30"
     description: "\uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574
-      {effect1.value}\uB97C(\uC744) \uC900\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815]"
+      {effect1.value}\uB97C(\uC744) \uC900\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
     actionType: "\uACF5\uACA9"
     rarity: "\uC77C\uBC18"
     energyCost: 15
+    cooldownTurns: 1
     keywordIds:
     - direction_select
     isObtainable: 0
@@ -186,10 +194,11 @@ MonoBehaviour:
   - id: sweep_001
     name: "\uD6A1\uBCA0\uAE30"
     description: "\uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574
-      {effect1.value}\uB97C(\uC744) \uC900\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815]"
+      {effect1.value}\uB97C(\uC744) \uC900\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
     actionType: "\uACF5\uACA9"
     rarity: "\uC77C\uBC18"
     energyCost: 20
+    cooldownTurns: 1
     keywordIds:
     - direction_select
     isObtainable: 0

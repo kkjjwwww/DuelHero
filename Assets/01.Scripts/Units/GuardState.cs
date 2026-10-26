@@ -3,15 +3,42 @@ using System.Collections.Generic;
 
 namespace DuelHero.Units
 {
+    public readonly struct GuardEffectSnapshot
+    {
+        public int Amount { get; }
+        public int RemainingSlots { get; }
+        public GuardEffectSnapshot(int amount, int remainingSlots)
+        { Amount = amount; RemainingSlots = remainingSlots; }
+    }
+
     // Each application expires independently; consume the earliest-expiring shield first.
     public sealed class GuardState
     {
-        private sealed class Effect
+        private struct Effect
         {
             public int Amount;
             public int RemainingSlots;
         }
         private readonly List<Effect> effects = new();
+        public GuardState() { }
+        // Planning buffers retain their capacity; branches never share mutable shield layers.
+        internal void CopyFrom(GuardState source)
+        {
+            effects.Clear();
+            effects.AddRange(source.effects);
+        }
+        internal void Reset(IReadOnlyList<GuardEffectSnapshot> snapshot)
+        {
+            effects.Clear();
+            for (int i = 0; i < snapshot.Count; i++) Apply(snapshot[i].Amount, snapshot[i].RemainingSlots);
+        }
+        public IReadOnlyList<GuardEffectSnapshot> Capture()
+        {
+            var snapshot = new GuardEffectSnapshot[effects.Count];
+            for (int i = 0; i < effects.Count; i++)
+                snapshot[i] = new GuardEffectSnapshot(effects[i].Amount, effects[i].RemainingSlots);
+            return Array.AsReadOnly(snapshot);
+        }
         public int Reduction
         {
             get
@@ -31,10 +58,12 @@ namespace DuelHero.Units
         public int ReduceDamage(int amount)
         {
             if (amount < 0) throw new ArgumentOutOfRangeException(nameof(amount));
-            foreach (var effect in effects)
+            for (int i = 0; i < effects.Count; i++)
             {
+                var effect = effects[i];
                 int absorbed = Math.Min(amount, effect.Amount);
                 effect.Amount -= absorbed;
+                effects[i] = effect;
                 amount -= absorbed;
                 if (amount == 0) break;
             }
@@ -45,7 +74,11 @@ namespace DuelHero.Units
         {
             bool changed = effects.Count > 0;
             for (int i = effects.Count - 1; i >= 0; i--)
-                if (--effects[i].RemainingSlots == 0) effects.RemoveAt(i);
+            {
+                var effect = effects[i];
+                if (--effect.RemainingSlots == 0) effects.RemoveAt(i);
+                else effects[i] = effect;
+            }
             return changed;
         }
     }

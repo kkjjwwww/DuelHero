@@ -72,27 +72,62 @@ namespace DuelHero.Battle
             ActionResolved?.Invoke(new BattleActionResult(kind, actorId ?? playerId, playerQueue.CurrentRound, cardId, outcome));
         public bool TryExecute()
         {
-            if (!isActiveAndEnabled || playerQueue == null || playerQueue.IsExecuting || playerQueue.Reservations.Count != 3 || Outcome != BattleOutcome.Running) return false;
-            if (effects == null || combatEffects == null || !combatEffects.CanResolve(playerId) || !combatEffects.CanResolve(enemyId) ||
+            if (!isActiveAndEnabled || playerQueue == null || playerQueue.IsExecuting ||
+                playerQueue.Reservations.Count != 3 || Outcome != BattleOutcome.Running)
+                return false;
+
+            if (effects == null || combatEffects == null ||
+                !combatEffects.CanResolve(playerId) || !combatEffects.CanResolve(enemyId) ||
                 !(enemyPlanSource is IEnemyActionPlan provider) || !enemyPlanSource.isActiveAndEnabled)
-            { LastError = "양측 유닛과 실행기, 적 행동 계획을 연결해주세요."; return false; }
-            if (!playerQueue.HasEnoughEnergy(out var reason)) { LastError = reason; return false; }
-            var playerCards = playerQueue.Reservations.Select(c => CardDirectionRules.ForExecution(c.Definition, c.SelectedDirection)).ToArray();
-            if (preparedEnemyCards == null && !PrepareEnemyPlan()) return false;
+            {
+                LastError = "양측 유닛과 실행기, 적 행동 계획을 연결해주세요.";
+                return false;
+            }
+
+            if (!playerQueue.HasEnoughEnergy(out var reason))
+            {
+                LastError = reason;
+                return false;
+            }
+
+            var playerCards = playerQueue.Reservations.Select(c => CardDirectionRules.ForExecution(c.Definition,c.SelectedDirection)).ToArray();
+
+            if (preparedEnemyCards == null && !PrepareEnemyPlan())
+                return false;
+
             var enemyCards = preparedEnemyCards;
             if (enemyCards.Length != 3 || playerCards.Any(c => !effects.Supports(playerId, c)) || enemyCards.Any(c => !effects.Supports(enemyId, c)))
             {
                 LastError = "행동 계획에 지원하지 않는 효과가 있습니다.";
-                Publish(BattleActionKind.ExecutionBlocked, outcome: BattleActionOutcome.UnsupportedEffect); return false;
+                Publish(BattleActionKind.ExecutionBlocked,outcome: BattleActionOutcome.UnsupportedEffect);
+                return false;
             }
+
             combatEffects.TryGetUnit(enemyId, out _, out var enemyStats);
-            var energyCards = enemyCards.Select(c => new CardInstance(c ?? new CardDefinition { effects = Array.Empty<CardEffectDefinition>() })).ToArray();
-            if (!CardEnergyRules.CanExecute(energyCards, enemyStats.Energy, enemyStats.MaxEnergy, out reason)) { LastError = "적 " + reason; return false; }
-            if (!playerQueue.BeginExecution()) return false;
-            enemyPlan = provider; LastError = null;
+            var energyCards = enemyCards
+                .Select(c => new CardInstance(c ?? new CardDefinition
+                {
+                    effects = Array.Empty<CardEffectDefinition>()
+                }))
+                .ToArray();
+
+            if (!CardEnergyRules.CanExecute(
+                energyCards, enemyStats.Energy, enemyStats.MaxEnergy, out reason))
+            {
+                LastError = "적 " + reason;
+                return false;
+            }
+
+            if (!playerQueue.BeginExecution())
+                return false;
+
+            enemyPlan = provider;
+            LastError = null;
             executedSlots = 0;
             executionRound = playerQueue.CurrentRound;
-            StartCoroutine(Execute(playerCards, enemyCards)); return true;
+
+            StartCoroutine(Execute(playerCards, enemyCards));
+            return true;
         }
         private IEnumerator Execute(CardDefinition[] playerCards, CardDefinition[] enemyCards)
         {

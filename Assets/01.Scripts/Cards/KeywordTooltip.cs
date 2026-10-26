@@ -31,7 +31,8 @@ namespace DuelHero.Cards
         }
         public void Show(KeywordDefinition keyword, Vector2 screenPosition)
         {
-            label.text = $"<color=#FFBA47>[{keyword.name}]</color>\n{keyword.description}";
+            label.text = string.IsNullOrEmpty(keyword.name) ? keyword.description
+                : $"<color=#FFBA47>[{keyword.name}]</color>\n{keyword.description}";
             panel.sizeDelta = new Vector2(280f, 28f + label.cachedTextGeneratorForLayout.GetPreferredHeight(label.text, label.GetGenerationSettings(new Vector2(256f, 0f))) / label.pixelsPerUnit);
             gameObject.SetActive(true); transform.SetAsLastSibling(); Move(screenPosition);
         }

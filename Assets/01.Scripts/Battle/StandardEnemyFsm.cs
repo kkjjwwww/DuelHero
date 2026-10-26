@@ -14,7 +14,7 @@ namespace DuelHero.Battle
             var affordable = ready.Where(c => c.Definition.energyCost <= state.Energy).ToArray();
             if (NeedsEnergy(ready, state.Energy) && affordable.Any(c => Has(c, "energyRestore")))
                 return EnemyTacticState.Recover;
-            if (affordable.SelectMany(Actions).Any(action => Hits(action, state, context.Target)))
+            if (affordable.SelectMany(Actions).Any(action => Hits(action, state, context)))
                 return EnemyTacticState.Engage;
             return EnemyTacticState.Approach;
         }

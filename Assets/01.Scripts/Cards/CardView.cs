@@ -45,6 +45,7 @@ namespace DuelHero.Cards
         private Color normalDescriptionColor;
         private KeywordHoverLink keywordHover;
         private static readonly Regex KeywordToken = new Regex(@"\[([^\[\]\r\n]+)\]");
+        private const string CooldownLinkId = "__card_cooldown";
         private Action<KeywordDefinition, Vector2> onKeywordEnter;
         private Action<Vector2> onKeywordMove;
         private Action onKeywordExit;
@@ -72,14 +73,24 @@ namespace DuelHero.Cards
             SetIllustration(illustration.sprite);
             nameLabel.text = card.name;
             energyLabel.text = card.energyCost.ToString();
-            string body = card.ResolvedDescription(FormatEffectValue);
+            string body = card.ResolvedDescription(FormatEffectValue, turns => $"[{CooldownLinkId}]");
             HashSet<string> ids = new HashSet<string>(card.keywordIds ?? Array.Empty<string>());
             var linkedKeywords = new Dictionary<string, KeywordDefinition>();
             foreach (var keyword in keywords ?? Enumerable.Empty<KeywordDefinition>())
                 if (ids.Contains(keyword.id)) linkedKeywords[keyword.name] = keyword;
+            if (card.EffectiveCooldownTurns > 0)
+                linkedKeywords[CooldownLinkId] = new KeywordDefinition
+                {
+                    id = CooldownLinkId,
+                    name = string.Empty,
+                    description = "<color=#FFFFFF>이 카드를 사용하면 다음 " +
+                        $"<color=#999999>{card.EffectiveCooldownTurns}</color>턴 동안 재사용할 수 없습니다.</color>"
+                };
             descriptionLabel.text = KeywordToken.Replace(body, match =>
                 linkedKeywords.TryGetValue(match.Groups[1].Value, out var keyword)
-                    ? $"<link=\"{keyword.id}\"><color=#FFBA47>{match.Value}</color></link>"
+                    ? keyword.id == CooldownLinkId
+                        ? $"<link=\"{keyword.id}\"><color=#999999>[{card.EffectiveCooldownTurns}턴]</color></link>"
+                        : $"<link=\"{keyword.id}\"><color=#FFBA47>[{keyword.name}]</color></link>"
                     : match.Value);
             if (keywordHover == null) keywordHover = descriptionLabel.GetComponent<KeywordHoverLink>();
             keywordHover.Initialize(this, descriptionLabel, linkedKeywords.Values);

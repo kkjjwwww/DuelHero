@@ -112,6 +112,8 @@ public static class CardSheetImporter
         {
             id = Required(r, "id"), name = Required(r, "name"), description = Required(r, "description"),
             actionType = Required(r, "actionType"), rarity = Required(r, "rarity"), energyCost = Number(r, "energyCost"),
+            cooldownTurns = r.TryGetValue("cooldownTurns", out var cooldown) && !string.IsNullOrWhiteSpace(cooldown)
+                ? Number(r, "cooldownTurns") : 1,
             keywordIds = r["keywordIds"].Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToArray(),
             isObtainable = Boolean(r, "isObtainable"), isBasicAction = Boolean(r, "isBasicAction"), isStarterCard = Boolean(r, "isStarterCard")
         }).ToArray();

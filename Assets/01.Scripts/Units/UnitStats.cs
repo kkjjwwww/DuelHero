@@ -11,6 +11,7 @@ namespace DuelHero.Units
         public int MaxEnergy { get; private set; }
         private readonly GuardState guard = new();
         public int GuardReduction => guard.Reduction;
+        public System.Collections.Generic.IReadOnlyList<GuardEffectSnapshot> CaptureGuard() => guard.Capture();
         public void ApplyGuard(int amount, int durationSlots)
         {
             Validate(amount);
