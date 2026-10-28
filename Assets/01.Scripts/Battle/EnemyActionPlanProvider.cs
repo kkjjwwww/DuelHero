@@ -2,6 +2,8 @@ using System;
 using System.Linq;
 using DuelHero.Cards;
 using DuelHero.Units;
+using DuelHero.Run;
+using DuelHero.Map;
 using UnityEngine;
 namespace DuelHero.Battle
 {
@@ -19,9 +21,12 @@ namespace DuelHero.Battle
         private EnemyPlannedAction[] activePlan;
         private System.Collections.Generic.IReadOnlyList<CardDefinition> activeExecution;
         private int activeRound;
+        private uint? standaloneSeed;
+        public uint LastDecisionSeed { get; private set; }
         public EnemyPlanSimulation LastSimulation { get; private set; }
         private UtilityPlanSelector selector;
         public EnemySearchMetrics LastSearch => selector?.LastSearch ?? default;
+        public EnemyDecisionTrace LastDecisionTrace => selector?.LastTrace;
         public event Action CardsChanged;
         public CardDatabase Database => database;
         public System.Collections.Generic.IReadOnlyList<CardInstance> Cards
@@ -45,11 +50,16 @@ namespace DuelHero.Battle
             if (targetStats == null || !targetStats.IsInitialized)
                 throw new InvalidOperationException("적 AI 대상의 공개 상태를 확인해주세요.");
             var supported = cards.Where(c => effects.Supports(actorId, c.Definition)).ToArray();
+            var run = RunSessionStore.Current;
+            bool runBattle = run?.PendingBattleNodeId != null;
+            uint seed = runBattle ? run.Map.Seed : (standaloneSeed ??= RouteMapGenerator.CreateSeed());
+            LastDecisionSeed = EnemyDecisionRandom.CreateSeed(seed, runBattle ? run.PendingBattleNodeId : null, actorId, round);
             var context = new EnemyDecisionContext(supported,
                 new EnemyPlanningState(movement.GridPosition, stats.Energy, stats.MaxEnergy, movement.Grid.Map),
                 target.GridPosition, round,
                 new EnemyUnitSnapshot(stats.Health, stats.MaxHealth, stats.Energy, stats.MaxEnergy, stats.CaptureGuard()),
-                new EnemyUnitSnapshot(targetStats.Health, targetStats.MaxHealth, targetStats.Energy, targetStats.MaxEnergy, targetStats.CaptureGuard()));
+                new EnemyUnitSnapshot(targetStats.Health, targetStats.MaxHealth, targetStats.Energy, targetStats.MaxEnergy, targetStats.CaptureGuard()),
+                LastDecisionSeed);
             selector ??= new UtilityPlanSelector(utilitySettings ??= new UtilityAiSettings());
             activePlan = selector.Select(context);
             LastSimulation = EnemyPlanningState.SimulatePlan(context, activePlan);

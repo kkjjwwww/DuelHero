@@ -12,6 +12,7 @@ namespace DuelHero.Battle
         public EnemyPlanningState State { get; }
         public Vector2Int Target { get; }
         public int Round { get; }
+        public uint DecisionSeed { get; }
         public EnemyUnitSnapshot Actor { get; }
         public EnemyUnitSnapshot TargetUnit { get; }
         public IReadOnlyDictionary<Vector2Int, int> DistancesToTarget { get; }
@@ -19,10 +20,11 @@ namespace DuelHero.Battle
         private readonly Dictionary<Vector2Int, AttackOptions> attackOptions = new();
 
         public EnemyDecisionContext(IReadOnlyList<CardInstance> cards, EnemyPlanningState state, Vector2Int target, int round,
-            EnemyUnitSnapshot actor, EnemyUnitSnapshot targetUnit)
+            EnemyUnitSnapshot actor, EnemyUnitSnapshot targetUnit, uint decisionSeed = 0)
         {
             Cards = System.Array.AsReadOnly(cards.ToArray()); State = state; Target = target; Round = round;
             Actor = actor; TargetUnit = targetUnit;
+            DecisionSeed = decisionSeed;
             DistancesToTarget = state.Map.DistancesFrom(target);
         }
 
@@ -47,7 +49,7 @@ namespace DuelHero.Battle
         }
 
         // At most three copies have been selected. Four cheapest distinct instances are
-        // sufficient to find a remaining affordable attack without rescanning the deck per branch.
+        // sufficient to find a remaining affordable attack without rescanning the deck per candidate.
         internal bool HasAttackOpportunity(Vector2Int position, int energy, EnemyPlannedAction[] selected, int count)
         {
             if (!attackOptions.TryGetValue(position, out var options))

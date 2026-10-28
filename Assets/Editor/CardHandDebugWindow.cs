@@ -53,6 +53,12 @@ namespace DuelHero.EditorTools
             }
 
             bool editable = !queue.IsExecuting && (turn == null || !turn.IsInputLocked);
+            EditorGUILayout.LabelField("전투 종료", EditorStyles.boldLabel);
+            using (new EditorGUI.DisabledScope(turn == null || !turn.CanWinForDebug))
+            {
+                if (GUILayout.Button("즉시 승리") && turn.TryWinForDebug()) return;
+            }
+            EditorGUILayout.Space(12);
             DrawCards(deck, queue, deckList, editable);
             EditorGUILayout.Space(12);
             DrawStats(queue.UnitStats, editable);

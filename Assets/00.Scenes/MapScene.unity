@@ -1513,7 +1513,7 @@ MonoBehaviour:
   view: {fileID: 304662398}
   unitDatabase: {fileID: 11400000, guid: a6ec61c028de1f14cb795b2fa5eb77b5, type: 2}
   playerUnitId: player_dummy_001
-  cardDatabase: {fileID: 11400000, guid: b38eb9bf764792848bf05096af2f0d8d, type: 2}
+  cardDatabase: {fileID: 11400000, guid: c7ef5d4e09c030144b6a820c990be87e, type: 2}
   battleScenePath: Assets/00.Scenes/BattleScene.unity
 --- !u!4 &892684007
 Transform:

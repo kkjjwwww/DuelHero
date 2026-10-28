@@ -41,7 +41,7 @@ namespace DuelHero.Battle
             foreach (var card in reserved.Where(c => c.CanExecute))
             {
                 foreach (var cell in card.AttackCells) cells.Add(cell);
-                hasMovement |= DrawMovement(card, false);
+                hasMovement |= DrawMovement(card.MovementPath, false, player);
                 finalDestination = card.EndPosition;
             }
             int index = 0;
@@ -49,14 +49,27 @@ namespace DuelHero.Battle
                 DrawCell(Get(reservedCells, index++, "ReservedAttack"), cell, reservedAttackColor, .012f);
             if (focus != null && focus.CanExecute && focus.Slot >= reserved.Count)
             {
-                hasMovement |= DrawMovement(focus, true);
+                hasMovement |= DrawMovement(focus.MovementPath, true, player);
                 finalDestination = focus.EndPosition;
             }
-            if (hasMovement && finalDestination.HasValue) DrawDestination(finalDestination.Value);
+            if (hasMovement && finalDestination.HasValue) DrawDestination(finalDestination.Value, player, playerSprite);
             if (focus == null || !focus.CanExecute) return;
-            index = 0;
-            foreach (var cell in focus.AttackCells)
-                DrawCell(Get(focusedCells, index++, "FocusedAttack"), cell, focusedAttackColor, .018f);
+            DrawFocusedAttacks(focus.AttackCells, player);
+        }
+        public void ShowExecuted(ExecutedCardPreview execution, GridMovement unit, SpriteRenderer unitSprite)
+        {
+            Clear();
+            if (whiteSprite == null || execution == null || unit == null) return;
+            bool moved = DrawMovement(execution.MovementPath, true, unit);
+            if (moved && execution.EndPosition != unit.GridPosition && unitSprite != null)
+                DrawDestination(execution.EndPosition, unit, unitSprite);
+            DrawFocusedAttacks(execution.AttackCells, unit);
+        }
+        private void DrawFocusedAttacks(IReadOnlyList<Vector2Int> cells, GridMovement unit)
+        {
+            int index = 0;
+            foreach (var cell in cells)
+                DrawCell(Get(focusedCells, index++, "FocusedAttack"), cell, focusedAttackColor, .018f, unit);
             if (index > 0)
             {
                 // One tween drives every focused tile so their blinking stays synchronized.
@@ -69,27 +82,26 @@ namespace DuelHero.Battle
                 }, focusedAttackColor.a * .2f, pulseHalfPeriod).SetLoops(-1, LoopType.Yoyo).SetUpdate(true);
             }
         }
-        private bool DrawMovement(CardPreviewResult card, bool focused)
+        private bool DrawMovement(IReadOnlyList<Vector2Int> path, bool focused, GridMovement unit)
         {
-            var path = card.MovementPath;
             if (path.Count < 2) return false;
-            float cellSize = player.CellSize;
+            float cellSize = unit.CellSize;
             for (int step = 1; step < path.Count; step++)
             {
-                Vector3 from = World(path[step - 1], .03f), to = World(path[step], .03f);
+                Vector3 from = World(path[step - 1], .03f, unit), to = World(path[step], .03f, unit);
                 for (int dot = 1; dot <= 5; dot++)
                 {
                     var sprite = Get(pathDots, ActiveCount(pathDots), "PathDot");
                     sprite.sprite = whiteSprite;
                     sprite.transform.position = Vector3.Lerp(from, to, dot / 6f);
-                    sprite.transform.rotation = player.Grid.transform.rotation * Quaternion.Euler(-90, 0, 0);
+                    sprite.transform.rotation = unit.Grid.transform.rotation * Quaternion.Euler(-90, 0, 0);
                     sprite.transform.localScale = Vector3.one * cellSize * .075f;
                     sprite.color = focused ? Color.white : pathColor;
                 }
             }
             return true;
         }
-        private void DrawDestination(Vector2Int destination)
+        private void DrawDestination(Vector2Int destination, GridMovement unit, SpriteRenderer unitSprite)
         {
             if (destinationGhost == null)
             {
@@ -99,25 +111,27 @@ namespace DuelHero.Battle
             }
             var ghost = destinationGhost;
             ghost.gameObject.SetActive(true);
-            ghost.sprite = playerSprite.sprite;
-            ghost.transform.rotation = playerSprite.transform.rotation;
-            ghost.transform.position = World(destination, 0) + (playerSprite.transform.position - player.transform.position);
-            ghost.transform.localScale = playerSprite.transform.lossyScale;
-            ghost.flipX = playerSprite.flipX;
-            ghost.sortingLayerID = playerSprite.sortingLayerID;
-            ghost.sortingOrder = playerSprite.sortingOrder + 1;
+            ghost.sprite = unitSprite.sprite;
+            ghost.transform.rotation = unitSprite.transform.rotation;
+            ghost.transform.position = World(destination, 0, unit) + (unitSprite.transform.position - unit.transform.position);
+            ghost.transform.localScale = unitSprite.transform.lossyScale;
+            ghost.flipX = unitSprite.flipX;
+            ghost.flipY = unitSprite.flipY;
+            ghost.sortingLayerID = unitSprite.sortingLayerID;
+            ghost.sortingOrder = unitSprite.sortingOrder + 1;
             ghost.color = new Color(1, 1, 1, ghostAlpha);
         }
-        private void DrawCell(SpriteRenderer sprite, Vector2Int cell, Color color, float elevation)
+        private void DrawCell(SpriteRenderer sprite, Vector2Int cell, Color color, float elevation, GridMovement unit = null)
         {
+            unit = unit != null ? unit : player;
             sprite.sprite = whiteSprite;
-            sprite.transform.position = World(cell, elevation);
-            sprite.transform.rotation = player.Grid.transform.rotation * Quaternion.Euler(-90, 0, 0);
-            sprite.transform.localScale = new Vector3(player.CellSize * attackCellSize, player.CellSize * attackCellSize, 1);
+            sprite.transform.position = World(cell, elevation, unit);
+            sprite.transform.rotation = unit.Grid.transform.rotation * Quaternion.Euler(-90, 0, 0);
+            sprite.transform.localScale = new Vector3(unit.CellSize * attackCellSize, unit.CellSize * attackCellSize, 1);
             sprite.color = color;
         }
-        private Vector3 World(Vector2Int cell, float elevation) =>
-            player.Grid.CellToWorld(cell, elevation);
+        private Vector3 World(Vector2Int cell, float elevation, GridMovement unit) =>
+            unit.Grid.CellToWorld(cell, elevation);
         private SpriteRenderer Get(List<SpriteRenderer> pool, int index, string name)
         {
             while (pool.Count <= index)

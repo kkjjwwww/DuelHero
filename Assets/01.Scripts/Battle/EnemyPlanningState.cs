@@ -48,22 +48,15 @@ namespace DuelHero.Battle
             actorGuard.Reset(context.Actor.GuardEffects); targetGuard.Reset(context.TargetUnit.GuardEffects);
         }
 
-        internal void CopyFrom(EnemyPlanningState source)
-        {
-            CopyValuesFrom(source);
-            actorGuard ??= new GuardState(); targetGuard ??= new GuardState();
-            actorGuard.CopyFrom(source.actorGuard); targetGuard.CopyFrom(source.targetGuard);
-        }
-
         internal void CopyValuesFrom(EnemyPlanningState source)
         {
             Position = source.Position; Energy = source.Energy; MaxEnergy = source.MaxEnergy; Map = source.Map;
             TargetHealth = source.TargetHealth; TotalEffectiveDamage = source.TotalEffectiveDamage;
         }
 
-        // Cheap shortlist preview. With the currently supported effects, all damage targets
+        // Value-only candidate preview. With the currently supported effects, all damage targets
         // the same stationary unit after preparation. Its aggregate shield gives the exact
-        // current-slot HP loss; only shortlisted actions need independent shield layers.
+        // current-slot HP loss; only the chosen action advances the shield layers.
         internal int PreviewAction(EnemyDecisionContext context, EnemyPreparedAction action, EnemyPlanningState source)
         {
             Apply(action);

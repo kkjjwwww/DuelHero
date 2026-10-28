@@ -37,13 +37,24 @@ namespace DuelHero.Battle
         public bool ResultsAvailable { get; private set; }
         public bool AwaitingNextTurn => ResultsAvailable && Outcome == BattleOutcome.Running;
         private CardDefinition[] preparedEnemyCards;
+        private readonly ExecutedCardPreview[] enemyExecutions = new ExecutedCardPreview[3];
         public IReadOnlyList<CardDefinition> PreparedEnemyCards =>
             preparedEnemyCards == null ? Array.Empty<CardDefinition>() : Array.AsReadOnly(preparedEnemyCards);
         public int CompletedSlots => executedSlots;
+        public int PreparedEnemyRevealSlotIndex { get; private set; } = -1;
+        private readonly System.Random intentRandom = new();
         private IEnemyActionPlan enemyPlan;
         private int executedSlots;
         private int executionRound;
         private bool restoring;
+        public bool TryGetEnemyExecution(int slot, out ExecutedCardPreview execution, out GridMovement unit)
+        {
+            execution = null;
+            unit = null;
+            if (!ResultsAvailable || slot < 0 || slot >= executedSlots || enemyExecutions[slot] == null) return false;
+            execution = enemyExecutions[slot];
+            return combatEffects.TryGetUnit(enemyId, out unit, out _);
+        }
         private void Start()
         {
             if (playerQueue == null) return;
@@ -53,6 +64,8 @@ namespace DuelHero.Battle
         private bool PrepareEnemyPlan()
         {
             preparedEnemyCards = null;
+            PreparedEnemyRevealSlotIndex = -1;
+            Array.Clear(enemyExecutions, 0, enemyExecutions.Length);
             if (!(enemyPlanSource is IEnemyActionPlan provider) || !enemyPlanSource.isActiveAndEnabled)
             { LastError = "적 행동 계획을 연결해주세요."; return false; }
             try
@@ -62,6 +75,7 @@ namespace DuelHero.Battle
                 enemyPlan = provider;
                 preparedEnemyCards = cards;
                 executedSlots = 0;
+                PreparedEnemyRevealSlotIndex = intentRandom.Next(cards.Length);
                 EnemyPlanPrepared?.Invoke(PreparedEnemyCards);
                 return true;
             }
@@ -126,6 +140,7 @@ namespace DuelHero.Battle
             executedSlots = 0;
             executionRound = playerQueue.CurrentRound;
 
+            PhaseChanged?.Invoke();
             StartCoroutine(Execute(playerCards, enemyCards));
             return true;
         }
@@ -133,7 +148,7 @@ namespace DuelHero.Battle
         {
             if (presentation != null) yield return presentation.Animate(true);
             combatEffects.TryGetUnit(playerId, out _, out var playerStats);
-            combatEffects.TryGetUnit(enemyId, out _, out var enemyStats);
+            combatEffects.TryGetUnit(enemyId, out var enemyMovement, out var enemyStats);
             int round = executionRound;
             for (int slot = 0; slot < 3; slot++)
             {
@@ -153,13 +168,23 @@ namespace DuelHero.Battle
                 if (pc != null) Publish(BattleActionKind.CardExecuted, playerId, pc.id);
                 if (ec != null) Publish(BattleActionKind.CardExecuted, enemyId, ec.id);
                 effects.ExecutePreparation(playerId, pc, round);
-                effects.ExecutePreparation(enemyId, ec, round);
+                var enemyPath = new List<Vector2Int> { enemyMovement.GridPosition };
+                void RecordMovement(BattleActionResult result)
+                {
+                    if (result.Kind == BattleActionKind.Movement && result.Outcome == BattleActionOutcome.Success)
+                        enemyPath.Add(result.To);
+                }
+                enemyMovement.ActionResolved += RecordMovement;
+                try { effects.ExecutePreparation(enemyId, ec, round); }
+                finally { enemyMovement.ActionResolved -= RecordMovement; }
 
                 var attacks = new List<CombatEffectResolver.AttackRequest>();
                 AddAttacks(attacks, playerId, pc);
                 AddAttacks(attacks, enemyId, ec);
 
                 var damage = combatEffects.CalculateDamageBatch(attacks, round);
+                enemyExecutions[slot] = new ExecutedCardPreview(enemyPath,
+                    damage.AttackCells.TryGetValue(enemyId, out var cells) ? cells : Array.Empty<Vector2Int>());
                 combatEffects.ApplyDamageBatch(damage);
                 
                 combatEffects.EndSlot(round);
@@ -177,6 +202,10 @@ namespace DuelHero.Battle
             if (playerQueue == null || !playerQueue.IsExecuting || ResultsAvailable || restoring) return;
             enemyPlan?.CompletePlan(executionRound, executedSlots);
             Publish(BattleActionKind.TurnEnded);
+            CompleteResults();
+        }
+        private void CompleteResults()
+        {
             if (Outcome != BattleOutcome.Running) Publish(BattleActionKind.BattleEnded);
             ResultsAvailable = true;
             playerQueue.SetActiveSlot(-1);
@@ -187,6 +216,28 @@ namespace DuelHero.Battle
             }
             PhaseChanged?.Invoke();
         }
+#if UNITY_EDITOR
+        public bool CanWinForDebug => Application.isPlaying && isActiveAndEnabled &&
+            playerQueue != null && !IsInputLocked && !restoring && Outcome == BattleOutcome.Running &&
+            combatEffects != null && combatEffects.TryGetUnit(playerId, out _, out var player) &&
+            combatEffects.TryGetUnit(enemyId, out _, out _) && player.Health > 0;
+
+        public bool TryWinForDebug()
+        {
+            if (!CanWinForDebug) return false;
+            combatEffects.TryGetUnit(playerId, out _, out var player);
+            combatEffects.TryGetUnit(enemyId, out _, out var enemy);
+            enemy.SetHealthForDebug(0);
+            Outcome = EvaluateOutcome(player.Health, enemy.Health);
+            executedSlots = 0;
+            for (int slot = playerQueue.Reservations.Count - 1; slot >= 0; slot--)
+                playerQueue.CancelAt(slot);
+            Array.Clear(enemyExecutions, 0, enemyExecutions.Length);
+            LastError = null;
+            CompleteResults();
+            return true;
+        }
+#endif
         public bool TryAdvanceTurn()
         {
             if (!isActiveAndEnabled || !AwaitingNextTurn) return false;

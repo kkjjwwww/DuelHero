@@ -31,7 +31,9 @@ namespace DuelHero.Cards
                 {
                     id = e.id, cardId = e.cardId, effectType = e.effectType, targetType = e.targetType,
                     resolutionOrder = e.resolutionOrder, value = e.value, durationSlots = e.durationSlots,
+
                     rangeOffsets = e.rangeOffsets?.Select(offset => Rotate(offset, direction)).ToArray()
+
                 }).ToArray()
             };
         }

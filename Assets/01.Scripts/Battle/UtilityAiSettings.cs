@@ -6,17 +6,17 @@ namespace DuelHero.Battle
     [Serializable]
     public sealed class UtilityAiSettings
     {
-        public int retainedPlans = 4;
-        public int actionsPerPlan = 6;
         public float damageWeight = 1f;
         public float opportunityWeight = 3f;
         public float remainingEnergyWeight = .03f;
         public float attackCostWeight = .2f;
+        public int randomCandidateCount = 3;
+        public float randomScoreTolerance = .1f;
 
         internal void Validate()
         {
-            if (retainedPlans < 1 || retainedPlans > 16 || actionsPerPlan < 3 || actionsPerPlan > 16)
-                throw new ArgumentOutOfRangeException(nameof(retainedPlans), "유지 계획은 1~16개, 행동 후보는 3~16개로 설정해주세요.");
+            if (randomCandidateCount < 1 || randomCandidateCount > 3 || !Valid(randomScoreTolerance) || randomScoreTolerance > 1)
+                throw new ArgumentOutOfRangeException(nameof(randomCandidateCount), "무작위 후보는 1~3개, 허용 점수 차이는 0~1로 설정해주세요.");
             if (!Valid(damageWeight) || !Valid(opportunityWeight) || !Valid(remainingEnergyWeight) || !Valid(attackCostWeight))
                 throw new ArgumentOutOfRangeException(nameof(damageWeight), "유틸리티 가중치는 유한한 0 이상의 값이어야 합니다.");
         }

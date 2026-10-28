@@ -35,6 +35,7 @@ namespace DuelHero.Battle
         {
             internal readonly List<PendingDamage> Hits = new();
             internal readonly List<BattleActionResult> Misses = new();
+            internal readonly Dictionary<string, HashSet<Vector2Int>> AttackCells = new();
             internal bool Applied;
         }
         internal sealed class PendingDamage
@@ -97,6 +98,10 @@ namespace DuelHero.Battle
                 if (actor.stats.Health <= 0 || !actor.stats.gameObject.activeInHierarchy) continue;
 
                 var range = AttackRangeCalculator.Calculate(actor.movement.GridPosition, effect.rangeOffsets);
+                if (!batch.AttackCells.TryGetValue(attack.ActorId, out var cells))
+                    batch.AttackCells[attack.ActorId] = cells = new HashSet<Vector2Int>();
+                foreach (var cell in range)
+                    if (actor.movement.Grid.Contains(cell)) cells.Add(cell);
 
                 var hit = new HashSet<UnitStats>();
                 foreach (var target in units)

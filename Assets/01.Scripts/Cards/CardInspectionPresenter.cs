@@ -6,7 +6,7 @@ using UnityEngine.EventSystems;
 
 namespace DuelHero.Cards
 {
-    // One cached, unmasked inspection card per canvas, shared by slots and card lists.
+    // One cached inspection card per canvas, shared by slots and card lists.
     public sealed class CardInspectionPresenter : MonoBehaviour, IScrollHandler
     {
         private Canvas canvas;
@@ -14,8 +14,10 @@ namespace DuelHero.Cards
         private CardView view;
         private CardDefinition definition;
         private CardDatabase database;
+        private bool informationMasked;
         private KeywordTooltip tooltip;
         private Action onClick;
+        private Action onHidden;
         private Action<PointerEventData> onScroll;
         private readonly Vector3[] corners = new Vector3[4];
         public CardView View => view;
@@ -39,10 +41,10 @@ namespace DuelHero.Cards
 
         public void Show(RectTransform source, CardView prefab, CardDefinition card, CardDatabase data,
             Font font, int cooldown = 0, Action click = null, float scale = 1.55f, float duration = .15f,
-            Action<PointerEventData> scroll = null)
+            Action<PointerEventData> scroll = null, Action hidden = null, bool typeOnly = false)
         {
             if (source == null || prefab == null || card == null || data == null) return;
-            if (owner == source && IsVisible) return;
+            if (owner == source && IsVisible && definition == card && database == data && informationMasked == typeOnly) return;
             Hide();
             if (view == null)
             {
@@ -66,11 +68,13 @@ namespace DuelHero.Cards
             owner = source;
             onClick = click;
             onScroll = scroll;
-            if (definition != card || database != data)
+            onHidden = hidden;
+            if (definition != card || database != data || informationMasked != typeOnly)
             {
-                view.Bind(card, data.keywords);
+                view.Bind(card, data.keywords, typeOnly);
                 definition = card;
                 database = data;
+                informationMasked = typeOnly;
             }
             view.SetFrontVisible(true);
             view.SetState(string.Empty, cooldown, true);
@@ -128,6 +132,8 @@ namespace DuelHero.Cards
         }
         public void Hide()
         {
+            var hidden = onHidden;
+            onHidden = null;
             owner = null;
             onClick = null;
             onScroll = null;
@@ -137,6 +143,7 @@ namespace DuelHero.Cards
                 view.gameObject.SetActive(false);
             }
             if (tooltip != null) tooltip.Hide();
+            hidden?.Invoke();
         }
         private void OnDisable() => Hide();
         private void OnDestroy()

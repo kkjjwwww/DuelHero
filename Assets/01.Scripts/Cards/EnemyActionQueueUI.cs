@@ -9,6 +9,7 @@ namespace DuelHero.Cards
         [SerializeField] private BattleTurnController source;
         [SerializeField] private EnemyActionSlotView[] slots;
         private EnemyCardListUI cardList;
+        private BattlePreviewPresenter preview;
 
         private void OnEnable()
         {
@@ -20,6 +21,7 @@ namespace DuelHero.Cards
             source.SlotCompleted += CompleteSlot;
             source.PhaseChanged += RefreshInspection;
             cardList = FindFirstObjectByType<EnemyCardListUI>();
+            preview = FindFirstObjectByType<BattlePreviewPresenter>();
             // Recover the current display when this UI is re-enabled.
             ShowPlan(source.PreparedEnemyCards);
             for (int i = 0; i < source.CompletedSlots; i++)
@@ -43,13 +45,22 @@ namespace DuelHero.Cards
         public void ShowPlan(IReadOnlyList<CardDefinition> plan)
         {
             for (int i = 0; i < slots.Length; i++)
-                slots[i].Bind(plan != null && i < plan.Count ? plan[i] : null);
+                slots[i].Bind(plan != null && i < plan.Count ? plan[i] ?? WaitCard.Definition : null);
+            if (plan != null && source != null && IsValid(source.PreparedEnemyRevealSlotIndex))
+                slots[source.PreparedEnemyRevealSlotIndex].ShowTypeOnly();
             RefreshInspection();
         }
         private void RefreshInspection()
         {
-            foreach (var slot in slots)
-                if (slot != null) slot.SetResultInspection(source != null && source.ResultsAvailable, OpenCardList);
+            for (int i = 0; i < slots.Length; i++)
+            {
+                int slot = i;
+                if (slots[i] != null)
+                    slots[i].SetResultInspection(source != null && source.ResultsAvailable, OpenCardList,
+                        () => preview?.FocusEnemyResult(source, slot),
+                        () => preview?.ClearEnemyResult(source, slot),
+                        preparation: source != null && !source.IsInputLocked && !source.ResultsAvailable);
+            }
         }
         private void OpenCardList() { if (cardList != null) cardList.Open(); }
         public void BeginSlot(int index)

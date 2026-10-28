@@ -82,11 +82,18 @@ namespace DuelHero.Editor
             Image titleMask = titleArea.gameObject.AddComponent<Image>();
             titleMask.raycastTarget = false;
             titleArea.gameObject.AddComponent<Mask>().showMaskGraphic = false;
-            Text nameLabel = AddText("Name", titleArea, "베기", font, 12, TextAnchor.MiddleCenter);
-            nameLabel.fontStyle = FontStyle.Bold;
-            nameLabel.resizeTextForBestFit = true;
-            nameLabel.resizeTextMinSize = 8;
-            nameLabel.resizeTextMaxSize = 12;
+            var badgeFont = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/Art/UI/Fonts/BusanDandiM SDF.asset");
+            var nameLabel = NewUI("Name", titleArea).AddComponent<TextMeshProUGUI>();
+            nameLabel.font = badgeFont;
+            nameLabel.text = "베기";
+            nameLabel.color = TextColor;
+            nameLabel.raycastTarget = false;
+            nameLabel.fontStyle = FontStyles.Bold;
+            nameLabel.alignment = TextAlignmentOptions.Center;
+            nameLabel.textWrappingMode = TextWrappingModes.NoWrap;
+            nameLabel.enableAutoSizing = true;
+            nameLabel.fontSizeMin = 8;
+            nameLabel.fontSizeMax = 12;
             Stretch(nameLabel.rectTransform);
 
             RectTransform descriptionArea = (RectTransform)NewUI("DescriptionArea", frontRoot.transform).transform;
@@ -122,11 +129,16 @@ namespace DuelHero.Editor
             Image energyBadge = AddImage("EnergyBadge", frontRoot.transform, energy);
             SetRect(energyBadge.rectTransform, new Vector2(0.01f, 0.81f), new Vector2(0.27f, 0.995f), new Vector2(-4f, 0f), new Vector2(1f, 2f));
             energyBadge.preserveAspect = true;
-            Text energyLabel = AddText("EnergyCost", energyBadge.transform, "10", font, 17, TextAnchor.MiddleCenter);
-            energyLabel.fontStyle = FontStyle.Bold;
-            energyLabel.resizeTextForBestFit = true;
-            energyLabel.resizeTextMinSize = 10;
-            energyLabel.resizeTextMaxSize = 17;
+            var energyLabel = NewUI("EnergyCost", energyBadge.transform).AddComponent<TextMeshProUGUI>();
+            energyLabel.font = badgeFont;
+            energyLabel.text = "10";
+            energyLabel.raycastTarget = false;
+            energyLabel.fontStyle = FontStyles.Bold;
+            energyLabel.alignment = TextAlignmentOptions.Center;
+            energyLabel.textWrappingMode = TextWrappingModes.NoWrap;
+            energyLabel.enableAutoSizing = true;
+            energyLabel.fontSizeMin = 10;
+            energyLabel.fontSizeMax = 17;
             energyLabel.color = new Color(1f, 0.88f, 0.45f, 1f);
             Stretch(energyLabel.rectTransform);
 

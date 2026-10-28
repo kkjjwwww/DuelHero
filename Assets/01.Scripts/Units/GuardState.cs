@@ -21,12 +21,6 @@ namespace DuelHero.Units
         }
         private readonly List<Effect> effects = new();
         public GuardState() { }
-        // Planning buffers retain their capacity; branches never share mutable shield layers.
-        internal void CopyFrom(GuardState source)
-        {
-            effects.Clear();
-            effects.AddRange(source.effects);
-        }
         internal void Reset(IReadOnlyList<GuardEffectSnapshot> snapshot)
         {
             effects.Clear();

@@ -36,6 +36,8 @@ namespace DuelHero.Battle
         private int hoveredSlot = -1;
         private int hoveredDirectionSlot = -1;
         private Vector2Int hoveredDirection = Vector2Int.right;
+        private BattleTurnController resultSource;
+        private int resultSlot = -1;
         public TurnEnergyPreview EnergyPreview { get; private set; }
         public event Action<TurnEnergyPreview> EnergyPreviewChanged;
         public CardPreviewResult GuardPreview { get; private set; }
@@ -56,6 +58,21 @@ namespace DuelHero.Battle
             PublishEnergy(null);
             PublishGuard(null);
             hoveredDirectionSlot = -1;
+            resultSource = null;
+            resultSlot = -1;
+        }
+        public void FocusEnemyResult(BattleTurnController source, int slot)
+        {
+            resultSource = source;
+            resultSlot = slot;
+            Refresh();
+        }
+        public void ClearEnemyResult(BattleTurnController source, int slot)
+        {
+            if (resultSource != source || resultSlot != slot) return;
+            resultSource = null;
+            resultSlot = -1;
+            Refresh();
         }
         public void FocusCard(CardInstance card) { hoveredCard = card; hoveredSlot = -1; hoveredDirectionSlot = -1; Refresh(); }
         public void ClearCard(CardInstance card) { if (ReferenceEquals(hoveredCard, card)) { hoveredCard = null; Refresh(); } }
@@ -84,6 +101,14 @@ namespace DuelHero.Battle
         }
         public void Refresh()
         {
+            if (renderer != null && resultSource != null &&
+                resultSource.TryGetEnemyExecution(resultSlot, out var execution, out var unit))
+            {
+                renderer.ShowExecuted(execution, unit, unit.GetComponentInChildren<SpriteRenderer>(true));
+                PublishEnergy(null);
+                PublishGuard(null);
+                return;
+            }
             if (renderer == null || queue == null || player == null || playerStats == null || !playerStats.IsInitialized || queue.IsExecuting)
             { renderer?.Clear(); PublishEnergy(null); PublishGuard(null); return; }
             try

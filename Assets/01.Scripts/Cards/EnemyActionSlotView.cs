@@ -5,6 +5,8 @@ using UnityEngine.EventSystems;
 
 namespace DuelHero.Cards
 {
+    public enum EnemyCardVisibility { Hidden, TypeOnly, Full }
+
     // Displays one action; never generates plans or executes effects.
     public sealed class EnemyActionSlotView : MonoBehaviour, IPointerEnterHandler
     {
@@ -32,12 +34,15 @@ namespace DuelHero.Cards
         private Tween executionTween;
         private CardInspectionPresenter inspection;
         private bool canInspect;
+        private bool canInspectTypeOnly;
         private System.Action openCardList;
+        private System.Action showResultPreview, hideResultPreview;
         private Vector3 frontScale, backScale;
         private Vector2 frontPosition, backPosition;
         private bool scalesCaptured;
         public bool IsRevealing { get; private set; }
-        public bool IsRevealed { get; private set; }
+        public EnemyCardVisibility Visibility { get; private set; }
+        public bool IsRevealed => Visibility == EnemyCardVisibility.Full;
         public bool IsExecuting { get; private set; }
         public bool IsCompleted { get; private set; }
         public bool IsPresented { get; private set; }
@@ -48,7 +53,8 @@ namespace DuelHero.Cards
             IsPresented = false;
             StopFlip();
             card = value;
-            IsRevealed = IsExecuting = IsCompleted = false;
+            Visibility = EnemyCardVisibility.Hidden;
+            IsExecuting = IsCompleted = false;
             nameLabel.text = card?.name ?? "대기";
             costLabel.text = card == null ? "" : $"에너지 {card.energyCost}";
             effectLabel.text = card?.ResolvedDescription() ?? "";
@@ -87,7 +93,7 @@ namespace DuelHero.Cards
                 position => { if (keywordTooltip != null) keywordTooltip.Move(position); });
             }
             frontCard.gameObject.SetActive(true);
-            frontCard.Bind(card, cardDatabase.keywords);
+            frontCard.Bind(card, cardDatabase.keywords, Visibility == EnemyCardVisibility.TypeOnly);
             frontCard.SetFrontVisible(true);
             frontCard.SetState(string.Empty, 0, true);
             var rect = (RectTransform)frontCard.transform;
@@ -98,25 +104,38 @@ namespace DuelHero.Cards
             rect.localRotation = Quaternion.identity;
             rect.localScale = Vector3.one * Mathf.Min(bounds.width / rect.rect.width, bounds.height / rect.rect.height);
         }
+        public void ShowTypeOnly()
+        {
+            HideInspection();
+            StopFlip();
+            Visibility = EnemyCardVisibility.TypeOnly;
+            BindCardFront();
+            RefreshAppearance();
+        }
         public void Reveal()
         {
+            HideInspection();
             StopFlip();
-            IsRevealed = true;
+            Visibility = EnemyCardVisibility.Full;
+            BindCardFront();
             RefreshAppearance();
         }
         public void Reveal(float duration)
         {
             if (IsRevealed || IsRevealing) return;
+            HideInspection();
             if (duration <= 0f || !isActiveAndEnabled) { Reveal(); return; }
             CaptureScales();
             var targetScale = frontScale * (IsPresented ? executionScale : 1f);
             IsRevealing = true;
             cardCanvasGroup.blocksRaycasts = false;
             flip = DOTween.Sequence();
-            flip.Append(backFace.transform.DOScaleX(0f, duration * .5f).SetEase(Ease.InQuad));
+            var visibleFace = Visibility == EnemyCardVisibility.TypeOnly ? frontFace : backFace;
+            flip.Append(visibleFace.transform.DOScaleX(0f, duration * .5f).SetEase(Ease.InQuad));
             flip.AppendCallback(() =>
             {
-                IsRevealed = true;
+                Visibility = EnemyCardVisibility.Full;
+                BindCardFront();
                 frontFace.transform.localScale = new Vector3(0f, targetScale.y, targetScale.z);
                 RefreshAppearance();
             });
@@ -161,7 +180,12 @@ namespace DuelHero.Cards
         {
             if (!IsPresented) Present(0f);
             StopFlip();
-            IsRevealed = IsExecuting = true;
+            if (!IsRevealed)
+            {
+                Visibility = EnemyCardVisibility.Full;
+                BindCardFront();
+            }
+            IsExecuting = true;
             IsCompleted = false;
             RefreshAppearance();
         }
@@ -191,16 +215,20 @@ namespace DuelHero.Cards
         }
         private void RefreshAppearance()
         {
-            frontFace.SetActive(IsRevealed);
-            backFace.SetActive(!IsRevealed);
+            frontFace.SetActive(Visibility != EnemyCardVisibility.Hidden);
+            backFace.SetActive(Visibility == EnemyCardVisibility.Hidden);
             if (executionHighlight != null) executionHighlight.SetActive(false);
             cardCanvasGroup.alpha = 1f;
             cardCanvasGroup.blocksRaycasts = !IsRevealing;
         }
-        public void SetResultInspection(bool enabled, System.Action onClick)
+        public void SetResultInspection(bool enabled, System.Action onClick,
+            System.Action onShow = null, System.Action onHide = null, bool preparation = false)
         {
             canInspect = enabled;
+            canInspectTypeOnly = preparation;
             openCardList = onClick;
+            showResultPreview = onShow;
+            hideResultPreview = onHide;
             if (!enabled) HideInspection();
             RefreshAppearance();
         }
@@ -225,10 +253,14 @@ namespace DuelHero.Cards
         }
         private void ShowInspection()
         {
-            if (!canInspect || !IsRevealed || card == null || cardPrefab == null || cardDatabase == null) return;
+            bool typeOnly = Visibility == EnemyCardVisibility.TypeOnly && canInspectTypeOnly;
+            if ((!typeOnly && (!canInspect || !IsRevealed)) || IsRevealing ||
+                card == null || cardPrefab == null || cardDatabase == null) return;
             if (inspection == null) inspection = CardInspectionPresenter.GetOrCreate(GetComponentInParent<Canvas>().rootCanvas);
             inspection.Show(InspectionAnchor, cardPrefab, card, cardDatabase, cardFont,
-                click: OpenCardList, scale: resultHoverScale, duration: resultHoverDuration);
+                click: typeOnly ? null : OpenCardList, scale: resultHoverScale, duration: resultHoverDuration,
+                hidden: typeOnly ? null : hideResultPreview, typeOnly: typeOnly);
+            if (!typeOnly) showResultPreview?.Invoke();
         }
         private RectTransform InspectionAnchor => (RectTransform)(frontCard != null ? frontCard.transform : frontFace.transform);
         private void HideInspection()
@@ -239,7 +271,11 @@ namespace DuelHero.Cards
         private void OnDisable()
         {
             HideInspection();
-            if (IsRevealing) IsRevealed = true;
+            if (IsRevealing)
+            {
+                Visibility = EnemyCardVisibility.Full;
+                BindCardFront();
+            }
             StopFlip();
             RefreshAppearance();
             if (keywordTooltip != null) keywordTooltip.Hide();

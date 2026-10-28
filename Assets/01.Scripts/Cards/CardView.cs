@@ -18,8 +18,9 @@ namespace DuelHero.Cards
         [Header("Front")]
         [SerializeField] private GameObject frontRoot;
         [SerializeField] private Image illustration;
-        [SerializeField] private Text nameLabel;
-        [SerializeField] private Text energyLabel;
+        [SerializeField] private TextMeshProUGUI illustrationMaskLabel;
+        [SerializeField] private TextMeshProUGUI nameLabel;
+        [SerializeField] private TextMeshProUGUI energyLabel;
         [SerializeField] private TextMeshProUGUI descriptionLabel;
         [SerializeField] private RectTransform descriptionArea;
         [SerializeField] private RectTransform rangeArea;
@@ -41,7 +42,7 @@ namespace DuelHero.Cards
         [SerializeField] private Sprite specialBadge;
         [SerializeField] private Sprite moveBadge;
 
-        private readonly Dictionary<Text, Color> normalTextColors = new();
+        private readonly Dictionary<Graphic, Color> normalTextColors = new();
         private Color normalDescriptionColor;
         private KeywordHoverLink keywordHover;
         private static readonly Regex KeywordToken = new Regex(@"\[([^\[\]\r\n]+)\]");
@@ -53,13 +54,18 @@ namespace DuelHero.Cards
         private bool? displayedInteractable;
         private int displayedReservationSlot = int.MinValue;
         private static readonly string[] ReservationNumbers = { "1", "2", "3" };
+        private bool informationMasked;
+        private Sprite illustrationBeforeMask;
 
         public Button Button => button;
         public RectTransform VisualRoot => visualRoot;
 
-        public void Bind(CardDefinition card, IEnumerable<KeywordDefinition> keywords)
+        public void Bind(CardDefinition card, IEnumerable<KeywordDefinition> keywords, bool typeOnly = false)
         {
             if (card == null) return;
+            if (informationMasked) SetIllustration(illustrationBeforeMask);
+            informationMasked = typeOnly;
+            if (illustrationMaskLabel != null) illustrationMaskLabel.gameObject.SetActive(typeOnly);
             displayedReservationSlot = int.MinValue;
             SetReservationSlot(-1);
             // A pooled view may still be grey from its previous owner.
@@ -94,6 +100,7 @@ namespace DuelHero.Cards
                     : match.Value);
             if (keywordHover == null) keywordHover = descriptionLabel.GetComponent<KeywordHoverLink>();
             keywordHover.Initialize(this, descriptionLabel, linkedKeywords.Values);
+            keywordHover.enabled = !typeOnly;
             typeBadge.sprite = BadgeFor(card.actionType);
 
             var effects = card.effects ?? Array.Empty<CardEffectDefinition>();
@@ -102,10 +109,16 @@ namespace DuelHero.Cards
                 .Where(effect => effect.rangeOffsets != null)
                 .SelectMany(effect => effect.rangeOffsets)
                 .Distinct().ToArray();
-            bool hasRange = !selfOnly && range.Length > 0;
+            bool hasRange = !typeOnly && !selfOnly && range.Length > 0;
             rangeArea.gameObject.SetActive(hasRange);
             rangeGraphic.SetOffsets(range);
             descriptionArea.anchorMin = new Vector2(descriptionArea.anchorMin.x, hasRange ? 0.18f : 0.085f);
+            if (typeOnly)
+            {
+                nameLabel.text = energyLabel.text = descriptionLabel.text = "?";
+                illustrationBeforeMask = illustration.sprite;
+                SetIllustration(null);
+            }
         }
 
         private static string FormatEffectValue(CardEffectDefinition effect, int value)
@@ -134,6 +147,7 @@ namespace DuelHero.Cards
 
         public void SetState(string state, int remainingCooldown, bool interactable)
         {
+            if (informationMasked) remainingCooldown = 0;
             if (displayedCooldown == remainingCooldown && displayedInteractable == interactable) return;
             CacheTextColors();
             if (displayedInteractable != interactable) button.interactable = interactable;
@@ -147,7 +161,7 @@ namespace DuelHero.Cards
             {
                 foreach (Graphic graphic in grayscaleGraphics)
                     if (graphic != null) graphic.material = coolingDown ? grayscaleMaterial : null;
-                foreach (KeyValuePair<Text, Color> entry in normalTextColors)
+                foreach (KeyValuePair<Graphic, Color> entry in normalTextColors)
                     if (entry.Key != null) entry.Key.color = coolingDown ? Grayscale(entry.Value) : entry.Value;
                 descriptionLabel.color = coolingDown ? Grayscale(normalDescriptionColor) : normalDescriptionColor;
                 descriptionLabel.overrideColorTags = coolingDown;
@@ -189,7 +203,7 @@ namespace DuelHero.Cards
             foreach (Text label in GetComponentsInChildren<Text>(true))
             {
                 // Numeric badges keep the prefab font and its vertical metrics.
-                if (label == energyLabel || label == cooldownLabel || label == reservationSlotLabel) continue;
+                if (label == cooldownLabel || label == reservationSlotLabel) continue;
                 label.font = font;
             }
         }
@@ -218,6 +232,8 @@ namespace DuelHero.Cards
             normalDescriptionColor = descriptionLabel.color;
             foreach (Text label in GetComponentsInChildren<Text>(true))
                 if (label != cooldownLabel) normalTextColors[label] = label.color;
+            normalTextColors[nameLabel] = nameLabel.color;
+            normalTextColors[energyLabel] = energyLabel.color;
         }
 
         private static Color Grayscale(Color color)

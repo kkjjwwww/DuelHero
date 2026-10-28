@@ -119,6 +119,42 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &25208877
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 25208878}
+  m_Layer: 0
+  m_Name: RewardCards
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!224 &25208878
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 25208877}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 728395267}
+  m_Father: {fileID: 407240477}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 820, y: 400}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &29255370
 GameObject:
   m_ObjectHideFlags: 0
@@ -3608,6 +3644,7 @@ RectTransform:
   - {fileID: 2107734220}
   - {fileID: 1733558873}
   - {fileID: 1455679829}
+  - {fileID: 25208878}
   m_Father: {fileID: 1367686154}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -5218,6 +5255,85 @@ CanvasRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 725502245}
+  m_CullTransparentMesh: 1
+--- !u!1 &728395266
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 728395267}
+  - component: {fileID: 728395269}
+  - component: {fileID: 728395268}
+  m_Layer: 0
+  m_Name: Message
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &728395267
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 728395266}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 25208878}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 182}
+  m_SizeDelta: {x: 800, y: 32}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &728395268
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 728395266}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
+  m_Material: {fileID: 0}
+  m_Color: {r: 0.94, g: 0.89, b: 0.77, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_FontData:
+    m_Font: {fileID: 12800000, guid: eb27a02f8f470c14eab62f14ada5c132, type: 3}
+    m_FontSize: 18
+    m_FontStyle: 0
+    m_BestFit: 0
+    m_MinSize: 10
+    m_MaxSize: 40
+    m_Alignment: 4
+    m_AlignByGeometry: 0
+    m_RichText: 1
+    m_HorizontalOverflow: 0
+    m_VerticalOverflow: 0
+    m_LineSpacing: 1
+  m_Text:
+--- !u!222 &728395269
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 728395266}
   m_CullTransparentMesh: 1
 --- !u!1 &730444404
 GameObject:
@@ -10708,7 +10824,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6965a6a86f6522345976197a05a98832, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Cards.PlayerDeck
-  database: {fileID: 11400000, guid: b38eb9bf764792848bf05096af2f0d8d, type: 2}
+  database: {fileID: 11400000, guid: c7ef5d4e09c030144b6a820c990be87e, type: 2}
 --- !u!114 &1243114847
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11817,6 +11933,7 @@ GameObject:
   - component: {fileID: 1367686156}
   - component: {fileID: 1367686155}
   - component: {fileID: 1367686160}
+  - component: {fileID: 1367686161}
   m_Layer: 0
   m_Name: BattleResultOverlay
   m_TagString: Untagged
@@ -11939,7 +12056,28 @@ MonoBehaviour:
   playerStats: {fileID: 185798875}
   playerDeck: {fileID: 1243114846}
   standaloneRestart: {fileID: 1367686156}
+  rewardSettings: {fileID: 11400000, guid: adee6d92c577a724581452316649c437, type: 2}
+  rewardView: {fileID: 1367686161}
   mapScenePath: Assets/00.Scenes/MapScene.unity
+--- !u!114 &1367686161
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1367686153}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79ed03b5cce2ce54589f1f039a603dce, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Cards.CardRewardUI
+  resultPanel: {fileID: 407240477}
+  resultTitle: {fileID: 2107734220}
+  heading: {fileID: 1733558872}
+  actionButton: {fileID: 1455679829}
+  content: {fileID: 25208878}
+  message: {fileID: 728395268}
+  cardPrefab: {fileID: 6403934370426295413, guid: 17b8247d91cf50047946601446045288, type: 3}
 --- !u!1 &1394121175
 GameObject:
   m_ObjectHideFlags: 0
