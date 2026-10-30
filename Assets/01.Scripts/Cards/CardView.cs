@@ -90,7 +90,7 @@ namespace DuelHero.Cards
                     id = CooldownLinkId,
                     name = string.Empty,
                     description = "<color=#FFFFFF>이 카드를 사용하면 다음 " +
-                        $"<color=#999999>{card.EffectiveCooldownTurns}</color>턴 동안 재사용할 수 없습니다.</color>"
+                        $"<color=#999999>{card.EffectiveCooldownTurns}</color>턴 동안 재사용 할 수 없다.</color>"
                 };
             descriptionLabel.text = KeywordToken.Replace(body, match =>
                 linkedKeywords.TryGetValue(match.Groups[1].Value, out var keyword)

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using DuelHero.Cards;
+using DuelHero.Units;
 using UnityEngine;
 namespace DuelHero.Battle
 {
@@ -16,6 +17,8 @@ namespace DuelHero.Battle
         [SerializeField] private CardEffectExecutor effects;
         [SerializeField] private CombatEffectResolver combatEffects;
         [SerializeField] private BattlePresentation presentation;
+        [SerializeField] private UnitAttackPresentation playerAttackPresentation;
+        [SerializeField] private UnitAttackPresentation enemyAttackPresentation;
         public bool IsInputLocked => (playerQueue != null && playerQueue.IsExecuting) ||
             (presentation != null && presentation.IsActive);
         [SerializeField, Min(0.01f)] private float slotDelay = 0.4f;
@@ -146,6 +149,12 @@ namespace DuelHero.Battle
         }
         private IEnumerator Execute(CardDefinition[] playerCards, CardDefinition[] enemyCards)
         {
+            CancelAttackPresentations();
+            try { yield return ExecuteSlots(playerCards, enemyCards); }
+            finally { CancelAttackPresentations(); }
+        }
+        private IEnumerator ExecuteSlots(CardDefinition[] playerCards, CardDefinition[] enemyCards)
+        {
             if (presentation != null) yield return presentation.Animate(true);
             combatEffects.TryGetUnit(playerId, out _, out var playerStats);
             combatEffects.TryGetUnit(enemyId, out var enemyMovement, out var enemyStats);
@@ -181,6 +190,12 @@ namespace DuelHero.Battle
                 var attacks = new List<CombatEffectResolver.AttackRequest>();
                 AddAttacks(attacks, playerId, pc);
                 AddAttacks(attacks, enemyId, ec);
+
+                // Each actor returns to idle before the next actor starts. Damage remains simultaneous.
+                if (playerAttackPresentation != null && attacks.Any(a => a.ActorId == playerId))
+                    yield return playerAttackPresentation.PlayAttack();
+                if (enemyAttackPresentation != null && attacks.Any(a => a.ActorId == enemyId))
+                    yield return enemyAttackPresentation.PlayAttack();
 
                 var damage = combatEffects.CalculateDamageBatch(attacks, round);
                 enemyExecutions[slot] = new ExecutedCardPreview(enemyPath,
@@ -267,9 +282,15 @@ namespace DuelHero.Battle
         public static BattleOutcome EvaluateOutcome(int playerHealth, int enemyHealth) => playerHealth <= 0
             ? BattleOutcome.Defeat
             : enemyHealth <= 0 ? BattleOutcome.Victory : BattleOutcome.Running;
+        private void CancelAttackPresentations()
+        {
+            if (playerAttackPresentation != null) playerAttackPresentation.Cancel();
+            if (enemyAttackPresentation != null) enemyAttackPresentation.Cancel();
+        }
         private void OnDisable()
         {
             StopAllCoroutines();
+            CancelAttackPresentations();
             FinishExecution();
         }
     }

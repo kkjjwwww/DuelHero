@@ -13,8 +13,17 @@ public class GridMovement : MonoBehaviour, DuelHero.Battle.IBattleActionSource
     [SerializeField] private DuelHero.Battle.BoardOccupancy board;
     public DuelHero.Battle.BoardOccupancy Board => board;
     public void AttachBoard(DuelHero.Battle.BoardOccupancy value) => board = value;
-    private void OnEnable() { if (board != null) board.RegisterUnit(this); }
-    private void OnDisable() { if (board != null) board.UnregisterUnit(this); }
+    private void OnEnable()
+    {
+        if (board != null) board.RegisterUnit(this);
+        PlacementChanged?.Invoke();
+    }
+    private void OnDisable()
+    {
+        if (board != null) board.UnregisterUnit(this);
+        PlacementChanged?.Invoke();
+    }
+    public event System.Action PlacementChanged;
     [SerializeField] private string actorId;
     public event System.Action<DuelHero.Battle.BattleActionResult> ActionResolved;
     [SerializeField] private ActionQueueUI queueUI;
@@ -95,10 +104,9 @@ public class GridMovement : MonoBehaviour, DuelHero.Battle.IBattleActionSource
         return true;
     }
 
-    private void LateUpdate() => UpdateWorldPosition();
-
     private void UpdateWorldPosition()
     {
         transform.position = Grid.CellToWorld(gridPosition);
+        PlacementChanged?.Invoke();
     }
 }

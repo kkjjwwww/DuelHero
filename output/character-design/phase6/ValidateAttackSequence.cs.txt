@@ -1,0 +1,65 @@
+var flags=System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic;
+System.Action<object,string,object> set=(o,n,v)=>o.GetType().GetField(n,flags).SetValue(o,v);
+System.Action<object,string> call=(o,n)=>o.GetType().GetMethod(n,flags).Invoke(o,null);
+var report=new System.Collections.Generic.List<object>();int totalChecks=0;
+System.Action<bool,string> require=(ok,n)=>{if(!ok)throw new System.Exception(n);totalChecks++;};
+var cases=new[]{"both","player_only","enemy_only","neither","miss","lethal_both","move_attack","guard"};
+foreach(var name in cases){
+ var path="Assets/00.Scenes/BattleScene.unity";var scene=UnityEditor.SceneManagement.EditorSceneManager.OpenScene(path,UnityEditor.SceneManagement.OpenSceneMode.Additive);
+ var stack=new System.Collections.Generic.Stack<System.Collections.IEnumerator>();
+ DuelHero.Units.UnitAttackPresentation pa=null,ea=null;
+ try{
+  GridMovement player=null,enemy=null;DuelHero.Battle.BattleTurnController turn=null;
+  foreach(var root in scene.GetRootGameObjects()){foreach(var m in root.GetComponentsInChildren<GridMovement>(true)){if(m.name=="Player")player=m;if(m.name=="Enemy")enemy=m;}var t=root.GetComponentInChildren<DuelHero.Battle.BattleTurnController>(true);if(t!=null)turn=t;}
+  var ps=player.GetComponent<DuelHero.Units.UnitStats>();var es=enemy.GetComponent<DuelHero.Units.UnitStats>();
+  var presenter=player.GetComponent<DuelHero.Units.UnitSpritePresenter>();pa=player.GetComponent<DuelHero.Units.UnitAttackPresentation>();ea=enemy.GetComponent<DuelHero.Units.UnitAttackPresentation>();
+  require(pa!=null&&ea!=null,"Saved attack components");
+  require((object)turn.GetType().GetField("playerAttackPresentation",flags).GetValue(turn)==pa && (object)turn.GetType().GetField("enemyAttackPresentation",flags).GetValue(turn)==ea,"Saved controller bindings");
+  int hp=name=="lethal_both"?5:100;ps.Initialize(hp,100,100,100);es.Initialize(hp,100,100,100);
+  set(player,"gridPosition",new UnityEngine.Vector2Int(0,2));set(enemy,"gridPosition",new UnityEngine.Vector2Int(name=="miss"?3:name=="move_attack"?2:1,2));call(player,"UpdateWorldPosition");call(enemy,"UpdateWorldPosition");
+  var queue=(DuelHero.Cards.CardReservationQueue)turn.GetType().GetField("playerQueue",flags).GetValue(turn);
+  var resolver=(DuelHero.Battle.CombatEffectResolver)turn.GetType().GetField("combatEffects",flags).GetValue(turn);
+  set(turn,"presentation",null);set(turn,"executionRound",1);
+  bool pAttack=name!="enemy_only"&&name!="neither";bool eAttack=name!="player_only"&&name!="neither"&&name!="guard";
+  var pEffects=new System.Collections.Generic.List<DuelHero.Cards.CardEffectDefinition>();
+  if(name=="move_attack")pEffects.Add(new DuelHero.Cards.CardEffectDefinition{effectType="move",targetType="자신",value=1,rangeOffsets=new[]{UnityEngine.Vector2Int.right}});
+  if(pAttack)pEffects.Add(new DuelHero.Cards.CardEffectDefinition{effectType="damage",targetType="적",value=10,resolutionOrder=1,rangeOffsets=new[]{UnityEngine.Vector2Int.right}});
+  var pCard=pAttack?new DuelHero.Cards.CardDefinition{id="test_player",effects=pEffects.ToArray()}:null;
+  DuelHero.Cards.CardDefinition eCard=eAttack?new DuelHero.Cards.CardDefinition{id="test_enemy",effects=new[]{new DuelHero.Cards.CardEffectDefinition{effectType="damage",targetType="적",value=10,rangeOffsets=new[]{UnityEngine.Vector2Int.left}}}}:null;
+  if(name=="guard")eCard=new DuelHero.Cards.CardDefinition{id="test_guard",effects=new[]{new DuelHero.Cards.CardEffectDefinition{effectType="guard",targetType="자신",value=4,durationSlots=1}}};
+  var list=(System.Collections.Generic.List<DuelHero.Cards.CardInstance>)queue.GetType().GetField("reservations",flags).GetValue(queue);
+  list.Add(new DuelHero.Cards.CardInstance(pCard??DuelHero.Cards.WaitCard.Definition));list.Add(new DuelHero.Cards.CardInstance(DuelHero.Cards.WaitCard.Definition));list.Add(new DuelHero.Cards.CardInstance(DuelHero.Cards.WaitCard.Definition));require(queue.BeginExecution(),"Queue execution starts");
+  var trace=new System.Collections.Generic.List<string>();bool revealed=false,pStarted=false,pFinished=false,eStarted=false,eFinished=false,pAfter=false,pIdle=false,damaged=false,enemyLunge=false;
+  turn.SlotRevealing+=slot=>{if(slot==0){revealed=true;trace.Add("reveal");require(presenter.CurrentPose==DuelHero.Units.UnitPose.Idle,"Idle during reveal");}};
+  resolver.ActionResolved+=result=>{if(result.Kind!=DuelHero.Battle.BattleActionKind.Damage)return;damaged=true;trace.Add("damage:"+result.ActorId);require((!pAttack||pFinished)&&(!eAttack||eFinished),"Damage after both presentations");require(presenter.CurrentPose==DuelHero.Units.UnitPose.Idle&&!pa.IsPlaying&&!ea.IsPlaying,"Idle during damage");};
+  System.Action sample=()=>{
+   require(!(pa.IsPlaying&&ea.IsPlaying),"Presentations never overlap");
+   if(pa.IsPlaying){require(revealed&&!eStarted,"Player presentation follows reveal");require(ps.Health==hp&&es.Health==hp,"HP unchanged during player presentation");if(!pStarted){pStarted=true;trace.Add("player_start");}if(presenter.CurrentPose==DuelHero.Units.UnitPose.AttackAfter)pAfter=true;if(pAfter&&presenter.CurrentPose==DuelHero.Units.UnitPose.Idle)pIdle=true;}
+   if(pStarted&&!pa.IsPlaying&&!pFinished){pFinished=true;trace.Add("player_idle");require(presenter.CurrentPose==DuelHero.Units.UnitPose.Idle,"Player returns to idle before enemy");}
+   if(ea.IsPlaying){require(revealed&&(!pAttack||pFinished),"Enemy starts after player completes");require(presenter.CurrentPose==DuelHero.Units.UnitPose.Idle,"Player idle throughout enemy presentation");require(ps.Health==hp&&es.Health==hp,"HP unchanged during enemy presentation");if(!eStarted){eStarted=true;trace.Add("enemy_start");}}
+   if(eStarted&&!ea.IsPlaying&&!eFinished){eFinished=true;trace.Add("enemy_end");}
+  };
+  var run=(System.Collections.IEnumerator)turn.GetType().GetMethod("Execute",flags).Invoke(turn,new object[]{new[]{pCard,null,null},new[]{eCard,null,null}});
+  stack.Push(run);for(int step=0;step<500&&stack.Count>0;step++){
+   var top=stack.Peek();bool more=top.MoveNext();sample();if(!more){var d=top as System.IDisposable;if(d!=null)d.Dispose();stack.Pop();continue;}
+   var nested=top.Current as System.Collections.IEnumerator;
+   if(nested!=null){
+    var tween=ea.GetType().GetField("motion",flags).GetValue(ea) as DG.Tweening.Sequence;
+    if(tween!=null&&DG.Tweening.TweenExtensions.IsActive(tween)){DG.Tweening.TweenExtensions.Goto(tween,.09f,false);require(enemy.transform.Find("PlacementRoot/MotionRoot").localPosition.sqrMagnitude>.00001f,"Enemy lunge plays");enemyLunge=true;sample();DG.Tweening.TweenExtensions.Complete(tween,false);}
+    stack.Push(nested);
+   }
+  }
+  require(stack.Count==0,"Sequence completes");
+  require(pStarted==pAttack&&eStarted==eAttack,"Only attacking actors animate");
+  require(!pAttack||(pAfter&&pIdle),"Player completes attack and idle recovery");
+  require(!eAttack||enemyLunge,"Enemy attack has visible presentation");
+  int expectedPlayer=name=="miss"||!eAttack?hp:System.Math.Max(0,hp-10);
+  int expectedEnemy=name=="miss"||!pAttack?hp:System.Math.Max(0,hp-(name=="guard"?6:10));
+  require(ps.Health==expectedPlayer&&es.Health==expectedEnemy,"Final health matches shared damage batch");
+  require(queue.IsExecuting==false||turn.ResultsAvailable,"Result state published");
+  require(turn.ResultsAvailable&&presenter.CurrentPose==DuelHero.Units.UnitPose.Idle,"Idle during result confirmation");
+  require(damaged==(pAttack||eAttack),"Attack result emitted");
+  report.Add(new{name=name,trace=trace.ToArray(),playerHealth=ps.Health,enemyHealth=es.Health,outcome=turn.Outcome.ToString()});
+ }finally{if(pa!=null)pa.Cancel();if(ea!=null)ea.Cancel();foreach(var item in stack){var d=item as System.IDisposable;if(d!=null)d.Dispose();}UnityEditor.SceneManagement.EditorSceneManager.CloseScene(scene,true);}
+}
+return new{checks=totalChecks,scenarios=report};

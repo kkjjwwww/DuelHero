@@ -1,0 +1,112 @@
+{
+  "mode": "Unity Editor integration checks: IEnumerator waits stepped manually; not a real-time Play Mode timing measurement.",
+  "checks": 417,
+  "scenarios": [
+    {
+      "name": "both",
+      "trace": [
+        "reveal",
+        "player_start",
+        "player_idle",
+        "enemy_start",
+        "enemy_end",
+        "damage:player_dummy_001",
+        "damage:enemy_dummy_001"
+      ],
+      "playerHealth": 90,
+      "enemyHealth": 90,
+      "outcome": "Running"
+    },
+    {
+      "name": "player_only",
+      "trace": [
+        "reveal",
+        "player_start",
+        "player_idle",
+        "damage:player_dummy_001"
+      ],
+      "playerHealth": 100,
+      "enemyHealth": 90,
+      "outcome": "Running"
+    },
+    {
+      "name": "enemy_only",
+      "trace": [
+        "reveal",
+        "enemy_start",
+        "enemy_end",
+        "damage:enemy_dummy_001"
+      ],
+      "playerHealth": 90,
+      "enemyHealth": 100,
+      "outcome": "Running"
+    },
+    {
+      "name": "neither",
+      "trace": [
+        "reveal"
+      ],
+      "playerHealth": 100,
+      "enemyHealth": 100,
+      "outcome": "Running"
+    },
+    {
+      "name": "miss",
+      "trace": [
+        "reveal",
+        "player_start",
+        "player_idle",
+        "enemy_start",
+        "enemy_end",
+        "damage:player_dummy_001",
+        "damage:enemy_dummy_001"
+      ],
+      "playerHealth": 100,
+      "enemyHealth": 100,
+      "outcome": "Running"
+    },
+    {
+      "name": "lethal_both",
+      "trace": [
+        "reveal",
+        "player_start",
+        "player_idle",
+        "enemy_start",
+        "enemy_end",
+        "damage:player_dummy_001",
+        "damage:enemy_dummy_001"
+      ],
+      "playerHealth": 0,
+      "enemyHealth": 0,
+      "outcome": "Defeat"
+    },
+    {
+      "name": "move_attack",
+      "trace": [
+        "reveal",
+        "player_start",
+        "player_idle",
+        "enemy_start",
+        "enemy_end",
+        "damage:player_dummy_001",
+        "damage:enemy_dummy_001"
+      ],
+      "playerHealth": 90,
+      "enemyHealth": 90,
+      "outcome": "Running"
+    },
+    {
+      "name": "guard",
+      "trace": [
+        "reveal",
+        "player_start",
+        "player_idle",
+        "damage:player_dummy_001"
+      ],
+      "playerHealth": 100,
+      "enemyHealth": 94,
+      "outcome": "Running"
+    }
+  ],
+  "cancellationChecksPassed": 9
+}
