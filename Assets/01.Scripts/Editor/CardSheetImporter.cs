@@ -37,7 +37,7 @@ public static class CardSheetImporter
     }
 
     // Fully parse and validate before touching the existing Unity asset.
-    public static string ImportFolder(string folder, string spreadsheetId = DefaultSpreadsheetId)
+    public static string ImportFolder(string folder, string spreadsheetId = DefaultSpreadsheetId, bool refreshViews = true)
     {
         CardDatabase parsed = ParseFolder(folder);
         CardDatabase target = AssetDatabase.LoadAssetAtPath<CardDatabase>(DatabasePath);
@@ -47,7 +47,7 @@ public static class CardSheetImporter
         var incomingCsv = new Dictionary<string, byte[]>();
         try
         {
-            foreach (string file in new[] { "Cards.csv", "Effects.csv", "Keywords.csv" })
+            foreach (string file in new[] { "Cards.csv", "Effects.csv", "Keywords.csv", "Statuses.csv" }.Where(f => f != "Statuses.csv" || File.Exists(Path.Combine(folder, f))))
             {
                 string destination = Path.Combine(SourceFolder, file);
                 previousCsv[destination] = File.Exists(destination) ? File.ReadAllBytes(destination) : null;
@@ -64,6 +64,7 @@ public static class CardSheetImporter
             foreach (var file in incomingCsv) File.WriteAllBytes(file.Key, file.Value);
             target.cards = parsed.cards;
             target.keywords = parsed.keywords;
+            target.statuses = parsed.statuses;
             target.sourceSpreadsheetId = spreadsheetId;
             target.importedAtUtc = DateTime.UtcNow.ToString("o");
             EditorUtility.SetDirty(target);
@@ -85,7 +86,7 @@ public static class CardSheetImporter
             throw;
         }
         finally { UnityEngine.Object.DestroyImmediate(parsed); }
-        RefreshDeckViews();
+        if (refreshViews) RefreshDeckViews();
         return $"Imported {target.cards.Length} cards, {target.cards.Sum(c => c.effects.Length)} effects, {target.keywords.Length} keywords.";
     }
 
@@ -108,6 +109,11 @@ public static class CardSheetImporter
         var cardRows = Table(Path.Combine(folder, "Cards.csv"), "id", "name", "description", "actionType", "energyCost", "keywordIds", "rarity", "isObtainable", "isBasicAction", "isStarterCard");
         var effectRows = Table(Path.Combine(folder, "Effects.csv"), "id", "cardId", "resolutionOrder", "effectType", "value", "durationSlots", "rangeOffsets", "targetType");
         var keywordRows = Table(Path.Combine(folder, "Keywords.csv"), "id", "name", "description", "resolutionRule", "triggerTiming", "parameters");
+        var statuses = File.Exists(Path.Combine(folder, "Statuses.csv"))
+            ? Table(Path.Combine(folder, "Statuses.csv"), "id", "name", "category", "keywordId", "stackRule", "countUnit")
+                .Select(r => new StatusDefinition { id = Required(r, "id"), name = Required(r, "name"), category = Required(r, "category"),
+                    keywordId = Required(r, "keywordId"), stackRule = Required(r, "stackRule"), countUnit = Required(r, "countUnit") }).ToArray()
+            : Array.Empty<StatusDefinition>();
         var cards = cardRows.Select(r => new CardDefinition
         {
             id = Required(r, "id"), name = Required(r, "name"), description = Required(r, "description"),
@@ -126,22 +132,32 @@ public static class CardSheetImporter
         {
             id = Required(r, "id"), cardId = Required(r, "cardId"), effectType = Required(r, "effectType"),
             resolutionOrder = Number(r, "resolutionOrder"), value = Number(r, "value"), durationSlots = Number(r, "durationSlots"),
+            statusId = r.TryGetValue("statusId", out var status) ? status : string.Empty,
+            triggerEffectId = r.TryGetValue("triggerEffectId", out var trigger) ? trigger : string.Empty,
             rangeOffsets = Offsets(r["rangeOffsets"]), targetType = Required(r, "targetType")
         }).ToArray();
         if (cards.Length == 0) throw new FormatException("No card rows with an id.");
         Unique(cards.Select(c => c.id), "card id"); Unique(effects.Select(e => e.id), "effect id"); Unique(keywords.Select(k => k.id), "keyword id");
         var cardIds = new HashSet<string>(cards.Select(c => c.id));
         var keywordIds = new HashSet<string>(keywords.Select(k => k.id));
+        Unique(statuses.Select(s => s.id), "status id");
+        foreach (var status in statuses)
+            if (status.id != "stun" || status.category != "디버프" || status.stackRule != "add" || status.countUnit != "actionSlot" || !keywordIds.Contains(status.keywordId))
+                throw new FormatException($"{status.id}: unsupported status definition or missing keyword");
         foreach (var effect in effects)
         {
             if (!cardIds.Contains(effect.cardId)) throw new FormatException($"{effect.id}: missing cardId {effect.cardId}");
-            if (!new[] { "move", "guard", "damage", "energyRestore" }.Contains(effect.effectType))
+            if (!new[] { "move", "guard", "damage", "energyRestore", "applyStatus" }.Contains(effect.effectType))
                 throw new FormatException($"{effect.id}: unsupported effectType {effect.effectType}");
             if (effect.resolutionOrder < 1) throw new FormatException($"{effect.id}: resolutionOrder must be positive");
             if (effect.effectType == "move" && (effect.rangeOffsets.Length != 1 ||
                 Math.Abs((long)effect.rangeOffsets[0].x) + Math.Abs((long)effect.rangeOffsets[0].y) != 1))
                 throw new FormatException($"{effect.id}: move requires one cardinal unit offset");
             if (!new[] { "자신", "적" }.Contains(effect.targetType)) throw new FormatException($"{effect.id}: invalid targetType");
+            if (effect.effectType == "applyStatus" && (effect.value <= 0 || effect.durationSlots != 0 || effect.targetType != "적" ||
+                !statuses.Any(s => s.id == effect.statusId) || !effects.Any(hit => hit.cardId == effect.cardId && hit.id == effect.triggerEffectId &&
+                    hit.effectType == "damage" && hit.resolutionOrder < effect.resolutionOrder)))
+                throw new FormatException($"{effect.id}: invalid status or hit-effect reference");
         }
         foreach (var card in cards)
         {
@@ -153,7 +169,7 @@ public static class CardSheetImporter
             Unique(card.effects.Select(e => e.resolutionOrder.ToString()), card.id + " effect order");
             if (Regex.IsMatch(card.ResolvedDescription(), @"\{[^}]+\}")) throw new FormatException($"{card.id}: unresolved description placeholder");
         }
-        var db = ScriptableObject.CreateInstance<CardDatabase>(); db.cards = cards; db.keywords = keywords;
+        var db = ScriptableObject.CreateInstance<CardDatabase>(); db.cards = cards; db.keywords = keywords; db.statuses = statuses;
         return db;
     }
 
@@ -180,6 +196,7 @@ public static class CardSheetImporter
     }
     private static Vector2Int[] Offsets(string value)
     {
+        if (string.IsNullOrWhiteSpace(value)) return Array.Empty<Vector2Int>();
         return value.Split(';').Select(part =>
         {
             var match = Regex.Match(part.Trim(), @"^\((-?\d+)\s*,\s*(-?\d+)\)$");

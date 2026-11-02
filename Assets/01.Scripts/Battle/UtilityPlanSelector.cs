@@ -57,6 +57,12 @@ namespace DuelHero.Battle
             float attackBurden = 0;
             for (int slot = 0; slot < plan.Length; slot++)
             {
+                if (slot < context.Actor.Stun)
+                {
+                    plan[slot] = new EnemyPlannedAction(new CardInstance(StunCard.Definition), Vector2Int.right);
+                    state.Step(context, plan[slot], slot);
+                    continue;
+                }
                 var debugSlot = trace?.BeginSlot(slot, state);
                 if (state.TargetHealth <= 0 || context.Actor.Health <= 0)
                 {

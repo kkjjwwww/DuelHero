@@ -25,6 +25,7 @@ namespace DuelHero.Cards
         [SerializeField, Min(0f)] private float resultHoverDuration = 0.15f;
         [Header("Card Front")]
         [SerializeField] private CardView cardPrefab;
+        [SerializeField] private CardView stunCardPrefab;
         [SerializeField] private CardDatabase cardDatabase;
         private CardView frontCard;
         private KeywordTooltip keywordTooltip;
@@ -60,6 +61,12 @@ namespace DuelHero.Cards
             effectLabel.text = card?.ResolvedDescription() ?? "";
             BindCardFront();
             RefreshAppearance();
+            if (StunCard.IsStun(card)) Reveal();
+        }
+        public void ShowStun()
+        {
+            if (StunCard.IsStun(card)) return;
+            Bind(StunCard.Definition);
         }
         private void BindCardFront()
         {
@@ -75,10 +82,13 @@ namespace DuelHero.Cards
                 if (frontCard != null) frontCard.gameObject.SetActive(false);
                 return;
             }
+            bool stunned = StunCard.IsStun(card);
+            if (frontCard != null && (frontCard.name == "StunnedCard") != stunned)
+            { Destroy(frontCard.gameObject); frontCard = null; }
             if (frontCard == null)
             {
-                frontCard = Instantiate(cardPrefab, frontFace.transform, false);
-                frontCard.name = "EnemyCardFront";
+                frontCard = Instantiate(stunned ? stunCardPrefab != null ? stunCardPrefab : StunCard.Prefab ?? cardPrefab : cardPrefab, frontFace.transform, false);
+                frontCard.name = stunned ? "StunnedCard" : "EnemyCardFront";
                 var font = cardFont = DuelHero.UI.GameFonts.UI;
                 frontCard.SetFont(font);
                 frontCard.SetClickAction(OpenCardList);
@@ -87,15 +97,16 @@ namespace DuelHero.Cards
                 hover.HideInfo = null;
                 frontCard.SetKeywordHoverActions((keyword, position) =>
                 {
+                    if (!canInspect && !canInspectTypeOnly) return;
                     if (keywordTooltip == null) keywordTooltip = KeywordTooltip.Create(GetComponentInParent<Canvas>().rootCanvas, font);
                     keywordTooltip.Show(keyword, position);
                 }, () => { if (keywordTooltip != null) keywordTooltip.Hide(); },
                 position => { if (keywordTooltip != null) keywordTooltip.Move(position); });
             }
             frontCard.gameObject.SetActive(true);
-            frontCard.Bind(card, cardDatabase.keywords, Visibility == EnemyCardVisibility.TypeOnly);
+            frontCard.Bind(card, cardDatabase.keywords, Visibility == EnemyCardVisibility.TypeOnly, isEnemy: true);
             frontCard.SetFrontVisible(true);
-            frontCard.SetState(string.Empty, 0, true);
+            frontCard.SetState(string.Empty, 0, !stunned);
             var rect = (RectTransform)frontCard.transform;
             var bounds = ((RectTransform)frontFace.transform).rect;
             rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
@@ -226,6 +237,7 @@ namespace DuelHero.Cards
         {
             canInspect = enabled;
             canInspectTypeOnly = preparation;
+            if (frontCard != null) frontCard.SetKeywordHoverEnabled(enabled || preparation);
             openCardList = onClick;
             showResultPreview = onShow;
             hideResultPreview = onHide;
@@ -234,7 +246,7 @@ namespace DuelHero.Cards
         }
         private void OpenCardList()
         {
-            if (!canInspect) return;
+            if (!canInspect || StunCard.IsStun(card)) return;
             HideInspection();
             openCardList?.Invoke();
         }
@@ -253,14 +265,17 @@ namespace DuelHero.Cards
         }
         private void ShowInspection()
         {
+            bool stunned = StunCard.IsStun(card);
             bool typeOnly = Visibility == EnemyCardVisibility.TypeOnly && canInspectTypeOnly;
-            if ((!typeOnly && (!canInspect || !IsRevealed)) || IsRevealing ||
+            bool allowed = stunned ? canInspect || canInspectTypeOnly : typeOnly || (canInspect && IsRevealed);
+            if (!allowed || IsRevealing ||
                 card == null || cardPrefab == null || cardDatabase == null) return;
             if (inspection == null) inspection = CardInspectionPresenter.GetOrCreate(GetComponentInParent<Canvas>().rootCanvas);
-            inspection.Show(InspectionAnchor, cardPrefab, card, cardDatabase, cardFont,
-                click: typeOnly ? null : OpenCardList, scale: resultHoverScale, duration: resultHoverDuration,
-                hidden: typeOnly ? null : hideResultPreview, typeOnly: typeOnly);
-            if (!typeOnly) showResultPreview?.Invoke();
+            inspection.Show(InspectionAnchor, stunned ? stunCardPrefab != null ? stunCardPrefab : StunCard.Prefab ?? cardPrefab : cardPrefab,
+                card, cardDatabase, cardFont,
+                click: typeOnly || stunned ? null : OpenCardList, scale: resultHoverScale, duration: resultHoverDuration,
+                hidden: typeOnly || stunned ? null : hideResultPreview, typeOnly: typeOnly, isEnemy: true);
+            if (!typeOnly && !stunned) showResultPreview?.Invoke();
         }
         private RectTransform InspectionAnchor => (RectTransform)(frontCard != null ? frontCard.transform : frontFace.transform);
         private void HideInspection()

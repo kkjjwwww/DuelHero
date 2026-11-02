@@ -32,6 +32,7 @@ namespace DuelHero.Battle
         public event Action<BattleActionResult> ActionResolved;
         public event Action<BattleOutcome> BattleFinished;
         public event Action<IReadOnlyList<CardDefinition>> EnemyPlanPrepared;
+        public event Action EnemySlotsChanged;
         public event Action<int> SlotStarted;
         public event Action<int> SlotPresenting;
         public event Action<int> SlotRevealing;
@@ -39,6 +40,9 @@ namespace DuelHero.Battle
         public event Action PhaseChanged;
         public bool ResultsAvailable { get; private set; }
         public bool AwaitingNextTurn => ResultsAvailable && Outcome == BattleOutcome.Running;
+        public bool CanInspectSlots => Outcome == BattleOutcome.Running && !restoring &&
+            (ResultsAvailable || ((presentation == null || !presentation.IsActive) &&
+                (playerQueue == null || !playerQueue.IsExecuting)));
         private CardDefinition[] preparedEnemyCards;
         private readonly ExecutedCardPreview[] enemyExecutions = new ExecutedCardPreview[3];
         public IReadOnlyList<CardDefinition> PreparedEnemyCards =>
@@ -164,7 +168,11 @@ namespace DuelHero.Battle
                 playerQueue.SetActiveSlot(slot);
                 if (playerStats.Health <= 0 || enemyStats.Health <= 0)
                 { Outcome = EvaluateOutcome(playerStats.Health, enemyStats.Health); break; }
-                var pc = playerCards[slot]; var ec = enemyCards[slot];
+                // Snapshot both disables before either actor can apply stun this slot.
+                bool playerStunned = playerStats.ConsumeStunSlot();
+                bool enemyStunned = enemyStats.ConsumeStunSlot();
+                var pc = playerStunned ? StunCard.Definition : playerCards[slot];
+                var ec = enemyStunned ? StunCard.Definition : enemyCards[slot];
                 if (playerStats.Energy < (pc?.energyCost ?? 0) || enemyStats.Energy < (ec?.energyCost ?? 0))
                 { LastError = "실행 중 에너지가 부족해졌습니다."; FinishExecution(); yield break; }
                 SlotPresenting?.Invoke(slot);
@@ -174,8 +182,8 @@ namespace DuelHero.Battle
                 if (postRevealDelay > 0f) yield return new WaitForSeconds(postRevealDelay);
                 SlotStarted?.Invoke(slot);
                 playerStats.TrySpendEnergy(pc?.energyCost ?? 0); enemyStats.TrySpendEnergy(ec?.energyCost ?? 0);
-                if (pc != null) Publish(BattleActionKind.CardExecuted, playerId, pc.id);
-                if (ec != null) Publish(BattleActionKind.CardExecuted, enemyId, ec.id);
+                if (pc != null && !StunCard.IsStun(pc)) Publish(BattleActionKind.CardExecuted, playerId, pc.id);
+                if (ec != null && !StunCard.IsStun(ec)) Publish(BattleActionKind.CardExecuted, enemyId, ec.id);
                 effects.ExecutePreparation(playerId, pc, round);
                 var enemyPath = new List<Vector2Int> { enemyMovement.GridPosition };
                 void RecordMovement(BattleActionResult result)
@@ -201,6 +209,13 @@ namespace DuelHero.Battle
                 enemyExecutions[slot] = new ExecutedCardPreview(enemyPath,
                     damage.AttackCells.TryGetValue(enemyId, out var cells) ? cells : Array.Empty<Vector2Int>());
                 combatEffects.ApplyDamageBatch(damage);
+                playerQueue.BlockFutureSlots(slot + 1, playerStats.Stun);
+                for (int future = slot + 1; future < Math.Min(3, slot + 1 + enemyStats.Stun); future++)
+                {
+                    enemyCards[future] = StunCard.Definition;
+                    (enemyPlan as EnemyActionPlanProvider)?.CancelSlot(future);
+                }
+                EnemySlotsChanged?.Invoke();
                 
                 combatEffects.EndSlot(round);
                 executedSlots++;
@@ -232,6 +247,26 @@ namespace DuelHero.Battle
             PhaseChanged?.Invoke();
         }
 #if UNITY_EDITOR
+        public bool CanEditForDebug => CanWinForDebug && !ResultsAvailable;
+        public bool TryApplyStunForDebug(UnitStats target, int amount)
+        {
+            if (!CanEditForDebug || target == null || amount <= 0) return false;
+            combatEffects.TryGetUnit(playerId, out _, out var player);
+            combatEffects.TryGetUnit(enemyId, out _, out var enemy);
+            if (target != player && target != enemy) return false;
+            target.ApplyStun(amount);
+            if (target == enemy && preparedEnemyCards != null)
+            {
+                for (int slot = 0; slot < Math.Min(3, target.Stun); slot++)
+                {
+                    preparedEnemyCards[slot] = StunCard.Definition;
+                    (enemyPlan as EnemyActionPlanProvider)?.CancelSlot(slot);
+                }
+                EnemySlotsChanged?.Invoke();
+            }
+            PhaseChanged?.Invoke();
+            return true;
+        }
         public bool CanWinForDebug => Application.isPlaying && isActiveAndEnabled &&
             playerQueue != null && !IsInputLocked && !restoring && Outcome == BattleOutcome.Running &&
             combatEffects != null && combatEffects.TryGetUnit(playerId, out _, out var player) &&
@@ -275,7 +310,7 @@ namespace DuelHero.Battle
             if (card == null) return;
             foreach (var effect in card.effects.OrderBy(e => e.resolutionOrder))
             {
-                if (effect.effectType == "damage") requests.Add(new CombatEffectResolver.AttackRequest(actor, card.id, effect));
+                if (effect.effectType == "damage") requests.Add(new CombatEffectResolver.AttackRequest(actor, card, effect));
 
             }
         }

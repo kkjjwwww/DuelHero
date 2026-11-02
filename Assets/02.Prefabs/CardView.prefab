@@ -1199,6 +1199,31 @@ MonoBehaviour:
   visualRoot: {fileID: 975557892545466948}
   frontRoot: {fileID: 6621547976207261755}
   illustration: {fileID: 7171595111309188714}
+  cardIllustrations:
+  - cardId: slash_001
+    sprite: {fileID: 21300000, guid: ba9505261847c5f428df3c94ba9fc1ed, type: 3}
+    enemySprite: {fileID: 0}
+  - cardId: guard_001
+    sprite: {fileID: 21300000, guid: 54f91bd5022646443b6311051ca5fd49, type: 3}
+    enemySprite: {fileID: 21300000, guid: 936e8bef19f980d46ab2e9b72f0e393d, type: 3}
+  - cardId: breathing_001
+    sprite: {fileID: 21300000, guid: 03ccf14db47dcd8408e6b779e0a3f6bb, type: 3}
+    enemySprite: {fileID: 21300000, guid: ec5ac7392b2f62b43b5dd290ee7bbcf5, type: 3}
+  - cardId: move_up_001
+    sprite: {fileID: 21300000, guid: c65982cf9b73a80408f41fa1a61e4fbe, type: 3}
+    enemySprite: {fileID: 21300000, guid: 807ba697b7f5e824eb2490c34dbd8851, type: 3}
+  - cardId: move_down_001
+    sprite: {fileID: 21300000, guid: c65982cf9b73a80408f41fa1a61e4fbe, type: 3}
+    enemySprite: {fileID: 21300000, guid: 807ba697b7f5e824eb2490c34dbd8851, type: 3}
+  - cardId: move_left_001
+    sprite: {fileID: 21300000, guid: c65982cf9b73a80408f41fa1a61e4fbe, type: 3}
+    enemySprite: {fileID: 21300000, guid: 807ba697b7f5e824eb2490c34dbd8851, type: 3}
+  - cardId: move_right_001
+    sprite: {fileID: 21300000, guid: c65982cf9b73a80408f41fa1a61e4fbe, type: 3}
+    enemySprite: {fileID: 21300000, guid: 807ba697b7f5e824eb2490c34dbd8851, type: 3}
+  - cardId: system_wait
+    sprite: {fileID: 21300000, guid: 187e1cf71ab871b448ebf279c37b7593, type: 3}
+    enemySprite: {fileID: 21300000, guid: 9ee708d669187ff40af05466ca77d1d0, type: 3}
   illustrationMaskLabel: {fileID: 2585468343720503962}
   nameLabel: {fileID: 4830123014176368167}
   energyLabel: {fileID: 7672088178475286491}
@@ -1224,6 +1249,15 @@ MonoBehaviour:
   recoveryBadge: {fileID: 21300000, guid: 787d6e579d7098144b85c7ced5615c8f, type: 3}
   specialBadge: {fileID: 21300000, guid: 2e1aa7d9560b80d4fa5b6fb6aca28138, type: 3}
   moveBadge: {fileID: 21300000, guid: 4b8ef1f61cb013e4e8104984aeacda8d, type: 3}
+  frameImage: {fileID: 3740800705786619956}
+  normalFrame: {fileID: 21300000, guid: e9600fa2ba21057488a160858cd5f31d, type: 3}
+  rareFrame: {fileID: 21300000, guid: 946582ce32918ed4582dde6767f20e54, type: 3}
+  uniqueFrame: {fileID: 21300000, guid: 702b990d8d8129844ac156a5a31cb946, type: 3}
+  legendaryFrame: {fileID: 21300000, guid: 2ecda0b46dfb27c409c01692530fda9e, type: 3}
+  normalNameColor: {r: 1, g: 1, b: 1, a: 1}
+  rareNameColor: {r: 0.35, g: 0.65, b: 1, a: 1}
+  uniqueNameColor: {r: 1, g: 0.84, b: 0.25, a: 1}
+  legendaryNameColor: {r: 1, g: 0.3, b: 0.3, a: 1}
 --- !u!1 &6621547976207261755
 GameObject:
   m_ObjectHideFlags: 0
@@ -1698,8 +1732,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uBCA0\uAE30"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8bea58569a1472f47a53ce57e797b5aa, type: 2}
-  m_sharedMaterial: {fileID: 4311246817271970673, guid: 8bea58569a1472f47a53ce57e797b5aa, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 142ca79da32fe7448953635c30f8c2e1, type: 2}
+  m_sharedMaterial: {fileID: 6832596831557314879, guid: 142ca79da32fe7448953635c30f8c2e1, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []

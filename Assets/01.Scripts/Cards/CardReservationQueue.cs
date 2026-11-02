@@ -12,6 +12,7 @@ namespace DuelHero.Cards
         private void OnDisable() { if (unitStats != null) unitStats.Changed -= OnEnergyChanged; }
         private void OnEnergyChanged()
         {
+            if (!IsExecuting) SynchronizeStunSlots();
             Changed?.Invoke();
             playerDeck?.NotifyStateChanged();
         }
@@ -29,6 +30,7 @@ namespace DuelHero.Cards
         public event Action Changed;
         public bool TryReserve(CardInstance card)
         {
+            if (!IsExecuting) SynchronizeStunSlots();
             if (IsExecuting || card == null || playerDeck == null || reservations.Count >= 3) return false;
             bool systemWait = ReferenceEquals(card, playerDeck.WaitAction);
             bool owned = systemWait;
@@ -46,13 +48,46 @@ namespace DuelHero.Cards
         }
         public bool CancelAt(int slot)
         {
-            if (IsExecuting || slot < 0 || slot >= reservations.Count) return false;
+            if (IsExecuting || slot < 0 || slot >= reservations.Count || StunCard.IsStun(reservations[slot].Definition)) return false;
             reservations[slot].ClearReservation(); reservations.RemoveAt(slot);
             for (int i = slot; i < reservations.Count; i++)
             {
                 reservations[i].RelocateReservation(i);
             }
+            SynchronizeStunSlots();
             Notify(); return true;
+        }
+        private void SynchronizeStunSlots()
+        {
+            int blocked = Math.Min(3, unitStats != null ? unitStats.Stun : 0);
+            int current = 0;
+            while (current < reservations.Count && StunCard.IsStun(reservations[current].Definition)) current++;
+            if (current == blocked) return;
+            if (blocked > current)
+            {
+                for (int slot = current; slot < blocked; slot++)
+                {
+                    var marker = new CardInstance(StunCard.Definition);
+                    if (slot < reservations.Count) { reservations[slot].ClearReservation(); reservations[slot] = marker; }
+                    else reservations.Add(marker);
+                }
+            }
+            else
+            {
+                reservations.RemoveRange(blocked, current - blocked);
+                for (int slot = blocked; slot < reservations.Count; slot++) reservations[slot].RelocateReservation(slot);
+            }
+        }
+        public void BlockFutureSlots(int firstSlot, int count)
+        {
+            if (!IsExecuting) return;
+            for (int slot = firstSlot; slot < Math.Min(3, firstSlot + count); slot++)
+            {
+                if (slot >= reservations.Count || StunCard.IsStun(reservations[slot].Definition)) continue;
+                reservations[slot].ClearReservation();
+                reservations[slot] = new CardInstance(StunCard.Definition);
+            }
+            Notify();
         }
         public bool BeginExecution()
         {
@@ -61,7 +96,7 @@ namespace DuelHero.Cards
         }
         public bool TrySetDirection(int slot, Vector2Int direction)
         {
-            if (IsExecuting || slot < 0 || slot >= reservations.Count || !reservations[slot].SetDirection(direction)) return false;
+            if (IsExecuting || slot < 0 || slot >= reservations.Count || StunCard.IsStun(reservations[slot].Definition) || !reservations[slot].SetDirection(direction)) return false;
             Notify(); return true;
         }
         public void SetActiveSlot(int slot) { ActiveSlot = slot; Notify(); }
@@ -69,8 +104,9 @@ namespace DuelHero.Cards
         {
             if (!IsExecuting) return;
             for (int i = 0; i < reservations.Count; i++)
-                if (i < executedSlots) reservations[i].MarkUsed(CurrentRound); else reservations[i].ClearReservation();
-            reservations.Clear(); CurrentRound++; IsExecuting = false; ActiveSlot = -1; Notify();
+                if (i < executedSlots && !StunCard.IsStun(reservations[i].Definition)) reservations[i].MarkUsed(CurrentRound); else reservations[i].ClearReservation();
+            reservations.Clear(); CurrentRound++; IsExecuting = false; ActiveSlot = -1;
+            SynchronizeStunSlots(); Notify();
         }
         public void AbortExecution()
         {

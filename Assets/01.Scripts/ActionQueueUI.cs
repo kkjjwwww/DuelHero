@@ -18,6 +18,7 @@ public class ActionQueueUI : MonoBehaviour
     [SerializeField, Min(.01f)] private float nextTurnBlinkHalfPeriod = .55f;
     [Header("Reserved Card Display")]
     [SerializeField] private CardView cardPrefab;
+    [SerializeField] private CardView stunCardPrefab;
     [SerializeField] private CardDatabase cardDatabase;
     [Header("Execution Motion")]
     [SerializeField, Min(1f)] private float executionScale = 1.1f;
@@ -28,6 +29,8 @@ public class ActionQueueUI : MonoBehaviour
     private Tween[] slotExecutionTweens;
     private Font cardFont;
     private KeywordTooltip keywordTooltip;
+    private CardInspectionPresenter inspection;
+    private bool CanInspect => actionExecutor != null ? actionExecutor.CanInspectSlots : reservationQueue != null && !reservationQueue.IsExecuting;
     private Tween nextTurnBlink;
     private CardReservationOutline nextTurnOutline;
     private CanvasGroup nextTurnOutlineGroup;
@@ -57,6 +60,7 @@ public class ActionQueueUI : MonoBehaviour
     }
     private void OnDisable()
     {
+        HideSlotInspection();
         if (keywordTooltip != null) keywordTooltip.Hide();
         if (reservationQueue != null) reservationQueue.Changed -= RefreshCards;
         if (actionExecutor != null) actionExecutor.PhaseChanged -= RefreshCards;
@@ -70,7 +74,11 @@ public class ActionQueueUI : MonoBehaviour
     }
     public void RefreshCards()
     {
-        if (actionExecutor != null && actionExecutor.IsInputLocked && keywordTooltip != null) keywordTooltip.Hide();
+        if (!CanInspect)
+        {
+            if (keywordTooltip != null) keywordTooltip.Hide();
+            HideSlotInspection();
+        }
         bool energyValid = reservationQueue != null && reservationQueue.HasEnoughEnergy(out _);
         bool battleEnded = actionExecutor != null && actionExecutor.Outcome != DuelHero.Battle.BattleOutcome.Running;
         bool nextTurn = actionExecutor != null && actionExecutor.AwaitingNextTurn;
@@ -150,11 +158,14 @@ public class ActionQueueUI : MonoBehaviour
             return;
         }
         CardInstance instance = reservationQueue.Reservations[index];
+        bool stunned = StunCard.IsStun(instance.Definition);
         CardView view = slotCards[index];
+        if (view != null && (view.name == "StunnedCard") != stunned)
+        { Destroy(view.gameObject); view = null; slotCards[index] = null; }
         if (view == null)
         {
-            view = Instantiate(cardPrefab, parent, false);
-            view.name = "ReservedCard";
+            view = Instantiate(stunned ? stunCardPrefab != null ? stunCardPrefab : StunCard.Prefab ?? cardPrefab : cardPrefab, parent, false);
+            view.name = stunned ? "StunnedCard" : "ReservedCard";
             view.transform.SetAsFirstSibling();
             slotCards[index] = view;
             if (cardFont == null) cardFont = DuelHero.UI.GameFonts.UI;
@@ -163,11 +174,23 @@ public class ActionQueueUI : MonoBehaviour
             view.SetClickAction(() => { if (!reservationQueue.IsExecuting) reservationQueue.CancelAt(slot); });
             view.SetKeywordHoverActions((keyword, position) =>
             {
-                if (actionExecutor != null && actionExecutor.IsInputLocked) return;
+                if (!CanInspect) return;
                 if (keywordTooltip == null) keywordTooltip = KeywordTooltip.Create(GetComponentInParent<Canvas>().rootCanvas, cardFont);
                 keywordTooltip.Show(keyword, position);
             }, () => { if (keywordTooltip != null) keywordTooltip.Hide(); },
             position => { if (keywordTooltip != null) keywordTooltip.Move(position); });
+            if (stunned)
+            {
+                var hover = view.GetComponent<CardHoverInfo>() ?? view.gameObject.AddComponent<CardHoverInfo>();
+                var source = view;
+                hover.ShowInfo = () =>
+                {
+                    if (!CanInspect) return;
+                    if (inspection == null) inspection = CardInspectionPresenter.GetOrCreate(GetComponentInParent<Canvas>().rootCanvas);
+                    inspection.Show((RectTransform)source.transform, stunCardPrefab != null ? stunCardPrefab : StunCard.Prefab ?? cardPrefab,
+                        StunCard.Definition, cardDatabase, cardFont, aboveSource: true);
+                };
+            }
         }
         if (!ReferenceEquals(boundCards[index], instance))
         {
@@ -191,19 +214,27 @@ public class ActionQueueUI : MonoBehaviour
                 * (slotExecuted[index] ? executionScale : 1f);
         }
         view.gameObject.SetActive(true);
-        view.SetState(string.Empty, 0, true);
+        view.SetState(string.Empty, 0, !stunned);
+        view.SetKeywordHoverEnabled(CanInspect);
         var hoverScale = view.GetComponent<ButtonHoverScale>();
         if (hoverScale == null)
         {
             hoverScale = view.gameObject.AddComponent<ButtonHoverScale>();
             hoverScale.ConfigureTargets(view.VisualRoot);
         }
-        hoverScale.enabled = !reservationQueue.IsExecuting;
+        hoverScale.enabled = CanInspect && !stunned;
         if (hoverScale.enabled) hoverScale.RefreshInteractability();
+    }
+    private void HideSlotInspection()
+    {
+        if (inspection == null || slotCards == null) return;
+        foreach (var card in slotCards)
+            if (card != null) inspection.Hide((RectTransform)card.transform);
     }
     private void BeginSlotExecution(int index)
     {
         if (index < 0 || index >= slotImages.Length) return;
+        if (index < reservationQueue.Reservations.Count && StunCard.IsStun(reservationQueue.Reservations[index].Definition)) return;
         if (slotCards == null || slotCards[index] == null) RefreshCards();
         if (slotCards == null || slotCards[index] == null) return;
         StopSlotMotion(index);

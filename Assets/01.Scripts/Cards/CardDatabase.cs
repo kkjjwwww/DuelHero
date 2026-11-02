@@ -10,6 +10,7 @@ namespace DuelHero.Cards
     public class CardEffectDefinition
     {
         public string id, cardId, effectType, targetType;
+        public string statusId, triggerEffectId;
         public int resolutionOrder, value, durationSlots;
         public Vector2Int[] rangeOffsets;
     }
@@ -54,12 +55,19 @@ namespace DuelHero.Cards
         public string id, name, description, resolutionRule, triggerTiming, parameters;
     }
 
+    [Serializable]
+    public class StatusDefinition
+    {
+        public string id, name, category, keywordId, stackRule, countUnit;
+    }
+
     public class CardDatabase : ScriptableObject
     {
         public string sourceSpreadsheetId;
         public string importedAtUtc;
         public CardDefinition[] cards = Array.Empty<CardDefinition>();
         public KeywordDefinition[] keywords = Array.Empty<KeywordDefinition>();
+        public StatusDefinition[] statuses = Array.Empty<StatusDefinition>();
 
         public IEnumerable<CardDefinition> StarterCards => cards.Where(c => c.isStarterCard || c.isBasicAction);
     }

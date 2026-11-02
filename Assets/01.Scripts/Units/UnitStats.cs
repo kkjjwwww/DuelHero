@@ -9,6 +9,21 @@ namespace DuelHero.Units
         public int MaxHealth { get; private set; }
         public int Energy { get; private set; }
         public int MaxEnergy { get; private set; }
+        public int Stun { get; private set; }
+        public void ApplyStun(int amount)
+        {
+            Validate(amount);
+            Stun = checked(Stun + amount);
+            Changed?.Invoke();
+        }
+        // Called for both actors at slot start, before either actor applies new effects.
+        public bool ConsumeStunSlot()
+        {
+            if (Stun <= 0) return false;
+            Stun--;
+            Changed?.Invoke();
+            return true;
+        }
         private readonly GuardState guard = new();
         public int GuardReduction => guard.Reduction;
         public System.Collections.Generic.IReadOnlyList<GuardEffectSnapshot> CaptureGuard() => guard.Capture();

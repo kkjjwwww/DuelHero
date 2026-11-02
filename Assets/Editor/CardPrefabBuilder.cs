@@ -84,11 +84,11 @@ namespace DuelHero.Editor
             titleArea.gameObject.AddComponent<Mask>().showMaskGraphic = false;
             var badgeFont = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/Art/UI/Fonts/BusanDandiM SDF.asset");
             var nameLabel = NewUI("Name", titleArea).AddComponent<TextMeshProUGUI>();
-            nameLabel.font = badgeFont;
+            nameLabel.font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/Art/UI/Fonts/HeirofLightBold SDF.asset");
             nameLabel.text = "베기";
             nameLabel.color = TextColor;
             nameLabel.raycastTarget = false;
-            nameLabel.fontStyle = FontStyles.Bold;
+            nameLabel.fontStyle = FontStyles.Normal;
             nameLabel.alignment = TextAlignmentOptions.Center;
             nameLabel.textWrappingMode = TextWrappingModes.NoWrap;
             nameLabel.enableAutoSizing = true;
@@ -170,7 +170,24 @@ namespace DuelHero.Editor
             Set(serialized, "visualRoot", visual.transform);
             Set(serialized, "frontRoot", frontRoot);
             Set(serialized, "illustration", illustration);
+            var illustrationIds = new[] { "slash_001", "guard_001", "breathing_001", "move_up_001", "move_down_001", "move_left_001", "move_right_001", WaitCard.Id };
+            var illustrationFiles = new[] { "Slash", "Guard", "Breathing", "Move", "Move", "Move", "Move", "Wait" };
+            var illustrations = serialized.FindProperty("cardIllustrations");
+            illustrations.arraySize = illustrationIds.Length;
+            for (int i = 0; i < illustrationIds.Length; i++)
+            {
+                var entry = illustrations.GetArrayElementAtIndex(i);
+                entry.FindPropertyRelative("cardId").stringValue = illustrationIds[i];
+                entry.FindPropertyRelative("sprite").objectReferenceValue = LoadSprite("Illustrations/CardIllustration" + illustrationFiles[i] + ".png");
+                entry.FindPropertyRelative("enemySprite").objectReferenceValue = illustrationFiles[i] == "Slash"
+                    ? null : LoadSprite("Illustrations/CardIllustrationEnemy" + illustrationFiles[i] + ".png");
+            }
             Set(serialized, "nameLabel", nameLabel);
+            Set(serialized, "frameImage", frameImage);
+            Set(serialized, "normalFrame", frame);
+            Set(serialized, "rareFrame", LoadSprite("CardFrontFrameRare.png"));
+            Set(serialized, "uniqueFrame", LoadSprite("CardFrontFrameUnique.png"));
+            Set(serialized, "legendaryFrame", LoadSprite("CardFrontFrameLegendary.png"));
             Set(serialized, "energyLabel", energyLabel);
             Set(serialized, "descriptionLabel", description);
             Set(serialized, "descriptionArea", descriptionArea);
@@ -202,7 +219,9 @@ namespace DuelHero.Editor
 
         private static void ConfigureTextures()
         {
-            string[] files = { "CardFrontFrame.png", "CardBack.png", "EnergyBadge.png", "TypeBadgeAttack.png", "TypeBadgeDefense.png", "TypeBadgeRecovery.png", "TypeBadgeSpecial.png", "TypeBadgeMove.png" };
+            string[] files = { "CardFrontFrame.png", "CardFrontFrameRare.png", "CardFrontFrameUnique.png", "CardFrontFrameLegendary.png", "CardBack.png", "EnergyBadge.png", "TypeBadgeAttack.png", "TypeBadgeDefense.png", "TypeBadgeRecovery.png", "TypeBadgeSpecial.png", "TypeBadgeMove.png" };
+            files = files.Concat(new[] { "Slash", "Guard", "Breathing", "Move", "Wait", "EnemyGuard", "EnemyBreathing", "EnemyMove", "EnemyWait" }
+                .Select(name => "Illustrations/CardIllustration" + name + ".png")).ToArray();
             foreach (string file in files)
             {
                 string path = "Assets/Art/UI/Cards/" + file;

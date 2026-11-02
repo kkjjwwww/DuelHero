@@ -11,3 +11,5 @@
 [방향지정][{cooldownTurns}턴]","공격","15","direction_select","일반","FALSE","FALSE","TRUE",""
 "sweep_001","횡베기","범위 내 모든 적에게 피해 {effect1.value}를(을) 준다.
 [방향지정][{cooldownTurns}턴]","공격","20","direction_select","일반","FALSE","FALSE","TRUE",""
+"head_break_001","머리깨기","범위 내 모든 적에게 피해 {effect1.value}를 주고 [기절]을 {effect2.value} 부여한다.
+[방향지정][{cooldownTurns}턴]","공격","20","direction_select;stun","일반","TRUE","FALSE","FALSE","2"

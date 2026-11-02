@@ -14,6 +14,11 @@ namespace DuelHero.Cards
         [SerializeField] private RectTransform content;
         [SerializeField] private Text message;
         [SerializeField] private CardView cardPrefab;
+        [SerializeField, Range(0f, 1f), InspectorName("보상 배경 불투명도")]
+        private float backgroundOpacity = .88f;
+        private Image panelBackground, screenBackground;
+        private bool panelBackgroundEnabled;
+        private Color screenBackgroundColor;
         private readonly List<CardView> views = new();
         private KeywordTooltip tooltip;
         private bool showing;
@@ -30,6 +35,18 @@ namespace DuelHero.Cards
             titlePosition = resultTitle.anchoredPosition;
             buttonPosition = actionButton.anchoredPosition;
             headingActive = heading.activeSelf;
+            panelBackground = resultPanel.GetComponent<Image>();
+            if (panelBackground != null)
+            {
+                panelBackgroundEnabled = panelBackground.enabled;
+                panelBackground.enabled = false;
+            }
+            screenBackground = GetComponent<Image>();
+            if (screenBackground != null)
+            {
+                screenBackgroundColor = screenBackground.color;
+                ApplyBackgroundOpacity();
+            }
             resultPanel.sizeDelta = new Vector2(920, 560);
             resultTitle.anchoredPosition = new Vector2(0, 225);
             actionButton.anchoredPosition = new Vector2(0, -225);
@@ -56,17 +73,6 @@ namespace DuelHero.Cards
                 card.SetKeywordHoverActions((keyword, position) => tooltip.Show(keyword, position),
                     () => tooltip.Hide(), position => tooltip.Move(position));
                 views.Add(card);
-                var label = new GameObject("Rarity", typeof(RectTransform), typeof(Text)).GetComponent<Text>();
-                label.transform.SetParent(card.transform, false);
-                label.font = font;
-                label.text = definition.rarity;
-                label.fontSize = 13;
-                label.alignment = TextAnchor.MiddleCenter;
-                label.color = RarityColor(definition.rarity);
-                label.raycastTarget = false;
-                label.rectTransform.anchorMin = label.rectTransform.anchorMax = new Vector2(.5f, 0);
-                label.rectTransform.sizeDelta = new Vector2(132, 24);
-                label.rectTransform.anchoredPosition = new Vector2(0, -15);
             }
             SetInteractable(true);
         }
@@ -98,14 +104,20 @@ namespace DuelHero.Cards
             resultTitle.anchoredPosition = titlePosition;
             actionButton.anchoredPosition = buttonPosition;
             heading.SetActive(headingActive);
+            if (panelBackground != null) panelBackground.enabled = panelBackgroundEnabled;
+            if (screenBackground != null) screenBackground.color = screenBackgroundColor;
         }
 
-        private static Color RarityColor(string rarity) => rarity switch
+        private void ApplyBackgroundOpacity()
         {
-            "고급" => new Color(.4f, .85f, .5f),
-            "희귀" => new Color(.4f, .65f, 1),
-            "전설" => new Color(1, .7f, .2f),
-            _ => new Color(.9f, .9f, .9f)
-        };
+            var color = screenBackground.color;
+            color.a = backgroundOpacity;
+            screenBackground.color = color;
+        }
+
+        private void OnValidate()
+        {
+            if (showing && screenBackground != null) ApplyBackgroundOpacity();
+        }
     }
 }

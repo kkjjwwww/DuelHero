@@ -14,7 +14,7 @@ namespace DuelHero.Battle
         public static bool SupportsDefinition(CardDefinition card)
         {
             if (card == null) return true;
-            if (WaitCard.IsWait(card)) return card.energyCost == 0 && card.effects != null && card.effects.Length == 0;
+            if (WaitCard.IsWait(card) || StunCard.IsStun(card)) return card.energyCost == 0 && card.effects != null && card.effects.Length == 0;
             return card.energyCost >= 0 && card.effects != null && card.effects.Length > 0 && card.effects.All(effect =>
                 effect != null && effect.value >= 0 && (effect.effectType switch
                 {
@@ -22,6 +22,8 @@ namespace DuelHero.Battle
                     "guard" => effect.targetType == "자신" && effect.durationSlots > 0,
                     "energyRestore" => effect.targetType == "자신",
                     "damage" => effect.targetType == "적" && effect.rangeOffsets != null && effect.rangeOffsets.Length > 0,
+                    "applyStatus" => effect.targetType == "적" && effect.statusId == "stun" && effect.value > 0 &&
+                        card.effects.Any(hit => hit.effectType == "damage" && hit.id == effect.triggerEffectId && hit.resolutionOrder < effect.resolutionOrder),
                     _ => false
                 }));
         }

@@ -10,6 +10,7 @@ namespace DuelHero.Cards
     public sealed class EnemyCardListUI : MonoBehaviour
     {
         [SerializeField] private EnemyActionPlanProvider source;
+        [SerializeField] private PlayerDeck playerSource;
         [SerializeField] private CardReservationQueue roundSource;
         [SerializeField] private Button toggleButton;
         [SerializeField] private Button closeButton;
@@ -50,12 +51,15 @@ namespace DuelHero.Cards
         private bool initialized;
         private bool layoutSettingsDirty;
         public bool IsOpen => panel != null && panel.activeSelf;
+        private IReadOnlyList<CardInstance> Cards => playerSource != null ? playerSource.Cards : source.Cards;
+        private CardDatabase Database => playerSource != null ? playerSource.Database : source.Database;
 
         private void OnEnable()
         {
             if (toggleButton != null) toggleButton.onClick.AddListener(Toggle);
             if (closeButton != null) closeButton.onClick.AddListener(Close);
             if (source != null) source.CardsChanged += OnCardsChanged;
+            if (playerSource != null) playerSource.CardsChanged += OnCardsChanged;
             if (roundSource != null) roundSource.Changed += RefreshStates;
             Close();
         }
@@ -64,13 +68,15 @@ namespace DuelHero.Cards
             if (toggleButton != null) toggleButton.onClick.RemoveListener(Toggle);
             if (closeButton != null) closeButton.onClick.RemoveListener(Close);
             if (source != null) source.CardsChanged -= OnCardsChanged;
+            if (playerSource != null) playerSource.CardsChanged -= OnCardsChanged;
             if (roundSource != null) roundSource.Changed -= RefreshStates;
             Close();
         }
         public void Toggle() { if (IsOpen) Close(); else Open(); }
         public void Open()
         {
-            if (IsOpen || source == null || roundSource == null || panel == null || content == null || cardPrefab == null) return;
+            if (IsOpen || (source == null && playerSource == null) || roundSource == null || panel == null || content == null || cardPrefab == null) return;
+            if (playerSource != null) playerSource.Initialize();
             Initialize();
             Synchronize();
             panel.SetActive(true);
@@ -138,7 +144,7 @@ namespace DuelHero.Cards
         }
         private void Synchronize()
         {
-            var cards = source.Cards;
+            var cards = Cards;
             var owned = new HashSet<CardInstance>(cards);
             bool changed = false;
             removed.Clear();
@@ -159,12 +165,12 @@ namespace DuelHero.Cards
                 var entry = pool.Count > 0 ? pool.Pop() : CreateEntry();
                 entry.Card = card;
                 entry.Cooldown = int.MinValue;
-                entry.View.Bind(card.Definition, source.Database.keywords);
+                entry.View.Bind(card.Definition, Database.keywords, isEnemy: playerSource == null);
                 entry.View.SetFrontVisible(true);
                 entry.Container.gameObject.SetActive(true);
                 entries.Add(card, entry); changed = true;
             }
-            if (titleLabel != null) titleLabel.text = "적 보유 카드 · " + cards.Count + "장";
+            if (titleLabel != null) titleLabel.text = (playerSource != null ? "내 보유 카드 · " : "적 보유 카드 · ") + cards.Count + "장";
             if (changed) ArrangeCategories();
             RefreshStates();
         }
@@ -185,9 +191,9 @@ namespace DuelHero.Cards
             hover.ShowInfo = () =>
             {
                 if (IsOpen && entry.Card != null)
-                    inspection.Show(entry.Container, cardPrefab, entry.Card.Definition, source.Database, font,
+                    inspection.Show(entry.Container, cardPrefab, entry.Card.Definition, Database, font,
                         entry.Card.RemainingCooldown(roundSource.CurrentRound), scale: hoverScale, duration: hoverDuration,
-                        scroll: eventData => { if (scroll != null) scroll.OnScroll(eventData); });
+                        scroll: eventData => { if (scroll != null) scroll.OnScroll(eventData); }, isEnemy: playerSource == null);
             };
             // The presenter keeps the preview open while the pointer crosses into it.
             hover.HideInfo = null;

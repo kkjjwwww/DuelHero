@@ -107,7 +107,7 @@ namespace DuelHero.Battle
             for (int i = 0; i < plan.Count; i++)
             {
                 var action = plan[i];
-                if (action.Card == null || (!WaitCard.IsWait(action.Card.Definition) &&
+                if (action.Card == null || (!WaitCard.IsWait(action.Card.Definition) && !StunCard.IsStun(action.Card.Definition) &&
                     (!context.Cards.Contains(action.Card) || !action.Card.CanReserve(context.Round))))
                     throw new ArgumentException("계획의 카드 소유·중복·쿨다운을 확인해주세요.", nameof(plan));
                 for (int previous = 0; previous < i; previous++)

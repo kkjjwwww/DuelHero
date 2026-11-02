@@ -15,6 +15,7 @@ namespace DuelHero.Cards
         {
             if (source == null) return;
             source.EnemyPlanPrepared += ShowPlan;
+            source.EnemySlotsChanged += RefreshStun;
             source.SlotStarted += BeginSlot;
             source.SlotPresenting += PresentSlot;
             source.SlotRevealing += RevealAnimated;
@@ -35,6 +36,7 @@ namespace DuelHero.Cards
         {
             if (source == null) return;
             source.EnemyPlanPrepared -= ShowPlan;
+            source.EnemySlotsChanged -= RefreshStun;
             source.SlotStarted -= BeginSlot;
             source.SlotPresenting -= PresentSlot;
             source.SlotRevealing -= RevealAnimated;
@@ -46,9 +48,15 @@ namespace DuelHero.Cards
         {
             for (int i = 0; i < slots.Length; i++)
                 slots[i].Bind(plan != null && i < plan.Count ? plan[i] ?? WaitCard.Definition : null);
-            if (plan != null && source != null && IsValid(source.PreparedEnemyRevealSlotIndex))
+            if (plan != null && source != null && IsValid(source.PreparedEnemyRevealSlotIndex) &&
+                !StunCard.IsStun(plan[source.PreparedEnemyRevealSlotIndex]))
                 slots[source.PreparedEnemyRevealSlotIndex].ShowTypeOnly();
             RefreshInspection();
+        }
+        private void RefreshStun()
+        {
+            for (int i = 0; i < slots.Length && i < source.PreparedEnemyCards.Count; i++)
+                if (StunCard.IsStun(source.PreparedEnemyCards[i])) slots[i].ShowStun();
         }
         private void RefreshInspection()
         {
@@ -56,10 +64,10 @@ namespace DuelHero.Cards
             {
                 int slot = i;
                 if (slots[i] != null)
-                    slots[i].SetResultInspection(source != null && source.ResultsAvailable, OpenCardList,
+                    slots[i].SetResultInspection(source != null && source.CanInspectSlots && source.ResultsAvailable, OpenCardList,
                         () => preview?.FocusEnemyResult(source, slot),
                         () => preview?.ClearEnemyResult(source, slot),
-                        preparation: source != null && !source.IsInputLocked && !source.ResultsAvailable);
+                        preparation: source != null && source.CanInspectSlots && !source.ResultsAvailable);
             }
         }
         private void OpenCardList() { if (cardList != null) cardList.Open(); }

@@ -28,8 +28,11 @@ namespace DuelHero.Battle
         {
             public readonly string ActorId, CardId;
             public readonly CardEffectDefinition Effect;
+            public readonly CardDefinition Card;
             public AttackRequest(string actorId, string cardId, CardEffectDefinition effect)
             { ActorId = actorId; CardId = cardId; Effect = effect; }
+            public AttackRequest(string actorId, CardDefinition card, CardEffectDefinition effect)
+                : this(actorId, card.id, effect) { Card = card; }
         }
         public sealed class DamageBatch
         {
@@ -44,6 +47,7 @@ namespace DuelHero.Battle
             internal int Amount, Reduced, Round;
             internal string ActorId, CardId, TargetId;
             internal Vector2Int From, To;
+            internal int Stun;
         }
         public static int DamageAfterGuard(int damage, int guard)
         {
@@ -114,7 +118,9 @@ namespace DuelHero.Battle
                     remainingGuard[target.stats] = shield - (effect.value - amount);
                     batch.Hits.Add(new PendingDamage { Target = target.stats, Amount = amount, Reduced = effect.value - amount,
                         ActorId = attack.ActorId, CardId = attack.CardId, TargetId = target.id, Round = round,
-                        From = actor.movement.GridPosition, To = target.movement.GridPosition });
+                        From = actor.movement.GridPosition, To = target.movement.GridPosition,
+                        Stun = attack.Card?.effects.Where(e => e.effectType == "applyStatus" && e.statusId == "stun" &&
+                            e.triggerEffectId == effect.id).Sum(e => e.value) ?? 0 });
                 }
                 if (hit.Count == 0) batch.Misses.Add(new BattleActionResult(BattleActionKind.Damage, attack.ActorId, round, attack.CardId, BattleActionOutcome.NoTarget));
             }
@@ -129,6 +135,7 @@ namespace DuelHero.Battle
             {
                 int before = hit.Target.Health;
                 hit.Target.ApplyResolvedDamage(hit.Amount, hit.Reduced);
+                if (hit.Stun > 0) hit.Target.ApplyStun(hit.Stun);
                 results.Add(new BattleActionResult(BattleActionKind.Damage, hit.ActorId, hit.Round, hit.CardId,
                     from: hit.From, to: hit.To, value: before - hit.Target.Health, targetId: hit.TargetId, reducedDamage: hit.Reduced));
             }

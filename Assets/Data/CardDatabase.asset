@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: CardDatabase
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Cards.CardDatabase
   sourceSpreadsheetId: 1pspfXZtUhTmSc9ZTL1iTzQDeBgvfbb_wqwCNs83EFQE
-  importedAtUtc: 2026-10-26T08:58:46.5548139Z
+  importedAtUtc: 2026-11-02T04:54:30.6012220Z
   cards:
   - id: move_up_001
     name: "\uC704 \uC774\uB3D9"
@@ -31,6 +31,8 @@ MonoBehaviour:
       cardId: move_up_001
       effectType: move
       targetType: "\uC790\uC2E0"
+      statusId: 
+      triggerEffectId: 
       resolutionOrder: 1
       value: 1
       durationSlots: 0
@@ -52,6 +54,8 @@ MonoBehaviour:
       cardId: move_down_001
       effectType: move
       targetType: "\uC790\uC2E0"
+      statusId: 
+      triggerEffectId: 
       resolutionOrder: 1
       value: 1
       durationSlots: 0
@@ -73,6 +77,8 @@ MonoBehaviour:
       cardId: move_left_001
       effectType: move
       targetType: "\uC790\uC2E0"
+      statusId: 
+      triggerEffectId: 
       resolutionOrder: 1
       value: 1
       durationSlots: 0
@@ -94,6 +100,8 @@ MonoBehaviour:
       cardId: move_right_001
       effectType: move
       targetType: "\uC790\uC2E0"
+      statusId: 
+      triggerEffectId: 
       resolutionOrder: 1
       value: 1
       durationSlots: 0
@@ -116,6 +124,8 @@ MonoBehaviour:
       cardId: guard_001
       effectType: guard
       targetType: "\uC790\uC2E0"
+      statusId: 
+      triggerEffectId: 
       resolutionOrder: 1
       value: 10
       durationSlots: 1
@@ -137,6 +147,8 @@ MonoBehaviour:
       cardId: breathing_001
       effectType: energyRestore
       targetType: "\uC790\uC2E0"
+      statusId: 
+      triggerEffectId: 
       resolutionOrder: 1
       value: 20
       durationSlots: 0
@@ -160,6 +172,8 @@ MonoBehaviour:
       cardId: slash_001
       effectType: damage
       targetType: "\uC801"
+      statusId: 
+      triggerEffectId: 
       resolutionOrder: 1
       value: 10
       durationSlots: 0
@@ -184,6 +198,8 @@ MonoBehaviour:
       cardId: thrust_001
       effectType: damage
       targetType: "\uC801"
+      statusId: 
+      triggerEffectId: 
       resolutionOrder: 1
       value: 15
       durationSlots: 0
@@ -209,6 +225,8 @@ MonoBehaviour:
       cardId: sweep_001
       effectType: damage
       targetType: "\uC801"
+      statusId: 
+      triggerEffectId: 
       resolutionOrder: 1
       value: 10
       durationSlots: 0
@@ -217,6 +235,43 @@ MonoBehaviour:
       - {x: 1, y: 1}
       - {x: 1, y: 0}
       - {x: 1, y: -1}
+  - id: head_break_001
+    name: "\uBA38\uB9AC\uAE68\uAE30"
+    description: "\uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574
+      {effect1.value}\uB97C \uC8FC\uACE0 [\uAE30\uC808]\uC744 {effect2.value} \uBD80\uC5EC\uD55C\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
+    actionType: "\uACF5\uACA9"
+    rarity: "\uC77C\uBC18"
+    energyCost: 20
+    cooldownTurns: 2
+    keywordIds:
+    - direction_select
+    - stun
+    isObtainable: 1
+    isBasicAction: 0
+    isStarterCard: 0
+    effects:
+    - id: head_break_001_effect_01
+      cardId: head_break_001
+      effectType: damage
+      targetType: "\uC801"
+      statusId: 
+      triggerEffectId: 
+      resolutionOrder: 1
+      value: 3
+      durationSlots: 0
+      rangeOffsets:
+      - {x: 0, y: 0}
+      - {x: 1, y: 0}
+    - id: head_break_001_effect_02
+      cardId: head_break_001
+      effectType: applyStatus
+      targetType: "\uC801"
+      statusId: stun
+      triggerEffectId: head_break_001_effect_01
+      resolutionOrder: 2
+      value: 1
+      durationSlots: 0
+      rangeOffsets: []
   keywords:
   - id: direction_select
     name: "\uBC29\uD5A5\uC9C0\uC815"
@@ -249,3 +304,26 @@ MonoBehaviour:
       \uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uC801\uC6A9\uD55C\uB2E4."
     triggerTiming: "\uD589\uB3D9 \uC2E4\uD589 \uC2DC"
     parameters: 
+  - id: stun
+    name: "\uAE30\uC808"
+    description: "\uAE30\uC808 \uC218\uCE58 \uB9CC\uD07C \uB2E4\uC74C \uD589\uB3D9\uC2AC\uB86F\uC744
+      \uC0AC\uC6A9 \uD560 \uC218 \uC5C6\uB2E4. \uC774\uBBF8 \uC608\uC57D\uB41C \uD589\uB3D9\uC740
+      \uCDE8\uC18C\uB41C\uB2E4."
+    resolutionRule: "\uC911\uCCA9\uC740 \uD569\uC0B0\uD55C\uB2E4. \uD604\uC7AC \uC2AC\uB86F
+      \uD589\uB3D9\uC740 \uC720\uC9C0\uD558\uACE0 \uB2E4\uC74C \uC2AC\uB86F\uBD80\uD130
+      \uD69F\uC218\uB9CC\uD07C \uCC28\uB2E8\uD55C\uB2E4. \uC608\uC57D\uB41C \uD589\uB3D9\uC740
+      \uC704\uCE58\uB97C \uB2F9\uAE30\uC9C0 \uC54A\uACE0 \uCDE8\uC18C\uD558\uBA70
+      \uC5D0\uB108\uC9C0\uC640 \uCFE8\uB2E4\uC6B4\uC744 \uC18C\uBE44\uD558\uC9C0
+      \uC54A\uB294\uB2E4. \uB0A8\uC740 \uD69F\uC218\uB294 \uB2E4\uC74C \uD134\uC73C\uB85C
+      \uC774\uC6D4\uD55C\uB2E4. \uC801\uC911 \uC2DC \uC2E4\uC81C \uD53C\uD574\uAC00
+      0\uC774\uC5B4\uB3C4 \uBD80\uC5EC\uD55C\uB2E4."
+    triggerTiming: "\uC801\uC911 \uC2DC \uBD80\uC5EC / \uB2E4\uC74C \uD589\uB3D9
+      \uC2AC\uB86F\uBD80\uD130 \uC801\uC6A9"
+    parameters: "\uAE30\uC808 \uC218\uCE58"
+  statuses:
+  - id: stun
+    name: "\uAE30\uC808"
+    category: "\uB514\uBC84\uD504"
+    keywordId: stun
+    stackRule: add
+    countUnit: actionSlot

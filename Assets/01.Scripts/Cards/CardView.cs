@@ -18,6 +18,14 @@ namespace DuelHero.Cards
         [Header("Front")]
         [SerializeField] private GameObject frontRoot;
         [SerializeField] private Image illustration;
+        [Serializable]
+        private struct CardIllustration
+        {
+            public string cardId;
+            public Sprite sprite;
+            public Sprite enemySprite;
+        }
+        [SerializeField] private CardIllustration[] cardIllustrations = Array.Empty<CardIllustration>();
         [SerializeField] private TextMeshProUGUI illustrationMaskLabel;
         [SerializeField] private TextMeshProUGUI nameLabel;
         [SerializeField] private TextMeshProUGUI energyLabel;
@@ -42,6 +50,14 @@ namespace DuelHero.Cards
         [SerializeField] private Sprite specialBadge;
         [SerializeField] private Sprite moveBadge;
 
+        [Header("Rarity")]
+        [SerializeField] private Image frameImage;
+        [SerializeField] private Sprite normalFrame, rareFrame, uniqueFrame, legendaryFrame;
+        [SerializeField] private Color normalNameColor = Color.white;
+        [SerializeField] private Color rareNameColor = new Color(0.35f, 0.65f, 1f);
+        [SerializeField] private Color uniqueNameColor = new Color(1f, 0.84f, 0.25f);
+        [SerializeField] private Color legendaryNameColor = new Color(1f, 0.3f, 0.3f);
+
         private readonly Dictionary<Graphic, Color> normalTextColors = new();
         private Color normalDescriptionColor;
         private KeywordHoverLink keywordHover;
@@ -55,15 +71,13 @@ namespace DuelHero.Cards
         private int displayedReservationSlot = int.MinValue;
         private static readonly string[] ReservationNumbers = { "1", "2", "3" };
         private bool informationMasked;
-        private Sprite illustrationBeforeMask;
 
         public Button Button => button;
         public RectTransform VisualRoot => visualRoot;
 
-        public void Bind(CardDefinition card, IEnumerable<KeywordDefinition> keywords, bool typeOnly = false)
+        public void Bind(CardDefinition card, IEnumerable<KeywordDefinition> keywords, bool typeOnly = false, bool isEnemy = false)
         {
             if (card == null) return;
-            if (informationMasked) SetIllustration(illustrationBeforeMask);
             informationMasked = typeOnly;
             if (illustrationMaskLabel != null) illustrationMaskLabel.gameObject.SetActive(typeOnly);
             displayedReservationSlot = int.MinValue;
@@ -74,11 +88,27 @@ namespace DuelHero.Cards
             if (normalTextColors.Count > 0) descriptionLabel.color = normalDescriptionColor;
             descriptionLabel.overrideColorTags = false;
             normalTextColors.Clear();
+            frameImage.sprite = card.rarity switch
+            {
+                "고급" or "rare" => rareFrame,
+                "희귀" or "unique" => uniqueFrame,
+                "전설" or "legendary" => legendaryFrame,
+                _ => normalFrame
+            };
+            nameLabel.color = card.rarity switch
+            {
+                "고급" or "rare" => rareNameColor,
+                "희귀" or "unique" => uniqueNameColor,
+                "전설" or "legendary" => legendaryNameColor,
+                _ => normalNameColor
+            };
             displayedCooldown = int.MinValue;
             displayedInteractable = null;
-            SetIllustration(illustration.sprite);
+            var artwork = cardIllustrations.FirstOrDefault(entry => entry.cardId == card.id);
+            SetIllustration(isEnemy ? artwork.enemySprite : artwork.sprite);
             nameLabel.text = card.name;
             energyLabel.text = card.energyCost.ToString();
+            energyLabel.transform.parent.gameObject.SetActive(!StunCard.IsStun(card));
             string body = card.ResolvedDescription(FormatEffectValue, turns => $"[{CooldownLinkId}]");
             HashSet<string> ids = new HashSet<string>(card.keywordIds ?? Array.Empty<string>());
             var linkedKeywords = new Dictionary<string, KeywordDefinition>();
@@ -116,7 +146,6 @@ namespace DuelHero.Cards
             if (typeOnly)
             {
                 nameLabel.text = energyLabel.text = descriptionLabel.text = "?";
-                illustrationBeforeMask = illustration.sprite;
                 SetIllustration(null);
             }
         }
@@ -141,6 +170,7 @@ namespace DuelHero.Cards
             onKeywordMove = move;
         }
 
+        public void SetKeywordHoverEnabled(bool value) => keywordHover?.SetHoverEnabled(value);
         internal void NotifyKeywordEnter(KeywordDefinition keyword, Vector2 position) => onKeywordEnter?.Invoke(keyword, position);
         internal void NotifyKeywordMove(Vector2 position) => onKeywordMove?.Invoke(position);
         internal void NotifyKeywordExit() => onKeywordExit?.Invoke();

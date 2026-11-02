@@ -57,8 +57,8 @@ namespace DuelHero.Battle
             var context = new EnemyDecisionContext(supported,
                 new EnemyPlanningState(movement.GridPosition, stats.Energy, stats.MaxEnergy, movement.Grid.Map),
                 target.GridPosition, round,
-                new EnemyUnitSnapshot(stats.Health, stats.MaxHealth, stats.Energy, stats.MaxEnergy, stats.CaptureGuard()),
-                new EnemyUnitSnapshot(targetStats.Health, targetStats.MaxHealth, targetStats.Energy, targetStats.MaxEnergy, targetStats.CaptureGuard()),
+                new EnemyUnitSnapshot(stats.Health, stats.MaxHealth, stats.Energy, stats.MaxEnergy, stats.CaptureGuard(), stats.Stun),
+                new EnemyUnitSnapshot(targetStats.Health, targetStats.MaxHealth, targetStats.Energy, targetStats.MaxEnergy, targetStats.CaptureGuard(), targetStats.Stun),
                 LastDecisionSeed);
             selector ??= new UtilityPlanSelector(utilitySettings ??= new UtilityAiSettings());
             activePlan = selector.Select(context);
@@ -67,10 +67,16 @@ namespace DuelHero.Battle
             activeRound = round;
             return activeExecution;
         }
+        public void CancelSlot(int slot)
+        {
+            if (activePlan == null || slot < 0 || slot >= activePlan.Length) return;
+            activePlan[slot] = new EnemyPlannedAction(new CardInstance(StunCard.Definition), Vector2Int.right);
+        }
         public void CompletePlan(int round, int executedSlots)
         {
             if (activePlan == null) return;
-            for (int i = 0; i < Math.Min(executedSlots, activePlan.Length); i++) activePlan[i].Card.MarkUsed(round);
+            for (int i = 0; i < Math.Min(executedSlots, activePlan.Length); i++)
+                if (!StunCard.IsStun(activePlan[i].Card.Definition)) activePlan[i].Card.MarkUsed(round);
             activePlan = null;
             activeExecution = null;
             CardsChanged?.Invoke();

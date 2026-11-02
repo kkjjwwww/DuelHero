@@ -15,6 +15,12 @@ namespace DuelHero.Cards
         private Vector2 pointerPosition;
         private Vector2 lastTooltipPosition;
         private int currentLink = -1;
+        private bool hoverEnabled = true;
+        public void SetHoverEnabled(bool value)
+        {
+            hoverEnabled = value;
+            if (!value) ClearLink();
+        }
 
         public void Initialize(CardView cardView, TMP_Text label, IEnumerable<KeywordDefinition> definitions)
         {
@@ -46,7 +52,7 @@ namespace DuelHero.Cards
         private void LateUpdate() { if (pointerInside) UpdateLink(); }
         private void UpdateLink()
         {
-            if (!pointerInside || text == null || !text.gameObject.activeInHierarchy) { ClearLink(); return; }
+            if (!hoverEnabled || !pointerInside || text == null || !text.gameObject.activeInHierarchy) { ClearLink(); return; }
             if (text.havePropertiesChanged) text.ForceMeshUpdate();
             var camera = canvas == null || canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
             int index = TMP_TextUtilities.FindIntersectingLink(text, pointerPosition, camera);

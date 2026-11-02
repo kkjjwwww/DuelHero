@@ -19,6 +19,7 @@ namespace DuelHero.EditorTools
         private UnitStats selectedUnit;
         private int healthInput;
         private int energyInput;
+        private int stunInput = 1;
 
         [MenuItem("Duel Hero/Debug/Card Hand and Stats")]
         private static void Open() => GetWindow<CardHandDebugWindow>("전투 디버그");
@@ -59,10 +60,31 @@ namespace DuelHero.EditorTools
                 if (GUILayout.Button("즉시 승리") && turn.TryWinForDebug()) return;
             }
             EditorGUILayout.Space(12);
+            DrawStunDebug(queue, turn);
+            EditorGUILayout.Space(12);
             DrawCards(deck, queue, deckList, editable);
             EditorGUILayout.Space(12);
             DrawStats(queue.UnitStats, editable);
             if (!editable) EditorGUILayout.HelpBox("행동 실행 및 복원 중에는 조작할 수 없습니다.", MessageType.Info);
+        }
+
+        private void DrawStunDebug(CardReservationQueue queue, BattleTurnController turn)
+        {
+            EditorGUILayout.LabelField("기절 테스트", EditorStyles.boldLabel);
+            using (new EditorGUI.DisabledScope(turn == null || !turn.CanEditForDebug))
+            {
+                stunInput = Mathf.Clamp(EditorGUILayout.IntField("부여할 기절 수치", stunInput), 1, 99);
+                var player = queue.UnitStats;
+                using (new EditorGUI.DisabledScope(player == null || !player.IsInitialized))
+                    if (GUILayout.Button("플레이어에게 기절 부여 · 현재 " + (player != null ? player.Stun : 0)))
+                        turn.TryApplyStunForDebug(player, stunInput);
+                foreach (var unit in FindObjectsByType<UnitStats>(FindObjectsSortMode.None))
+                {
+                    if (unit == player || !unit.IsInitialized) continue;
+                    if (GUILayout.Button(unit.gameObject.name + "에게 기절 부여 · 현재 " + unit.Stun))
+                        turn.TryApplyStunForDebug(unit, stunInput);
+                }
+            }
         }
 
         private void DrawCards(PlayerDeck deck, CardReservationQueue queue, DeckListUI deckList, bool editable)

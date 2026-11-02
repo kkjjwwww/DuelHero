@@ -25,12 +25,13 @@ namespace DuelHero.Cards
             return new CardDefinition
             {
                 id = card.id, name = card.name, description = card.description, actionType = card.actionType,
-                rarity = card.rarity, energyCost = card.energyCost, keywordIds = card.keywordIds,
+                rarity = card.rarity, energyCost = card.energyCost, keywordIds = card.keywordIds, cooldownTurns = card.cooldownTurns,
                 isObtainable = card.isObtainable, isBasicAction = card.isBasicAction, isStarterCard = card.isStarterCard,
                 effects = card.effects.Select(e => new CardEffectDefinition
                 {
                     id = e.id, cardId = e.cardId, effectType = e.effectType, targetType = e.targetType,
                     resolutionOrder = e.resolutionOrder, value = e.value, durationSlots = e.durationSlots,
+                    statusId = e.statusId, triggerEffectId = e.triggerEffectId,
 
                     rangeOffsets = e.rangeOffsets?.Select(offset => Rotate(offset, direction)).ToArray()
 

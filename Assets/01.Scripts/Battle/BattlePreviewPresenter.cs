@@ -118,9 +118,9 @@ namespace DuelHero.Battle
                     ? CardPreviewCalculator.CalculateQueue(initial, queue.Reservations, hoveredDirectionSlot, hoveredDirection)
                     : CardPreviewCalculator.CalculateQueue(initial, queue.Reservations);
                 CardPreviewResult focus = null;
-                bool hoveredCandidate = hoveredCard != null &&
-                    (hoveredCard.ReservedSlot < 0 || hoveredCard.ReservedSlot >= reserved.Count);
-                if (hoveredCard != null)
+                bool reservedHover = hoveredCard != null && hoveredCard.ReservedSlot >= 0 && hoveredCard.ReservedSlot < reserved.Count;
+                bool hoveredCandidate = hoveredCard != null && !reservedHover && reserved.Count < 3;
+                if (reservedHover || hoveredCandidate)
                 {
                     focus = hoveredCandidate
                         ? CardPreviewCalculator.CalculateCandidate(initial, queue.Reservations, hoveredCard.Definition, Vector2Int.right)
