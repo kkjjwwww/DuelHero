@@ -81,7 +81,7 @@ internal static class EnemyPlanSimulationValidation
             resolver.ActionResolved += result => { if (result.Kind == BattleActionKind.Damage) damageEvents.Add(result); };
             var context = Context(cards, grid.Map, actor.movement.GridPosition, target.movement.GridPosition,
                 actor.stats, target.stats);
-            var plan = utility ? new UtilityPlanSelector(new UtilityAiSettings { attackStyleMultiplier = 1, maneuverStyleMultiplier = 1, preparationStyleMultiplier = 1, randomCandidateCount = 1 }).Select(context) :
+            var plan = utility ? new UtilityPlanSelector(new UtilityAiSettings { attackStyleMultiplier = 1, maneuverStyleMultiplier = 1, preparationStyleMultiplier = 1, softmaxTemperature = 0 }).Select(context) :
                 cards.Select(c => new EnemyPlannedAction(c, direction)).ToArray();
             int[] available = cards.Select(c => c.AvailableFromRound).ToArray();
             var definitionsBefore = DefinitionSignature(cards);
@@ -264,7 +264,7 @@ internal static class EnemyPlanSimulationValidation
     public static void RunUtility()
     {
         Run();
-        var settings = new UtilityAiSettings { attackStyleMultiplier = 1, maneuverStyleMultiplier = 1, preparationStyleMultiplier = 1, randomCandidateCount = 1 };
+        var settings = new UtilityAiSettings { attackStyleMultiplier = 1, maneuverStyleMultiplier = 1, preparationStyleMultiplier = 1, softmaxTemperature = 0 };
         var selector = new UtilityPlanSelector(settings);
         var evaluator = new EnemyPlanEvaluator(settings);
         Require(evaluator.AttackCostPenalty(20, 20) > evaluator.AttackCostPenalty(20, 100) &&
@@ -344,6 +344,9 @@ internal static class EnemyPlanSimulationValidation
         ValidateRandomSelection();
         ValidateTacticalScores();
         ValidateRoundStyles();
+        ValidateMovementBenefits();
+        ValidateAttackEligibility();
+        ValidateAttackFirstPriority();
         ProfileUtility();
         Debug.Log($"슬롯별 유틸리티 AI 검증 통과: 이동·회복 후 공격, 저에너지 감점, 동점 순서·카드 제한·반복 대기, 경계·실행 대조 {cases}개.");
     }
@@ -354,7 +357,7 @@ internal static class EnemyPlanSimulationValidation
         UtilityPlanSelector.CaptureScores = true;
         try
         {
-            var selector = new UtilityPlanSelector(new UtilityAiSettings { attackStyleMultiplier = 1, maneuverStyleMultiplier = 1, preparationStyleMultiplier = 1, randomCandidateCount = 1 });
+            var selector = new UtilityPlanSelector(new UtilityAiSettings { attackStyleMultiplier = 1, maneuverStyleMultiplier = 1, preparationStyleMultiplier = 1, riskWeight = .5f, softmaxTemperature = 0 });
             var map = Map();
             var origin = new Vector2Int(2, 2);
             var target = new Vector2Int(3, 2);
@@ -381,7 +384,7 @@ internal static class EnemyPlanSimulationValidation
             var plan = selector.Select(context);
             Require(plan[0].Card.Definition.id == "escape" && selector.LastTrace.Slots[0].Candidates[
                 selector.LastTrace.Slots[0].SelectedIndex].Score.RiskDamage == 0, "위험할 때 안전한 이동을 선택하지 않았습니다.");
-            Require(selector.LastTrace.Slots[1].Candidates.All(c => c.Score.Escape == 10),
+            Require(selector.LastTrace.Slots[1].Candidates.All(c => c.Score.RiskDamage == 0),
                 "안전해진 뒤 추가 이탈 가점을 받았습니다.");
 
             // Safe, empty recovery/guard versus real movement toward a reachable firing position.
@@ -439,15 +442,142 @@ internal static class EnemyPlanSimulationValidation
         finally { UtilityPlanSelector.CaptureScores = recording; }
     }
 
+    private static void ValidateAttackFirstPriority()
+    {
+        var attack = Attack("ranged", 10, 15);
+        attack.Definition.effects[0].rangeOffsets = new[] { Vector2Int.right, Vector2Int.right * 2 };
+        var cards = new[] { Move("approach", 1), attack, Guard(), Restore(20) };
+        var origin = new Vector2Int(1, 2); var target = new Vector2Int(4, 2);
+        var selector = new UtilityPlanSelector(new UtilityAiSettings { softmaxTemperature = 0 });
+        for (uint seed = 0; seed < 48; seed++)
+        {
+            var context = new EnemyDecisionContext(cards, new EnemyPlanningState(origin, 100, 100, Map()), target, 1,
+                new EnemyUnitSnapshot(100, 100, 100, 100, Array.Empty<GuardEffectSnapshot>()),
+                new EnemyUnitSnapshot(100, 100, 100, 100, Array.Empty<GuardEffectSnapshot>()), seed, new[] { attack });
+            var plan = selector.Select(context);
+            Require(plan[0].Card == cards[0] && plan[0].Direction == Vector2Int.right && plan[1].Card == attack,
+                "교전 진입 대신 효과 없는 행동을 선택했습니다.");
+        }
+        Debug.Log("공격 우선 검증 통과: 48개 시드에서 위험 범위 진입 후 명중 공격 선택.");
+    }
+
+    private static void ValidateAttackEligibility()
+    {
+        bool recording = UtilityPlanSelector.CaptureScores;
+        UtilityPlanSelector.CaptureScores = true;
+        try
+        {
+            var selector = new UtilityPlanSelector(new UtilityAiSettings());
+            var map = Map();
+            var origin = new Vector2Int(4, 2); var target = new Vector2Int(0, 2);
+            var attack = Attack("pure", 0, 10);
+            for (uint seed = 0; seed < 48; seed++)
+            {
+                var context = Context(new[] { attack }, map, origin, target, 100, 100, seed);
+                Require(selector.Select(context).All(a => WaitCard.IsWait(a.Card.Definition)) &&
+                    selector.LastSearch.RejectedAttacks == 12, "도달하지 않는 순수 공격 대신 대기하지 않았습니다.");
+                context = Context(new[] { attack }, map, origin, origin + Vector2Int.left, 100, 100, seed);
+                var plan = selector.Select(context);
+                Require(plan[0].Card == attack && plan[0].Direction == Vector2Int.left,
+                    "반대 방향 공격 또는 명중 방향 제외 오류");
+            }
+            var dash = Dash(1, 10);
+            var closing = Context(new[] { dash }, map, new Vector2Int(1, 2), new Vector2Int(3, 2), 30, 100);
+            Require(selector.Select(closing)[0].Card == dash, "자체 이동 후 명중하는 공격이 제외됐습니다.");
+            var blocked = new GridMap(Enumerable.Range(0, 6).SelectMany(x => Enumerable.Range(0, 5).Select(y => new Vector2Int(x, y))),
+                new[] { new Vector2Int(2, 2) });
+            selector.Select(Context(new[] { dash }, blocked, new Vector2Int(1, 2), new Vector2Int(3, 2), 30, 100));
+            Require(selector.LastTrace.Slots[0].Candidates.All(c => c.Direction != Vector2Int.right),
+                "장애물로 이동이 막혀 빗나가는 공격이 남았습니다.");
+            var restoreAttack = Make("restoreAttack", 0,
+                new CardEffectDefinition { effectType = "energyRestore", targetType = "자신", value = 20 },
+                new CardEffectDefinition { effectType = "damage", targetType = "적", value = 10, rangeOffsets = new[] { Vector2Int.right } });
+            Require(selector.Select(Context(new[] { restoreAttack }, map, origin, target, 0, 100))[0].Card == restoreAttack,
+                "실제 회복 이득이 있는 복합 카드를 제외했습니다.");
+            Require(selector.Select(Context(new[] { restoreAttack }, map, origin, target, 100, 100)).All(a => WaitCard.IsWait(a.Card.Definition)),
+                "효과 없는 회복을 핑계로 빗나가는 공격이 남았습니다.");
+            Debug.Log("공격 후보 검증 통과: 48개 시드 반대 방향·범위 밖 공격 차단, 자체 이동 명중·장애물·복합 회복·대기.");
+        }
+        finally { UtilityPlanSelector.CaptureScores = recording; }
+    }
+
+    private static void ValidateMovementBenefits()
+    {
+        bool recording = UtilityPlanSelector.CaptureScores;
+        UtilityPlanSelector.CaptureScores = true;
+        try
+        {
+            var selector = new UtilityPlanSelector(new UtilityAiSettings { softmaxTemperature = 0 });
+            var origin = new Vector2Int(2, 2);
+            CardInstance FixedMove(string id, Vector2Int direction) {
+                var card = Move(id, 1); card.Definition.keywordIds = Array.Empty<string>();
+                card.Definition.effects[0].rangeOffsets = new[] { direction }; return card;
+            }
+            var right = FixedMove("right", Vector2Int.right);
+            var left = FixedMove("left", Vector2Int.left);
+            var up = FixedMove("up", Vector2Int.up);
+            var context = Context(new[] { right, left, up }, Map(), origin, new Vector2Int(5, 4), 0, 100);
+            var plan = selector.Select(context);
+            var trace = selector.LastTrace;
+            Require(plan[0].Card == right && plan[1].Card == up, "무실익 왕복 대신 다른 이동을 선택하지 않았습니다.");
+            Require(trace.Slots[0].Candidates.All(c => c.Score.MovementPenalty == 1 && c.Score.UnproductiveMove),
+                "새 위치의 무실익 이동 감점 오류");
+            var reverse = trace.Slots[1].Candidates.First(c => c.CardId == "left");
+            Require(reverse.Score.Revisited && reverse.Score.MovementPenalty == 3,
+                "재방문 감점은 앞 슬롯 1점 + 이번 슬롯 2점이어야 합니다.");
+            Require(plan.Select(a => a.Card).SequenceEqual(selector.Select(context).Select(a => a.Card)),
+                "이전 판단의 방문 기록이 남았습니다.");
+            var setup = Make("setup", 0,
+                new CardEffectDefinition { effectType = "move", targetType = "자신", value = 1, rangeOffsets = new[] { Vector2Int.right } },
+                new CardEffectDefinition { effectType = "energyRestore", targetType = "자신", value = 10 });
+            setup.Definition.keywordIds = Array.Empty<string>();
+            var backAttack = Make("backAttack", 10,
+                new CardEffectDefinition { effectType = "move", targetType = "자신", value = 1, rangeOffsets = new[] { Vector2Int.left } },
+                new CardEffectDefinition { effectType = "damage", targetType = "적", value = 20, rangeOffsets = new[] { Vector2Int.left * 2 }, resolutionOrder = 1 });
+            backAttack.Definition.keywordIds = Array.Empty<string>();
+            selector.Select(Context(new[] { setup, backAttack }, Map(), origin, new Vector2Int(0, 2), 0, 100));
+            var returningAttack = selector.LastTrace.Slots[1].Candidates.Single();
+            Require(returningAttack.Score.Revisited && !returningAttack.Score.UnproductiveMove && returningAttack.Score.MovementPenalty == 0,
+                "피해를 주는 복귀 이동이 감점됐습니다.");
+            var retreat = FixedMove("retreat", Vector2Int.left); retreat.Definition.energyCost = 10;
+            var threat = Attack("threat", 0, 20);
+            threat.Definition.effects[0].rangeOffsets = new[] { Vector2Int.right * 2 };
+            var retreatContext = new EnemyDecisionContext(new[] { setup, retreat }, new EnemyPlanningState(origin, 0, 100, Map()),
+                new Vector2Int(5, 2), 1,
+                new EnemyUnitSnapshot(100, 100, 0, 100, Array.Empty<GuardEffectSnapshot>()),
+                new EnemyUnitSnapshot(100, 100, 50, 100, Array.Empty<GuardEffectSnapshot>()), 0, new[] { threat });
+            selector.Select(retreatContext);
+            var returningSafe = selector.LastTrace.Slots[1].Candidates.Single();
+            Require(returningSafe.Score.Revisited && returningSafe.Score.RiskDamage == 0 && returningSafe.Score.MovementPenalty == 0,
+                "위험을 벗어나는 복귀 이동이 감점됐습니다.");
+            var bleeding = new EnemyDecisionContext(new[] { right, left, up }, new EnemyPlanningState(origin, 0, 100, Map()),
+                new Vector2Int(5, 4), 1,
+                new EnemyUnitSnapshot(100, 100, 0, 100, Array.Empty<GuardEffectSnapshot>()),
+                new EnemyUnitSnapshot(100, 100, 50, 100, Array.Empty<GuardEffectSnapshot>(), bleed: 5));
+            selector.Select(bleeding);
+            Require(selector.LastTrace.Slots[0].Candidates.All(c => c.Score.MovementPenalty == 1),
+                "출혈 자동 피해를 이동 실익으로 오인했습니다.");
+            var attack = Attack("attack", 0, 10);
+            var obstacle = new GridMap(Enumerable.Range(0, 6).SelectMany(x => Enumerable.Range(0, 5).Select(y => new Vector2Int(x, y))),
+                new[] { new Vector2Int(2, 1) });
+            selector.Select(Context(new[] { Move("detour", 1), attack }, obstacle, new Vector2Int(1, 1), new Vector2Int(4, 1), 0, 100));
+            Require(selector.LastTrace.Slots[0].Candidates.Where(c => c.CardId == "detour" &&
+                (c.Direction == Vector2Int.up || c.Direction == Vector2Int.down)).All(c => !c.Score.UnproductiveMove),
+                "장애물을 돌아 공격 위치에 접근하는 이동이 감점됐습니다.");
+            Debug.Log("이동 실익 검증 통과: 무실익 1점·재방문 2점·기록 초기화·공격 복귀 예외·지형 우회.");
+        }
+        finally { UtilityPlanSelector.CaptureScores = recording; }
+    }
+
     private static void ValidateRoundStyles()
     {
         bool recording = UtilityPlanSelector.CaptureScores;
         UtilityPlanSelector.CaptureScores = true;
         try
         {
-            var settings = new UtilityAiSettings { randomCandidateCount = 1 };
+            var settings = new UtilityAiSettings { softmaxTemperature = 0 };
             var selector = new UtilityPlanSelector(settings);
-            var neutral = new UtilityPlanSelector(new UtilityAiSettings { randomCandidateCount = 1,
+            var neutral = new UtilityPlanSelector(new UtilityAiSettings { softmaxTemperature = 0,
                 attackStyleMultiplier = 1, maneuverStyleMultiplier = 1, preparationStyleMultiplier = 1 });
             var map = Map();
             var origin = new Vector2Int(2, 2); var target = new Vector2Int(3, 2);
@@ -529,9 +659,8 @@ internal static class EnemyPlanSimulationValidation
                 foreach (var row in selector.LastTrace.Slots[0].Candidates)
                 {
                     var baseline = neutral.LastTrace.Slots[0].Candidates.First(c => c.CardIndex == row.CardIndex && c.Direction == row.Direction);
-                    Require(Math.Abs(row.Score.RiskPenalty - baseline.Score.RiskPenalty * style.Preparation) < .0001f &&
-                        Math.Abs(row.Score.Escape - baseline.Score.Escape * style.Maneuver) < .0001f,
-                        "위험·방어·이탈 배율 오류");
+                    Require(Math.Abs(row.Score.RiskPenalty - baseline.Score.RiskPenalty * style.Preparation) < .0001f,
+                        "위험·방어 배율 오류");
                 }
             }
             var dominant = new[] { Attack("dominant", 0, 80), Attack("weak", 0, 5), Restore(20) };
@@ -576,14 +705,15 @@ internal static class EnemyPlanSimulationValidation
                 var slot = trace.Slots[i];
                 var chosen = slot.Candidates[slot.SelectedIndex];
                 Require(cards[chosen.CardIndex] == captured[i].Card && chosen.Direction == captured[i].Direction &&
-                    slot.EligibleIndices.Contains(slot.SelectedIndex) && chosen.Score.Total >= slot.MinimumScore &&
+                    slot.EligibleIndices.Contains(slot.SelectedIndex) &&
                     slot.BestScore == slot.Candidates.Max(c => c.Score.Total), "표시한 선택·점수가 실제 선택과 다릅니다.");
                 Require(Math.Abs(chosen.Score.Total - (chosen.Score.Damage + chosen.Score.Opportunity +
-                    chosen.Score.Energy + chosen.Score.Escape - chosen.Score.CostPenalty - chosen.Score.RiskPenalty -
-                    chosen.Score.IneffectivePenalty)) < .0001f, "점수 구성 합계 오류");
+                    chosen.Score.Energy - chosen.Score.CostPenalty - chosen.Score.RiskPenalty -
+                    chosen.Score.IneffectivePenalty - chosen.Score.MovementPenalty)) < .0001f, "점수 구성 합계 오류");
                 candidateCount += slot.Candidates.Count;
             }
-            Require(candidateCount == selector.LastSearch.ActionPreviews, "평가한 후보 중 기록이 누락되었습니다.");
+            Require(candidateCount == selector.LastSearch.ActionPreviews - selector.LastSearch.RejectedAttacks,
+                "평가한 유효 후보 중 기록이 누락되었습니다.");
             string name = trace.Slots[0].Candidates[0].CardName;
             cards[0].Definition.name = "changed after decision";
             Require(trace.Slots[0].Candidates[0].CardName == name, "원본 카드 변경이 지난 기록을 바꿨습니다.");
@@ -607,83 +737,58 @@ internal static class EnemyPlanSimulationValidation
 #if UNITY_6000_0_OR_NEWER
             var globalRandom = UnityEngine.Random.state;
 #endif
-            var map = Map();
-            var cards = Enumerable.Range(0, 5).Select(i => Attack("equal" + i, 0, 20)).ToArray();
-            foreach (var card in cards) card.Definition.effects[0].rangeOffsets = Directions;
-            var selector = new UtilityPlanSelector(new UtilityAiSettings { attackStyleMultiplier = 1, maneuverStyleMultiplier = 1, preparationStyleMultiplier = 1 });
+            var map = Map(); var origin = new Vector2Int(2, 2); var target = new Vector2Int(3, 2);
+            var settings = new UtilityAiSettings { attackStyleMultiplier = 1, maneuverStyleMultiplier = 1, preparationStyleMultiplier = 1 };
+            var selector = new UtilityPlanSelector(settings);
+            var equal = Enumerable.Range(0, 5).Select(i => Attack("equal" + i, 0, 20)).ToArray();
+            foreach (var card in equal) card.Definition.effects[0].rangeOffsets = Directions;
             var observed = new HashSet<int>();
             for (uint seed = 0; seed < 64; seed++)
             {
-                var context = Context(cards, map, new Vector2Int(2, 2), new Vector2Int(3, 2), 100, 100, seed);
                 UtilityPlanSelector.CaptureScores = true;
-                var plan = selector.Select(context);
-                var trace = selector.LastTrace;
-                Require(trace.DecisionSeed == seed, "판단 시드 기록 오류");
+                var context = Context(equal, map, origin, target, 100, 100, seed);
+                var plan = selector.Select(context); var trace = selector.LastTrace;
                 foreach (var slot in trace.Slots)
                 {
-                    Require(slot.EligibleIndices.Count == 3 && slot.EligibleIndices.Contains(slot.SelectedIndex), "상위 3개 후보 추첨 오류");
-                    Require(slot.EligibleIndices.Select(i => slot.Candidates[i].CardIndex).Distinct().Count() == 3 &&
-                        slot.EligibleIndices.All(i => slot.Candidates[i].Direction == Vector2Int.right &&
-                            slot.Candidates[i].Score.Total >= slot.MinimumScore), "동일 결과 방향 중복 또는 점수 범위 오류");
+                    Require(slot.EligibleIndices.Count == 2 && slot.EligibleIndices.Contains(slot.SelectedIndex) &&
+                        slot.EligibleIndices.Select(i => slot.Candidates[i].CardIndex).Distinct().Count() == 2 &&
+                        slot.EligibleIndices.All(i => slot.Candidates[i].Direction == Vector2Int.right), "상위 2개·동일 방향 결과 합치기 오류");
+                    Require(slot.Probabilities.All(p => Math.Abs(p - .5) < 1e-9), "동점 확률 오류");
                 }
                 observed.Add(trace.Slots[0].Candidates[trace.Slots[0].SelectedIndex].CardIndex);
-                EnemyPlanningState.SimulatePlan(context, plan);
                 UtilityPlanSelector.CaptureScores = false;
                 var replay = selector.Select(context);
-                Require(plan.Zip(replay, (a, b) => a.Card == b.Card && a.Direction == b.Direction).All(equal => equal),
-                    "같은 시드·입력의 재현성 또는 디버그 켜기·끄기 독립성 오류");
+                Require(plan.Zip(replay, (a, b) => a.Card == b.Card && a.Direction == b.Direction).All(v => v), "시드·기록 재현 오류");
             }
-            Require(observed.SetEquals(new[] { 0, 1, 2 }), "다른 시드에서 유사 가치 후보의 다양성이 없습니다.");
-            observed.Clear();
-            for (int i = 0; i < cards.Length; i++) cards[i].Definition.effects[0].value = 20 - i;
-            // A new context owns the prepared-card cache after the fixture's data change.
-            for (uint seed = 0; seed < 64; seed++)
-            {
-                UtilityPlanSelector.CaptureScores = true;
-                selector.Select(Context(cards, map, new Vector2Int(2, 2), new Vector2Int(3, 2), 100, 100, seed));
-                var slot = selector.LastTrace.Slots[0];
-                Require(slot.EligibleIndices.Count == 3 && slot.EligibleIndices.All(i =>
-                    slot.Candidates[i].Score.Total >= slot.MinimumScore), "10% 점수 경계 오류");
-                observed.Add(slot.Candidates[slot.SelectedIndex].CardIndex);
-            }
-            Require(observed.SetEquals(new[] { 0, 1, 2 }), "최고점과 비슷한 차순위 후보가 선택되지 않았습니다.");
-
+            Require(observed.SetEquals(new[] { 0, 1 }), "상위 두 후보 밖의 선택 또는 다양성 오류");
+            Require(Math.Abs(UtilityPlanSelector.SoftmaxBestProbability(18.6f, 6.1f, 8) - .8267) < .001 &&
+                UtilityPlanSelector.SoftmaxBestProbability(-2, -8, 8) > .5 &&
+                UtilityPlanSelector.SoftmaxBestProbability(0, 0, 8) == .5 &&
+                UtilityPlanSelector.SoftmaxBestProbability(float.MaxValue, -float.MaxValue, 8) == 1 &&
+                UtilityPlanSelector.SoftmaxBestProbability(2, 1, 0) == 1, "Softmax 수치 안정성 오류");
+            var weighted = new[] { Attack("high", 0, 18), Attack("low", 0, 6) };
             UtilityPlanSelector.CaptureScores = true;
-            var decisive = new[] { Attack("best", 0, 50), Attack("weak", 0, 5) };
-            var negative = new[] { Attack("negativeA", 10, 5), Attack("negativeB", 10, 5), Attack("outside", 11, 5) };
-            var negativeSelector = new UtilityPlanSelector(new UtilityAiSettings { attackStyleMultiplier = 1, maneuverStyleMultiplier = 1, preparationStyleMultiplier = 1, damageWeight = 0, opportunityWeight = 0, remainingEnergyWeight = 0, attackCostWeight = 1 });
-            for (uint seed = 0; seed < 32; seed++)
+            int low = 0; double expected = 0;
+            for (uint seed = 0; seed < 2048; seed++)
             {
-                var context = Context(decisive, map, new Vector2Int(2, 2), new Vector2Int(3, 2), 100, 100, seed);
-                Require(selector.Select(context)[0].Card == decisive[0] && selector.LastTrace.Slots[0].EligibleIndices.Count == 1,
-                    "명백히 낮은 점수 후보가 추첨에 포함됐습니다.");
-                context = Context(negative, map, new Vector2Int(2, 2), new Vector2Int(3, 2), 100, 100, seed);
-                Require(negativeSelector.Select(context)[0].Card != negative[2], "음수 점수의 허용 범위 계산 오류");
-                var slot = negativeSelector.LastTrace.Slots[0];
-                Require(slot.BestScore < 0 && Math.Abs(slot.MinimumScore - (-1.1f)) < .0001f &&
-                    slot.EligibleIndices.All(i => slot.Candidates[i].Score.Total >= slot.MinimumScore), "음수 점수 경계 오류");
+                var plan = selector.Select(Context(weighted, map, origin, target, 100, 100, seed));
+                var slot = selector.LastTrace.Slots[0];
+                Require(slot.EligibleIndices.Count == 2 && Math.Abs(slot.Probabilities.Sum() - 1) < 1e-9,
+                    "10% 밖 차순위 후보 제외 또는 확률 합계 오류");
+                expected = slot.Probabilities[1]; if (plan[0].Card == weighted[1]) low++;
             }
-            var zero = new UtilityPlanSelector(new UtilityAiSettings { attackStyleMultiplier = 1, maneuverStyleMultiplier = 1, preparationStyleMultiplier = 1, damageWeight = 0, opportunityWeight = 0, remainingEnergyWeight = 0, attackCostWeight = 0 });
-            zero.Select(Context(cards, map, new Vector2Int(2, 2), new Vector2Int(3, 2), 100, 100, 42));
-            Require(zero.LastTrace.Slots[0].BestScore == 0 && zero.LastTrace.Slots[0].EligibleIndices.Count == 3,
-                "0점 후보 추첨 오류");
-
-            var seedMethod = typeof(UtilityPlanSelector).Assembly.GetType("DuelHero.Battle.EnemyDecisionRandom")
-                .GetMethod("CreateSeed", BindingFlags.NonPublic | BindingFlags.Static);
-            uint combined = (uint)seedMethod.Invoke(null, new object[] { 123u, "nodeA", "enemyA", 1 });
-            Require(combined == (uint)seedMethod.Invoke(null, new object[] { 123u, "nodeA", "enemyA", 1 }) &&
-                combined != (uint)seedMethod.Invoke(null, new object[] { 124u, "nodeA", "enemyA", 1 }) &&
-                combined != (uint)seedMethod.Invoke(null, new object[] { 123u, "nodeB", "enemyA", 1 }) &&
-                combined != (uint)seedMethod.Invoke(null, new object[] { 123u, "nodeA", "enemyB", 1 }) &&
-                combined != (uint)seedMethod.Invoke(null, new object[] { 123u, "nodeA", "enemyA", 2 }), "판단 시드 구성 요소 누락");
-            Reject(() => new UtilityPlanSelector(new UtilityAiSettings { attackStyleMultiplier = 1, maneuverStyleMultiplier = 1, preparationStyleMultiplier = 1, randomCandidateCount = 0 }).Select(
-                Context(cards, map, new Vector2Int(2, 2), new Vector2Int(3, 2), 100, 100)));
-            Reject(() => new UtilityPlanSelector(new UtilityAiSettings { attackStyleMultiplier = 1, maneuverStyleMultiplier = 1, preparationStyleMultiplier = 1, randomScoreTolerance = float.NaN }).Select(
-                Context(cards, map, new Vector2Int(2, 2), new Vector2Int(3, 2), 100, 100)));
+            Require(Math.Abs(low / 2048d - expected) < .04, "실제 추첨 빈도가 표시 확률과 다릅니다.");
+            var single = new[] { Attack("single", 0, 10) };
+            selector.Select(Context(single, map, origin, target, 100, 100));
+            Require(selector.LastTrace.Slots[0].Probabilities.Single() == 1, "단일 후보 확률 오류");
+            settings.softmaxTemperature = 0;
+            Require(selector.Select(Context(weighted, map, origin, target, 100, 100))[0].Card == weighted[0], "온도 0 최고점 선택 오류");
+            Reject(() => new UtilityPlanSelector(new UtilityAiSettings { softmaxTemperature = float.NaN }).Select(Context(single, map, origin, target, 100, 100)));
+            Reject(() => new UtilityPlanSelector(new UtilityAiSettings { softmaxTemperature = -1 }).Select(Context(single, map, origin, target, 100, 100)));
 #if UNITY_6000_0_OR_NEWER
-            Require(globalRandom.Equals(UnityEngine.Random.state), "Unity 전역 난수 상태를 변경했습니다.");
+            Require(globalRandom.Equals(UnityEngine.Random.state), "Unity 전역 난수 변경");
 #endif
-            Debug.Log("무작위 선택 검증 통과: 64개 시드 재현·다양성, 최대 3개·10% 범위, 방향 중복 제거, 음수·0점, 시드 구성.");
+            Debug.Log($"Softmax 검증 통과: 상위 2개, 64시드 재현, 동점·음수·극단값·단일후보, 차순위 기대 {expected:P2}/실제 {low / 2048d:P2} (2048회).");
         }
         finally { UtilityPlanSelector.CaptureScores = recording; }
     }

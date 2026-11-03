@@ -28,22 +28,24 @@ namespace DuelHero.Battle
         public float remainingEnergyWeight = .03f;
         public float attackCostWeight = .2f;
         public float approachWeight = 1.5f;
-        public float riskWeight = .5f;
-        public float escapeWeight = .5f;
+        public float riskWeight = .1f;
         public float ineffectiveActionPenalty = 1f;
-        public int randomCandidateCount = 3;
-        public float randomScoreTolerance = .1f;
+        public float unproductiveMovePenalty = 1f;
+        public float revisitMovePenalty = 2f;
+        // Zero selects the best deterministically; positive values soften the score gap.
+        public float softmaxTemperature = 8f;
         public float attackStyleMultiplier = 1.2f;
         public float maneuverStyleMultiplier = 1.3f;
         public float preparationStyleMultiplier = 1.3f;
 
         internal void Validate()
         {
-            if (randomCandidateCount < 1 || randomCandidateCount > 3 || !Valid(randomScoreTolerance) || randomScoreTolerance > 1)
-                throw new ArgumentOutOfRangeException(nameof(randomCandidateCount), "무작위 후보는 1~3개, 허용 점수 차이는 0~1로 설정해주세요.");
+            if (!Valid(softmaxTemperature))
+                throw new ArgumentOutOfRangeException(nameof(softmaxTemperature), "Softmax 온도는 유한한 0 이상의 값이어야 합니다.");
             if (!Valid(damageWeight) || !Valid(opportunityWeight) || !Valid(remainingEnergyWeight) || !Valid(attackCostWeight) ||
-                !Valid(approachWeight) || !Valid(riskWeight) || !Valid(escapeWeight) || !Valid(ineffectiveActionPenalty) ||
-                !Valid(attackStyleMultiplier) || !Valid(maneuverStyleMultiplier) || !Valid(preparationStyleMultiplier))
+                !Valid(approachWeight) || !Valid(riskWeight) || !Valid(ineffectiveActionPenalty) ||
+                !Valid(attackStyleMultiplier) || !Valid(maneuverStyleMultiplier) || !Valid(preparationStyleMultiplier) ||
+                !Valid(unproductiveMovePenalty) || !Valid(revisitMovePenalty))
                 throw new ArgumentOutOfRangeException(nameof(damageWeight), "유틸리티 가중치는 유한한 0 이상의 값이어야 합니다.");
         }
         private static bool Valid(float value) => value >= 0 && !float.IsNaN(value) && !float.IsInfinity(value);

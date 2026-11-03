@@ -11,17 +11,21 @@ namespace DuelHero.Battle
         public float Energy { get; }
         public float CostPenalty { get; }
         public float RiskPenalty { get; }
-        public float Escape { get; }
         public float IneffectivePenalty { get; }
         public int RiskDamage { get; }
         public int BlockedDamage { get; }
-        public float Total => Damage + Opportunity + Energy + Escape - CostPenalty - RiskPenalty - IneffectivePenalty;
+        public float MovementPenalty { get; }
+        public bool Revisited { get; }
+        public bool UnproductiveMove { get; }
+        public float Total => Damage + Opportunity + Energy - CostPenalty - RiskPenalty - IneffectivePenalty - MovementPenalty;
         internal EnemyActionScore(float damage, float opportunity, float energy, float costPenalty,
-            float riskPenalty = 0, float escape = 0, float ineffectivePenalty = 0, int riskDamage = 0, int blockedDamage = 0)
+            float riskPenalty = 0, float ineffectivePenalty = 0, int riskDamage = 0, int blockedDamage = 0,
+            float movementPenalty = 0, bool revisited = false, bool unproductiveMove = false)
         {
             Damage = damage; Opportunity = opportunity; Energy = energy; CostPenalty = costPenalty;
-            RiskPenalty = riskPenalty; Escape = escape; IneffectivePenalty = ineffectivePenalty;
+            RiskPenalty = riskPenalty; IneffectivePenalty = ineffectivePenalty;
             RiskDamage = riskDamage; BlockedDamage = blockedDamage;
+            MovementPenalty = movementPenalty; Revisited = revisited; UnproductiveMove = unproductiveMove;
         }
     }
 
@@ -51,14 +55,16 @@ namespace DuelHero.Battle
         public sealed class Slot
         {
             private readonly List<Candidate> candidates = new List<Candidate>();
-            private readonly List<int> eligibleIndices = new List<int>(3);
+            private readonly List<int> eligibleIndices = new List<int>(2);
+            private readonly List<double> probabilities = new List<double>(2);
             public int Index { get; }
             public Vector2Int PositionBefore { get; }
             public int EnergyBefore { get; }
             public IReadOnlyList<Candidate> Candidates { get; }
             public IReadOnlyList<int> EligibleIndices { get; }
             public float BestScore { get; internal set; }
-            public float MinimumScore { get; internal set; }
+            public float Temperature { get; internal set; }
+            public IReadOnlyList<double> Probabilities { get; }
             public int SelectedIndex { get; internal set; } = -1;
             public string Note { get; internal set; }
             internal Slot(int index, EnemyPlanningState state)
@@ -66,11 +72,13 @@ namespace DuelHero.Battle
                 Index = index; PositionBefore = state.Position; EnergyBefore = state.Energy;
                 Candidates = candidates.AsReadOnly();
                 EligibleIndices = eligibleIndices.AsReadOnly();
+                Probabilities = probabilities.AsReadOnly();
             }
             internal void Add(int index, CardInstance card, Vector2Int direction,
                 EnemyPlanningState before, EnemyPlanningState after, EnemyActionScore score) =>
                 candidates.Add(new Candidate(index, card, direction, before, after, score));
-            internal void AddEligible(int index) => eligibleIndices.Add(index);
+            internal void AddEligible(int index, double probability)
+            { eligibleIndices.Add(index); probabilities.Add(probability); }
         }
 
         private readonly List<Slot> slots = new List<Slot>(3);

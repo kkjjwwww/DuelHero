@@ -91,19 +91,9 @@ namespace DuelHero.Battle
             attackDistances.TryGetValue(State.Position, out int initial) && attackDistances.TryGetValue(position, out int current)
                 ? System.Math.Min(3, System.Math.Max(0, initial - current)) : 0;
 
-        internal bool HasAvailableAttack(int energy, EnemyPlannedAction[] selected, int count)
-        {
-            for (int i = 0; i < Cards.Count; i++)
-            {
-                var card = Cards[i];
-                if (!card.CanReserve(Round) || card.Definition.energyCost < 0 || card.Definition.energyCost > energy ||
-                    !EnemyPlanningRules.Has(card, "damage")) continue;
-                bool used = false;
-                for (int s = 0; s < count; s++) if (selected[s].Card == card) { used = true; break; }
-                if (!used) return true;
-            }
-            return false;
-        }
+        internal bool ImprovesAttackPosition(Vector2Int before, Vector2Int after) =>
+            attackDistances.TryGetValue(before, out int initial) &&
+            attackDistances.TryGetValue(after, out int current) && current < initial;
 
         public EnemyPreparedAction GetPreparedAction(EnemyPlannedAction action)
         {

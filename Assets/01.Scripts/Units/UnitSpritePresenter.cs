@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
 namespace DuelHero.Units
@@ -16,11 +17,42 @@ namespace DuelHero.Units
         [SerializeField] private Sprite heal;
         [SerializeField] private Sprite jumpGround;
         [SerializeField] private Sprite jumpAir;
+        [SerializeField, Min(0f)] private float supportPoseDuration = 0.4f;
+        private int supportPoseVersion;
+        private bool supportPosePlaying;
 
         public UnitPose CurrentPose { get; private set; } = UnitPose.Idle;
 
         private void Reset() => targetRenderer = GetComponentInChildren<SpriteRenderer>(true);
         private void OnEnable() => ResetPose();
+        private void OnDisable() => CancelSupportPose();
+
+        public IEnumerator PlaySupportPose(UnitPose pose, bool holdUntilResolved = false)
+        {
+            if (pose != UnitPose.Block && pose != UnitPose.Heal)
+                throw new ArgumentOutOfRangeException(nameof(pose));
+            if (!isActiveAndEnabled) yield break;
+            CancelSupportPose();
+            int run = ++supportPoseVersion;
+            supportPosePlaying = true;
+            try
+            {
+                if (!SetPose(pose)) { CancelSupportPose(); yield break; }
+                if (supportPoseDuration > 0f) yield return new WaitForSeconds(supportPoseDuration);
+            }
+            finally
+            {
+                if (run == supportPoseVersion && !holdUntilResolved) CancelSupportPose();
+            }
+        }
+
+        public void CancelSupportPose()
+        {
+            supportPoseVersion++;
+            if (!supportPosePlaying) return;
+            supportPosePlaying = false;
+            ResetPose();
+        }
 
         public bool SetPose(UnitPose pose)
         {

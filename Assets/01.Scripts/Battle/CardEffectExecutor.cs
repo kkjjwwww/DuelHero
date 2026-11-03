@@ -35,19 +35,26 @@ namespace DuelHero.Battle
         }
         public void ExecutePreparation(string actorId, CardDefinition card, int round, bool counter = false)
         {
-            var steps = ExecutePreparationSteps(actorId, card, round, counter, null, null);
+            var steps = ExecutePreparationSteps(actorId, card, round, counter, null, null, false);
             try { while (steps.MoveNext()) { } }
             finally { (steps as System.IDisposable)?.Dispose(); }
         }
         public IEnumerator ExecutePreparationAnimated(string actorId, CardDefinition card, int round,
-            UnitJumpPresentation jump, UnitVisualPlacement placement) =>
-            ExecutePreparationSteps(actorId, card, round, false, jump, placement);
+            UnitJumpPresentation jump, UnitVisualPlacement placement, bool counter = false) =>
+            ExecutePreparationSteps(actorId, card, round, counter, jump, placement, true);
+
+        public void CancelPreparationPresentation(string actorId)
+        {
+            if (combatEffects != null && combatEffects.TryGetUnit(actorId, out var movement, out _))
+                movement.GetComponent<UnitSpritePresenter>()?.CancelSupportPose();
+        }
 
         private IEnumerator ExecutePreparationSteps(string actorId, CardDefinition card, int round, bool counter,
-            UnitJumpPresentation jump, UnitVisualPlacement placement)
+            UnitJumpPresentation jump, UnitVisualPlacement placement, bool animateSupport)
         {
             if (card == null) yield break;
             combatEffects.TryGetUnit(actorId, out var movement, out var stats);
+            var sprites = animateSupport ? movement.GetComponent<UnitSpritePresenter>() : null;
             foreach (var effect in card.effects.Where(e => e.IsCounter == counter).OrderBy(e => e.resolutionOrder))
             {
                 switch (effect.effectType)
@@ -71,6 +78,13 @@ namespace DuelHero.Battle
                     case "guard": combatEffects.ResolveGuard(actorId, card.id, effect, round); break;
                     case "energyRestore": stats.RestoreEnergy(effect.value); break;
                     case "healthRestore": stats.Heal(effect.value); break;
+                }
+                if (sprites != null && effect.value > 0)
+                {
+                    if (effect.effectType == "guard") yield return sprites.PlaySupportPose(UnitPose.Block, true);
+                    else if (effect.effectType == "healthRestore" || effect.effectType == "energyRestore")
+                        yield return sprites.PlaySupportPose(UnitPose.Heal);
+                    if (!movement.isActiveAndEnabled) yield break;
                 }
             }
         }

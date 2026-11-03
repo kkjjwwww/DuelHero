@@ -1224,6 +1224,24 @@ MonoBehaviour:
   - cardId: system_wait
     sprite: {fileID: 21300000, guid: 187e1cf71ab871b448ebf279c37b7593, type: 3}
     enemySprite: {fileID: 21300000, guid: 9ee708d669187ff40af05466ca77d1d0, type: 3}
+  - cardId: thrust_001
+    sprite: {fileID: 21300000, guid: e7bd63b36c8c9df44bfef6c1da34b474, type: 3}
+    enemySprite: {fileID: 0}
+  - cardId: sweep_001
+    sprite: {fileID: 21300000, guid: a4dc4b4a75d5af4488c3fc3abda4fdb0, type: 3}
+    enemySprite: {fileID: 0}
+  - cardId: head_break_001
+    sprite: {fileID: 21300000, guid: eb432f1a1ba8a354ca2b09898a33ffe5, type: 3}
+    enemySprite: {fileID: 21300000, guid: eb432f1a1ba8a354ca2b09898a33ffe5, type: 3}
+  - cardId: bleed_attack_001
+    sprite: {fileID: 21300000, guid: 8bade83d7a8c42e498e82c01d94b8a32, type: 3}
+    enemySprite: {fileID: 21300000, guid: 8bade83d7a8c42e498e82c01d94b8a32, type: 3}
+  - cardId: riposte_stance_001
+    sprite: {fileID: 21300000, guid: 098e548e37b19844daa7926b9192de40, type: 3}
+    enemySprite: {fileID: 21300000, guid: 098e548e37b19844daa7926b9192de40, type: 3}
+  - cardId: tear_wound_001
+    sprite: {fileID: 21300000, guid: ce84de67ee6cefa4a928b13342940795, type: 3}
+    enemySprite: {fileID: 21300000, guid: ce84de67ee6cefa4a928b13342940795, type: 3}
   illustrationMaskLabel: {fileID: 2585468343720503962}
   nameLabel: {fileID: 4830123014176368167}
   energyLabel: {fileID: 7672088178475286491}

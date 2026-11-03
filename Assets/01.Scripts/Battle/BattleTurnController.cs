@@ -20,6 +20,7 @@ namespace DuelHero.Battle
         [SerializeField] private UnitAttackPresentation playerAttackPresentation;
         [SerializeField] private UnitAttackPresentation enemyAttackPresentation;
         [SerializeField] private UnitJumpPresentation playerJumpPresentation;
+        [SerializeField] private UnitJumpPresentation enemyJumpPresentation;
         [SerializeField] private UnitVisualPlacement unitVisualPlacement;
         public bool IsInputLocked => (playerQueue != null && playerQueue.IsExecuting) ||
             (presentation != null && presentation.IsActive);
@@ -195,7 +196,11 @@ namespace DuelHero.Battle
                         enemyPath.Add(result.To);
                 }
                 enemyMovement.ActionResolved += RecordMovement;
-                try { effects.ExecutePreparation(enemyId, ec, round); }
+                try
+                {
+                    yield return effects.ExecutePreparationAnimated(enemyId, ec, round,
+                        enemyJumpPresentation, unitVisualPlacement);
+                }
                 finally { enemyMovement.ActionResolved -= RecordMovement; }
 
                 var attacks = new List<CombatEffectResolver.AttackRequest>();
@@ -212,6 +217,8 @@ namespace DuelHero.Battle
                 enemyExecutions[slot] = new ExecutedCardPreview(enemyPath,
                     damage.AttackCells.TryGetValue(enemyId, out var cells) ? cells : Array.Empty<Vector2Int>());
                 combatEffects.ApplyDamageBatch(damage);
+                effects.CancelPreparationPresentation(playerId);
+                effects.CancelPreparationPresentation(enemyId);
                 // Only direct hits from the base actions arm counters. Determine both survivors
                 // before either counter animation or damage; the counter batch never re-arms them.
                 bool playerCounter = CanCounter(playerId, pc, playerStats, damage);
@@ -229,8 +236,8 @@ namespace DuelHero.Battle
                         if (enemyAttackPresentation != null) yield return enemyAttackPresentation.PlayAttack();
                     }
                     var counterAttacks = new List<CombatEffectResolver.AttackRequest>();
-                    if (playerCounter) { effects.ExecutePreparation(playerId, pc, round, true); AddAttacks(counterAttacks, playerId, pc, true); }
-                    if (enemyCounter) { effects.ExecutePreparation(enemyId, ec, round, true); AddAttacks(counterAttacks, enemyId, ec, true); }
+                    if (playerCounter) { yield return effects.ExecutePreparationAnimated(playerId, pc, round, playerJumpPresentation, unitVisualPlacement, true); AddAttacks(counterAttacks, playerId, pc, true); }
+                    if (enemyCounter) { yield return effects.ExecutePreparationAnimated(enemyId, ec, round, enemyJumpPresentation, unitVisualPlacement, true); AddAttacks(counterAttacks, enemyId, ec, true); }
                     var counters = combatEffects.CalculateDamageBatch(counterAttacks, round);
                     if (counters.AttackCells.TryGetValue(enemyId, out var counterCells))
                     {
@@ -238,6 +245,8 @@ namespace DuelHero.Battle
                             damage.AttackCells.TryGetValue(enemyId, out var baseCells) ? baseCells.Concat(counterCells).Distinct() : counterCells);
                     }
                     combatEffects.ApplyDamageBatch(counters);
+                    effects.CancelPreparationPresentation(playerId);
+                    effects.CancelPreparationPresentation(enemyId);
                 }
                 playerQueue.BlockFutureSlots(slot + 1, playerStats.Stun);
                 for (int future = slot + 1; future < Math.Min(3, slot + 1 + enemyStats.Stun); future++)
@@ -352,9 +361,15 @@ namespace DuelHero.Battle
             : enemyHealth <= 0 ? BattleOutcome.Victory : BattleOutcome.Running;
         private void CancelUnitPresentations()
         {
+            if (effects != null)
+            {
+                effects.CancelPreparationPresentation(playerId);
+                effects.CancelPreparationPresentation(enemyId);
+            }
             if (playerAttackPresentation != null) playerAttackPresentation.Cancel();
             if (enemyAttackPresentation != null) enemyAttackPresentation.Cancel();
             if (playerJumpPresentation != null) playerJumpPresentation.Cancel();
+            if (enemyJumpPresentation != null) enemyJumpPresentation.Cancel();
         }
         private void OnDisable()
         {

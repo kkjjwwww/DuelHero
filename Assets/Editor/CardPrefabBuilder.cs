@@ -170,8 +170,8 @@ namespace DuelHero.Editor
             Set(serialized, "visualRoot", visual.transform);
             Set(serialized, "frontRoot", frontRoot);
             Set(serialized, "illustration", illustration);
-            var illustrationIds = new[] { "slash_001", "guard_001", "breathing_001", "move_up_001", "move_down_001", "move_left_001", "move_right_001", WaitCard.Id };
-            var illustrationFiles = new[] { "Slash", "Guard", "Breathing", "Move", "Move", "Move", "Move", "Wait" };
+            var illustrationIds = new[] { "slash_001", "guard_001", "breathing_001", "move_up_001", "move_down_001", "move_left_001", "move_right_001", WaitCard.Id, "thrust_001", "sweep_001", "head_break_001", "bleed_attack_001", "riposte_stance_001", "tear_wound_001" };
+            var illustrationFiles = new[] { "Slash", "Guard", "Breathing", "Move", "Move", "Move", "Move", "Wait", "Thrust", "Sweep", "HeadBreak", "BleedAttack", "RiposteStance", "TearWound" };
             var illustrations = serialized.FindProperty("cardIllustrations");
             illustrations.arraySize = illustrationIds.Length;
             for (int i = 0; i < illustrationIds.Length; i++)
@@ -179,8 +179,10 @@ namespace DuelHero.Editor
                 var entry = illustrations.GetArrayElementAtIndex(i);
                 entry.FindPropertyRelative("cardId").stringValue = illustrationIds[i];
                 entry.FindPropertyRelative("sprite").objectReferenceValue = LoadSprite("Illustrations/CardIllustration" + illustrationFiles[i] + ".png");
-                entry.FindPropertyRelative("enemySprite").objectReferenceValue = illustrationFiles[i] == "Slash"
-                    ? null : LoadSprite("Illustrations/CardIllustrationEnemy" + illustrationFiles[i] + ".png");
+                entry.FindPropertyRelative("enemySprite").objectReferenceValue = i >= 10
+                    ? entry.FindPropertyRelative("sprite").objectReferenceValue
+                    : illustrationFiles[i] == "Slash" || illustrationFiles[i] == "Thrust" || illustrationFiles[i] == "Sweep"
+                        ? null : LoadSprite("Illustrations/CardIllustrationEnemy" + illustrationFiles[i] + ".png");
             }
             Set(serialized, "nameLabel", nameLabel);
             Set(serialized, "frameImage", frameImage);

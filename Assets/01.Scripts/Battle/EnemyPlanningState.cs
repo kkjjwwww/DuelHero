@@ -21,16 +21,7 @@ namespace DuelHero.Battle
         internal EnemyPlanningState() { }
         public EnemyPlanningState(Vector2Int position, int energy, int maxEnergy, GridMap map)
         { Position = position; Energy = energy; MaxEnergy = maxEnergy; Map = map; }
-        public EnemyPlanningState Predict(CardDefinition card, Vector2Int direction)
-            => Predict(new EnemyPreparedAction(card, direction));
-        public EnemyPlanningState Predict(EnemyPreparedAction action)
-        {
-            var next = new EnemyPlanningState(Position, Energy, MaxEnergy, Map);
-            next.Apply(action); return next;
-        }
-        public void Apply(CardDefinition card, Vector2Int direction)
-            => Apply(new EnemyPreparedAction(card, direction));
-        public void Apply(EnemyPreparedAction action)
+        private void Apply(EnemyPreparedAction action)
         {
             if (action.EnergyCost < 0 || action.EnergyCost > Energy) throw new InvalidOperationException("적 AI 카드 비용이 부족합니다.");
             Energy -= action.EnergyCost;

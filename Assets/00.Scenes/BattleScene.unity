@@ -9059,6 +9059,7 @@ MonoBehaviour:
   playerAttackPresentation: {fileID: 185798878}
   enemyAttackPresentation: {fileID: 2024972216}
   playerJumpPresentation: {fileID: 185798879}
+  enemyJumpPresentation: {fileID: 2024972217}
   unitVisualPlacement: {fileID: 910000004}
   slotDelay: 0.4
   enemyCardRevealDuration: 0.4
@@ -22085,6 +22086,7 @@ GameObject:
   - component: {fileID: 2024972214}
   - component: {fileID: 2024972215}
   - component: {fileID: 2024972216}
+  - component: {fileID: 2024972217}
   m_Layer: 0
   m_Name: Enemy
   m_TagString: Untagged
@@ -22092,6 +22094,24 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &2024972217
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2024972209}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2b659e991b8884a4689f8cc2e9349335, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Units.UnitJumpPresentation
+  sprites: {fileID: 0}
+  motionRoot: {fileID: 449193315}
+  takeoffDuration: 0.1
+  flightDuration: 0.3
+  landingDuration: 0.1
+  jumpHeight: 0.3
 --- !u!212 &2024972210
 SpriteRenderer:
   serializedVersion: 2
@@ -22234,8 +22254,7 @@ MonoBehaviour:
     opportunityWeight: 3
     remainingEnergyWeight: 0.03
     attackCostWeight: 0.2
-    randomCandidateCount: 3
-    randomScoreTolerance: 0.1
+    softmaxTemperature: 8
   cardIds:
   - move_up_001
   - move_down_001

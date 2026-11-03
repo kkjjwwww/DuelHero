@@ -9,12 +9,14 @@ namespace DuelHero.Battle
     {
         public int ActionPreviews { get; }
         public int AppliedActions { get; }
+        public int RejectedAttacks { get; }
         public double ElapsedMilliseconds { get; }
         // -1 when the runtime does not expose the allocation counter.
         public long AllocatedBytes { get; }
-        internal EnemySearchMetrics(int previews, int applied, long ticks, long bytes)
+        internal EnemySearchMetrics(int previews, int applied, long ticks, long bytes, int rejectedAttacks = 0)
         {
             ActionPreviews = previews; AppliedActions = applied;
+            RejectedAttacks = rejectedAttacks;
             ElapsedMilliseconds = ticks * 1000d / Stopwatch.Frequency; AllocatedBytes = bytes;
         }
     }
@@ -32,7 +34,8 @@ namespace DuelHero.Battle
             internal bool SameOutcome(Candidate other) => Action.Card == other.Action.Card && Position == other.Position &&
                 Energy == other.Energy && TargetHealth == other.TargetHealth && RawDamage == other.RawDamage;
         }
-        private readonly Candidate[] candidates = new Candidate[3];
+        private readonly Candidate[] candidates = new Candidate[2];
+        private readonly Vector2Int[] visitedPositions = new Vector2Int[4];
         private readonly UtilityAiSettings settings;
         private readonly EnemyPlanEvaluator evaluator;
         private readonly EnemyPlanningState state = new EnemyPlanningState();
@@ -53,11 +56,12 @@ namespace DuelHero.Battle
             var style = new EnemyRoundStyle(context.Style, settings);
             LastStyle = style;
             state.Reset(context);
+            visitedPositions[0] = state.Position;
             LastTrace = null;
             var trace = CaptureScores ? new EnemyDecisionTrace(context.Round, context.DecisionSeed, style) : null;
             var random = new EnemyDecisionRandom(context.DecisionSeed);
             var plan = new EnemyPlannedAction[3];
-            int previews = 0, applied = 0;
+            int previews = 0, applied = 0, rejectedAttacks = 0;
             float attackBurden = 0;
             EnemyActionScore prefix = default;
             for (int slot = 0; slot < plan.Length; slot++)
@@ -67,6 +71,7 @@ namespace DuelHero.Battle
                     plan[slot] = new EnemyPlannedAction(new CardInstance(StunCard.Definition), Vector2Int.right);
                     prefix = AddForcedRisk(context, prefix);
                     state.Step(context, plan[slot], slot);
+                    visitedPositions[slot + 1] = state.Position;
                     continue;
                 }
                 var debugSlot = trace?.BeginSlot(slot, state);
@@ -78,7 +83,6 @@ namespace DuelHero.Battle
                 }
 
                 int candidateCount = 0;
-                bool escape = context.RiskAt(state.Position) > 0 && !context.HasAvailableAttack(state.Energy, plan, slot);
                 context.PrepareAttackDistances(state.Energy, plan, slot);
                 for (int cardIndex = 0; cardIndex < context.Cards.Count; cardIndex++)
                 {
@@ -93,9 +97,20 @@ namespace DuelHero.Battle
                         int rawDamage = preview.PreviewAction(context, prepared, state);
                         float burden = attackBurden + (prepared.HasDamage ? evaluator.AttackCostPenalty(prepared.EnergyCost, state.Energy) * style.Preparation : 0);
                         plan[slot] = action;
-                        var score = evaluator.Evaluate(context, preview, plan, slot + 1, burden, state, escape, prefix, style);
-                        debugSlot?.Add(cardIndex, card, action.Direction, state, preview, score);
+                        bool revisited = false;
+                        for (int i = 0; i <= slot; i++)
+                            if (visitedPositions[i] == preview.Position) { revisited = true; break; }
+                        var score = evaluator.Evaluate(context, preview, plan, slot + 1, burden, state, prefix, style,
+                            revisited, rawDamage);
                         previews++;
+                        // A missed attack may still be useful as a preparation card, but
+                        // never keep an empty swing merely because other candidates score poorly.
+                        bool missedAttack = prepared.HasDamage && !prepared.CanHit(preview.Position, context.Target);
+                        bool usefulMovement = preview.Position != state.Position && !score.UnproductiveMove;
+                        bool usefulGuard = score.BlockedDamage > Math.Min(score.RiskDamage, state.GuardAmount);
+                        if (missedAttack && !usefulMovement && preview.Energy <= state.Energy && !usefulGuard)
+                        { rejectedAttacks++; continue; }
+                        debugSlot?.Add(cardIndex, card, action.Direction, state, preview, score);
                         Retain(new Candidate { Action = action, Score = score.Total, Burden = burden, Breakdown = score,
                             Position = preview.Position, Energy = preview.Energy, TargetHealth = preview.TargetHealth,
                             RawDamage = rawDamage, TraceIndex = (debugSlot?.Candidates.Count ?? 0) - 1 }, ref candidateCount);
@@ -105,28 +120,29 @@ namespace DuelHero.Battle
                 if (candidateCount > 0)
                 {
                     float best = candidates[0].Score;
-                    float minimum = best - settings.randomScoreTolerance * Math.Max(1f, Math.Abs(best));
-                    int eligible = 1;
-                    while (eligible < candidateCount && candidates[eligible].Score >= minimum) eligible++;
-                    var chosen = candidates[eligible > 1 ? random.Next(eligible) : 0];
+                    double probability = candidateCount == 1 ? 1d :
+                        SoftmaxBestProbability(best, candidates[1].Score, settings.softmaxTemperature);
+                    var chosen = candidates[probability >= 1d || random.NextUnit() < probability ? 0 : 1];
                     choice = chosen.Action; attackBurden = chosen.Burden; prefix = chosen.Breakdown;
                     if (debugSlot != null)
                     {
-                        debugSlot.BestScore = best; debugSlot.MinimumScore = minimum; debugSlot.SelectedIndex = chosen.TraceIndex;
-                        for (int i = 0; i < eligible; i++) debugSlot.AddEligible(candidates[i].TraceIndex);
+                        debugSlot.BestScore = best; debugSlot.Temperature = settings.softmaxTemperature; debugSlot.SelectedIndex = chosen.TraceIndex;
+                        debugSlot.AddEligible(candidates[0].TraceIndex, probability);
+                        if (candidateCount == 2) debugSlot.AddEligible(candidates[1].TraceIndex, 1d - probability);
                     }
                 }
                 // Wait remains a fallback only when every owned action is unavailable.
                 plan[slot] = choice;
                 if (debugSlot != null && debugSlot.SelectedIndex < 0)
-                    debugSlot.Note = "사용 가능한 카드가 없어 대기를 선택했습니다. 점수 비교는 하지 않았습니다.";
+                    debugSlot.Note = "사용 가능한 유효 후보가 없어 대기를 선택했습니다. 명중하지 않고 다른 실익도 없는 공격은 제외합니다.";
                 if (candidateCount == 0) prefix = AddForcedRisk(context, prefix);
                 state.Step(context, choice, slot);
+                visitedPositions[slot + 1] = state.Position;
                 applied++;
             }
             long after = GC.GetAllocatedBytesForCurrentThread();
             LastSearch = new EnemySearchMetrics(previews, applied, Stopwatch.GetTimestamp() - start,
-                bytes == 0 && after == 0 ? -1 : after - bytes);
+                bytes == 0 && after == 0 ? -1 : after - bytes, rejectedAttacks);
             LastTrace = trace;
             return plan;
         }
@@ -137,18 +153,21 @@ namespace DuelHero.Battle
             for (int i = 0; i < count; i++) if (candidate.SameOutcome(candidates[i])) return;
             int index = 0;
             while (index < count && candidates[index].Score >= candidate.Score) index++;
-            if (index >= settings.randomCandidateCount) return;
-            for (int i = Math.Min(count, settings.randomCandidateCount - 1); i > index; i--) candidates[i] = candidates[i - 1];
+            if (index >= candidates.Length) return;
+            for (int i = Math.Min(count, candidates.Length - 1); i > index; i--) candidates[i] = candidates[i - 1];
             candidates[index] = candidate;
-            count = Math.Min(count + 1, settings.randomCandidateCount);
+            count = Math.Min(count + 1, candidates.Length);
         }
+
+        public static double SoftmaxBestProbability(float best, float second, float temperature) =>
+            temperature <= 0 ? 1d : 1d / (1d + Math.Exp(((double)second - best) / temperature));
 
         private EnemyActionScore AddForcedRisk(EnemyDecisionContext context, EnemyActionScore prefix)
         {
             int risk = state.TargetHealth > 0 ? context.RiskAt(state.Position) : 0;
             return new EnemyActionScore(prefix.Damage, prefix.Opportunity, prefix.Energy, prefix.CostPenalty,
                 prefix.RiskPenalty + settings.riskWeight * LastStyle.Preparation * Math.Max(0, risk - state.GuardAmount),
-                prefix.Escape, prefix.IneffectivePenalty);
+                prefix.IneffectivePenalty, movementPenalty: prefix.MovementPenalty);
         }
 
         private static bool Used(EnemyPlannedAction[] plan, CardInstance card, int count)

@@ -18,6 +18,16 @@ namespace DuelHero.Battle
             return (int)(value % (uint)exclusiveMax);
         }
 
+        internal double NextUnit()
+        {
+            // Avalanche nearby decision seeds before converting to a continuous draw.
+            uint value = (uint)Next(int.MaxValue);
+            value = unchecked((value ^ (value >> 16)) * 0x7feb352du);
+            value = unchecked((value ^ (value >> 15)) * 0x846ca68bu);
+            value ^= value >> 16;
+            return value / 4294967296d;
+        }
+
         internal static uint CreateSeed(uint runSeed, string nodeId, string actorId, int round)
         {
             uint hash = Mix(2166136261u, runSeed);
