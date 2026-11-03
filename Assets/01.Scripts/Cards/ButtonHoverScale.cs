@@ -6,11 +6,13 @@ using DG.Tweening;
 namespace DuelHero.Cards
 {
     [DisallowMultipleComponent]
-    public sealed class ButtonHoverScale : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+    public sealed class ButtonHoverScale : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler
     {
         [SerializeField, Min(1f)] private float hoverScale = 1.15f;
         [SerializeField, Min(0f)] private float transitionDuration = 0.1f;
         [SerializeField] private Ease transitionEase = Ease.OutQuad;
+        [SerializeField] private bool shrinkOnPress;
+        [SerializeField, Range(.1f, 1f)] private float pressedScale = .95f;
         [Tooltip("비워두면 자기 자신을 확대합니다. 여러 대상을 지정하면 함께 확대합니다.")]
         [SerializeField] private Transform[] scaleTargets = new Transform[0];
         private Button button;
@@ -19,6 +21,7 @@ namespace DuelHero.Cards
         private Tween[] scaleTweens;
         private bool selected;
         private bool hovered;
+        private bool pressed;
 
         private void Awake()
         {
@@ -45,21 +48,36 @@ namespace DuelHero.Cards
         public void OnPointerEnter(PointerEventData eventData)
         {
             hovered = true;
-            if (CanAnimate()) AnimateTo(Mathf.Max(1f, hoverScale));
+            if (CanAnimate()) UpdateScale();
         }
         public void OnPointerExit(PointerEventData eventData)
         {
             hovered = false;
+            pressed = false;
             if (selected && isActiveAndEnabled) AnimateTo(Mathf.Max(1f, hoverScale));
             else if (CanAnimate()) AnimateTo(1f);
             else ResetScale();
         }
+        public void OnPointerDown(PointerEventData eventData)
+        {
+            if (!shrinkOnPress || eventData.button != PointerEventData.InputButton.Left || !CanAnimate()) return;
+            pressed = true;
+            UpdateScale();
+        }
+        public void OnPointerUp(PointerEventData eventData)
+        {
+            if (!pressed || eventData.button != PointerEventData.InputButton.Left) return;
+            pressed = false;
+            UpdateScale();
+        }
+        private void UpdateScale() => AnimateTo(pressed && CanAnimate() ? pressedScale
+            : selected || (hovered && CanAnimate()) ? Mathf.Max(1f, hoverScale) : 1f);
         public void SetSelected(bool value)
         {
             if (selected == value) return;
             selected = value;
             if (targets == null || !isActiveAndEnabled) return;
-            AnimateTo(selected || (hovered && CanAnimate()) ? Mathf.Max(1f, hoverScale) : 1f);
+            UpdateScale();
         }
         private bool CanAnimate() => isActiveAndEnabled &&
             (button == null || (button.IsActive() && button.IsInteractable()));
@@ -69,6 +87,7 @@ namespace DuelHero.Cards
             if (button != null && (!button.IsActive() || !button.IsInteractable()))
             {
                 hovered = false;
+                pressed = false;
                 if (selected && isActiveAndEnabled) AnimateTo(Mathf.Max(1f, hoverScale));
                 else ResetScale();
             }
@@ -103,7 +122,7 @@ namespace DuelHero.Cards
         }
         private void OnDisable()
         {
-            selected = hovered = false;
+            selected = hovered = pressed = false;
             ResetScale();
         }
     }

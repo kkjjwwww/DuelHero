@@ -54,7 +54,7 @@ namespace DuelHero.Cards
             content.gameObject.SetActive(true);
             message.text = cards.Count == 0 ? "획득 가능한 카드가 없습니다." : "카드를 클릭하면 획득하고 맵으로 돌아갑니다.";
             Font font = message.font;
-            tooltip = KeywordTooltip.Create(GetComponentInParent<Canvas>().rootCanvas, font);
+            tooltip = KeywordTooltip.Create(GetComponentInParent<Canvas>().rootCanvas);
             for (int i = 0; i < cards.Count; i++)
             {
                 var definition = cards[i];

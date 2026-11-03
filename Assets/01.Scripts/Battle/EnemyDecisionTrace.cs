@@ -10,9 +10,19 @@ namespace DuelHero.Battle
         public float Opportunity { get; }
         public float Energy { get; }
         public float CostPenalty { get; }
-        public float Total => Damage + Opportunity + Energy - CostPenalty;
-        internal EnemyActionScore(float damage, float opportunity, float energy, float costPenalty)
-        { Damage = damage; Opportunity = opportunity; Energy = energy; CostPenalty = costPenalty; }
+        public float RiskPenalty { get; }
+        public float Escape { get; }
+        public float IneffectivePenalty { get; }
+        public int RiskDamage { get; }
+        public int BlockedDamage { get; }
+        public float Total => Damage + Opportunity + Energy + Escape - CostPenalty - RiskPenalty - IneffectivePenalty;
+        internal EnemyActionScore(float damage, float opportunity, float energy, float costPenalty,
+            float riskPenalty = 0, float escape = 0, float ineffectivePenalty = 0, int riskDamage = 0, int blockedDamage = 0)
+        {
+            Damage = damage; Opportunity = opportunity; Energy = energy; CostPenalty = costPenalty;
+            RiskPenalty = riskPenalty; Escape = escape; IneffectivePenalty = ineffectivePenalty;
+            RiskDamage = riskDamage; BlockedDamage = blockedDamage;
+        }
     }
 
     // Latest decision only. Created only when explicitly recording; stores values rather

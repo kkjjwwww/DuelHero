@@ -98,7 +98,7 @@ namespace DuelHero.Cards
                 frontCard.SetKeywordHoverActions((keyword, position) =>
                 {
                     if (!canInspect && !canInspectTypeOnly) return;
-                    if (keywordTooltip == null) keywordTooltip = KeywordTooltip.Create(GetComponentInParent<Canvas>().rootCanvas, font);
+                    if (keywordTooltip == null) keywordTooltip = KeywordTooltip.Create(GetComponentInParent<Canvas>().rootCanvas);
                     keywordTooltip.Show(keyword, position);
                 }, () => { if (keywordTooltip != null) keywordTooltip.Hide(); },
                 position => { if (keywordTooltip != null) keywordTooltip.Move(position); });

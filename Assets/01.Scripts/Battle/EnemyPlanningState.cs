@@ -15,6 +15,8 @@ namespace DuelHero.Battle
         internal int TargetHealth { get; private set; }
         internal int TotalEffectiveDamage { get; private set; }
         private GuardState actorGuard, targetGuard;
+        internal int GuardAmount => actorGuard.Reduction;
+        internal int PreviewGuard { get; private set; }
         internal EnemyPlanningState() { }
         public EnemyPlanningState(Vector2Int position, int energy, int maxEnergy, GridMap map)
         { Position = position; Energy = energy; MaxEnergy = maxEnergy; Map = map; }
@@ -60,6 +62,10 @@ namespace DuelHero.Battle
         internal int PreviewAction(EnemyDecisionContext context, EnemyPreparedAction action, EnemyPlanningState source)
         {
             Apply(action);
+            long guard = source.GuardAmount;
+            for (int i = 0; i < action.Effects.Length; i++)
+                if (action.Effects[i].effectType == "guard") guard += action.Effects[i].value;
+            PreviewGuard = (int)Math.Min(int.MaxValue, guard);
             int raw = action.RawDamage(Position, context.Target);
             int damage = Math.Min(TargetHealth, Math.Max(0, raw - source.targetGuard.Reduction));
             TargetHealth -= damage; TotalEffectiveDamage += damage;

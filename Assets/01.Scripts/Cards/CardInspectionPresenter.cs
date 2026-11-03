@@ -68,7 +68,7 @@ namespace DuelHero.Cards
                 });
                 view.SetKeywordHoverActions((keyword, position) =>
                 {
-                    if (tooltip == null) tooltip = KeywordTooltip.Create(canvas, font);
+                    if (tooltip == null) tooltip = KeywordTooltip.Create(canvas);
                     tooltip.Show(keyword, position);
                 }, () => { if (tooltip != null) tooltip.Hide(); },
                 position => { if (tooltip != null) tooltip.Move(position); });

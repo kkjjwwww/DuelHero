@@ -5,35 +5,33 @@ namespace DuelHero.Cards
 {
     public sealed class KeywordTooltip : MonoBehaviour
     {
-        private RectTransform panel;
-        private Text label;
+        [SerializeField] private RectTransform panel;
+        [SerializeField] private Text label;
+        [SerializeField] private bool fitWidth;
+        [SerializeField, Min(1f)] private float minWidth = 48f;
+        [SerializeField, Min(1f)] private float maxWidth = 280f;
         private Canvas canvas;
-        public static KeywordTooltip Create(Canvas canvas, Font font)
+        public static KeywordTooltip Create(Canvas canvas, bool compact = false)
         {
-            var go = new GameObject("KeywordTooltip", typeof(RectTransform), typeof(CanvasGroup), typeof(Image), typeof(KeywordTooltip));
-            go.transform.SetParent(canvas.transform, false);
-            var result = go.GetComponent<KeywordTooltip>();
-            result.canvas = canvas;
-            result.panel = (RectTransform)go.transform;
-            result.panel.anchorMin = result.panel.anchorMax = Vector2.zero;
-            result.panel.pivot = Vector2.zero;
-            var group = go.GetComponent<CanvasGroup>(); group.blocksRaycasts = false; group.interactable = false;
-            var background = go.GetComponent<Image>(); background.color = new Color(0.055f, 0.065f, 0.08f, 0.98f); background.raycastTarget = false;
-            var textGo = new GameObject("Text", typeof(RectTransform), typeof(Text));
-            textGo.transform.SetParent(go.transform, false);
-            result.label = textGo.GetComponent<Text>();
-            result.label.font = font; result.label.fontSize = 16; result.label.supportRichText = true;
-            result.label.color = new Color(0.96f, 0.91f, 0.8f); result.label.raycastTarget = false;
-            var rect = result.label.rectTransform; rect.anchorMin = Vector2.zero; rect.anchorMax = Vector2.one;
-            rect.offsetMin = new Vector2(12, 10); rect.offsetMax = new Vector2(-12, -10);
+            var prefab = Resources.Load<KeywordTooltip>("UI/Tooltips/" + (compact ? "DelayedTooltip" : "KeywordTooltip"));
+            var result = Instantiate(prefab, canvas.rootCanvas.transform, false);
+            result.name = prefab.name;
+            result.canvas = canvas.rootCanvas;
             result.Hide();
             return result;
         }
         public void Show(KeywordDefinition keyword, Vector2 screenPosition)
         {
-            label.text = string.IsNullOrEmpty(keyword.name) ? keyword.description
-                : $"<color=#FFBA47>[{keyword.name}]</color>\n{keyword.description}";
-            panel.sizeDelta = new Vector2(280f, 28f + label.cachedTextGeneratorForLayout.GetPreferredHeight(label.text, label.GetGenerationSettings(new Vector2(256f, 0f))) / label.pixelsPerUnit);
+            ShowText(string.IsNullOrEmpty(keyword.name) ? keyword.description
+                : $"<color=#FFBA47>[{keyword.name}]</color>\n{keyword.description}", screenPosition);
+        }
+        public void Show(string text, Vector2 screenPosition) => ShowText(text, screenPosition);
+        private void ShowText(string text, Vector2 screenPosition)
+        {
+            label.text = text;
+            Vector2 padding = label.rectTransform.offsetMin - label.rectTransform.offsetMax;
+            float width = fitWidth ? Mathf.Clamp(label.preferredWidth + padding.x, minWidth, maxWidth) : maxWidth;
+            panel.sizeDelta = new Vector2(width, padding.y + label.cachedTextGeneratorForLayout.GetPreferredHeight(label.text, label.GetGenerationSettings(new Vector2(width - padding.x, 0f))) / label.pixelsPerUnit);
             gameObject.SetActive(true); transform.SetAsLastSibling(); Move(screenPosition);
         }
         public void Move(Vector2 screenPosition)

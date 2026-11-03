@@ -16,6 +16,9 @@ namespace DuelHero.Battle
         internal readonly CardEffectDefinition[] Effects;
         public bool HasDamage { get; }
         private readonly bool hasMove;
+        internal bool HasMovement => hasMove;
+        internal Vector2Int AttackCell(Vector2Int origin, Vector2Int offset) => origin + CardDirectionRules.Rotate(offset, direction);
+        internal Vector2Int AttackOrigin(Vector2Int target, Vector2Int offset) => target - CardDirectionRules.Rotate(offset, direction);
 
         internal EnemyPreparedAction(CardDefinition card, Vector2Int direction, EnemyPreparedAction original = null)
         {

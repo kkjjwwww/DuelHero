@@ -175,7 +175,7 @@ public class ActionQueueUI : MonoBehaviour
             view.SetKeywordHoverActions((keyword, position) =>
             {
                 if (!CanInspect) return;
-                if (keywordTooltip == null) keywordTooltip = KeywordTooltip.Create(GetComponentInParent<Canvas>().rootCanvas, cardFont);
+                if (keywordTooltip == null) keywordTooltip = KeywordTooltip.Create(GetComponentInParent<Canvas>().rootCanvas);
                 keywordTooltip.Show(keyword, position);
             }, () => { if (keywordTooltip != null) keywordTooltip.Hide(); },
             position => { if (keywordTooltip != null) keywordTooltip.Move(position); });

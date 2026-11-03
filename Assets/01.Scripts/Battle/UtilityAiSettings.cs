@@ -10,6 +10,10 @@ namespace DuelHero.Battle
         public float opportunityWeight = 3f;
         public float remainingEnergyWeight = .03f;
         public float attackCostWeight = .2f;
+        public float approachWeight = 1.5f;
+        public float riskWeight = .5f;
+        public float escapeWeight = .5f;
+        public float ineffectiveActionPenalty = 1f;
         public int randomCandidateCount = 3;
         public float randomScoreTolerance = .1f;
 
@@ -17,7 +21,8 @@ namespace DuelHero.Battle
         {
             if (randomCandidateCount < 1 || randomCandidateCount > 3 || !Valid(randomScoreTolerance) || randomScoreTolerance > 1)
                 throw new ArgumentOutOfRangeException(nameof(randomCandidateCount), "무작위 후보는 1~3개, 허용 점수 차이는 0~1로 설정해주세요.");
-            if (!Valid(damageWeight) || !Valid(opportunityWeight) || !Valid(remainingEnergyWeight) || !Valid(attackCostWeight))
+            if (!Valid(damageWeight) || !Valid(opportunityWeight) || !Valid(remainingEnergyWeight) || !Valid(attackCostWeight) ||
+                !Valid(approachWeight) || !Valid(riskWeight) || !Valid(escapeWeight) || !Valid(ineffectiveActionPenalty))
                 throw new ArgumentOutOfRangeException(nameof(damageWeight), "유틸리티 가중치는 유한한 0 이상의 값이어야 합니다.");
         }
         private static bool Valid(float value) => value >= 0 && !float.IsNaN(value) && !float.IsInfinity(value);

@@ -256,7 +256,7 @@ namespace DuelHero.Cards
             view.SetKeywordHoverActions((keyword, position) =>
             {
                 if (IsInputLocked || IsTransitioning || fanLayout.Focused != view) return;
-                if (keywordTooltip == null) keywordTooltip = KeywordTooltip.Create(GetComponentInParent<Canvas>().rootCanvas, GetFont());
+                if (keywordTooltip == null) keywordTooltip = KeywordTooltip.Create(GetComponentInParent<Canvas>().rootCanvas);
                 keywordTooltip.Show(keyword, position);
             }, () => { if (keywordTooltip != null) keywordTooltip.Hide(); },
             position => { if (keywordTooltip != null) keywordTooltip.Move(position); });

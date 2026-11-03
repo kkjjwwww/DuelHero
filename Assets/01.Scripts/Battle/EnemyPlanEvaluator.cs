@@ -12,18 +12,30 @@ namespace DuelHero.Battle
             settings.attackCostWeight * cost * ((float)cost / Math.Max(1, energyBefore));
 
         internal EnemyActionScore Evaluate(EnemyDecisionContext context, EnemyPlanningState state,
-            EnemyPlannedAction[] selected, int count, float attackBurden)
+            EnemyPlannedAction[] selected, int count, float attackBurden,
+            EnemyPlanningState before, bool escape, EnemyActionScore prefix)
         {
             float opportunity = 0;
             if (state.TargetHealth > 0)
             {
-                if (context.HasAttackOpportunity(state.Position, state.Energy, selected, count)) opportunity = 1;
-                if (context.DistancesToTarget.TryGetValue(context.State.Position, out int initial) &&
-                    context.DistancesToTarget.TryGetValue(state.Position, out int current))
-                    opportunity += .5f * Math.Min(3, Math.Max(0, initial - current));
+                if (count < 3 && context.HasAttackOpportunity(state.Position, state.Energy, selected, count))
+                    opportunity = settings.opportunityWeight;
+                if (!escape) opportunity += settings.approachWeight * context.AttackApproach(state.Position);
             }
+            int risk = state.TargetHealth > 0 ? context.RiskAt(state.Position) : 0;
+            int blocked = Math.Min(risk, state.PreviewGuard);
+            int exposed = risk - blocked;
+            // Only added protection counts as a useful guard action; existing shields do not
+            // turn a blocked move or an empty recovery into a useful action.
+            int guardGain = blocked - Math.Min(risk, before.GuardAmount);
+            bool ineffective = state.Position == before.Position && state.Energy == before.Energy &&
+                state.TotalEffectiveDamage == before.TotalEffectiveDamage && guardGain <= 0;
+            int riskBefore = Math.Max(0, context.RiskAt(before.Position) - before.GuardAmount);
             return new EnemyActionScore(settings.damageWeight * state.TotalEffectiveDamage,
-                settings.opportunityWeight * opportunity, settings.remainingEnergyWeight * state.Energy, attackBurden);
+                opportunity, settings.remainingEnergyWeight * state.Energy, attackBurden,
+                prefix.RiskPenalty + settings.riskWeight * exposed,
+                prefix.Escape + (escape ? settings.escapeWeight * Math.Max(0, riskBefore - exposed) : 0),
+                prefix.IneffectivePenalty + (ineffective ? settings.ineffectiveActionPenalty : 0), risk, blocked);
         }
     }
 }

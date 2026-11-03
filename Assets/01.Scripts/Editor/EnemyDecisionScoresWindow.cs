@@ -13,7 +13,7 @@ public sealed class EnemyDecisionScoresWindow : EditorWindow
 
     private void OnEnable()
     {
-        minSize = new Vector2(900, 350);
+        minSize = new Vector2(1200, 350);
         UtilityPlanSelector.CaptureScores = true;
         FollowSelection();
         if (source == null) source = Object.FindFirstObjectByType<EnemyActionPlanProvider>();
@@ -46,7 +46,7 @@ public sealed class EnemyDecisionScoresWindow : EditorWindow
             return;
         }
         EditorGUILayout.LabelField($"{source.name} · 라운드 {displayedTrace.Round} · 판단 시드 {displayedTrace.DecisionSeed}", EditorStyles.boldLabel);
-        EditorGUILayout.HelpBox("총점 = 피해 + 공격 기회·접근 + 에너지 − 비용 부담. 점수는 앞 슬롯을 포함한 누적 평가값이며 슬롯 안에서 비교합니다. " +
+        EditorGUILayout.HelpBox("총점 = 피해 + 공격 기회·접근 + 에너지 + 이탈 − 비용 부담 − 위험 − 무효 행동. 위험·이탈·무효 감점은 누적이며 슬롯 안에서 비교합니다. " +
             "●는 추첨 후보, ▶는 실제 선택입니다. 허용 점수 차이 안의 상위 후보 중 균등 확률로 선택합니다. " +
             "비용 부족·쿨다운·예약 중·이미 선택한 카드는 평가 대상에서 제외됩니다.", MessageType.None);
         scroll = EditorGUILayout.BeginScrollView(scroll);
@@ -62,6 +62,7 @@ public sealed class EnemyDecisionScoresWindow : EditorWindow
             Cell("선택", 35); Cell("카드 / 보유 번호", 170); Cell("방향", 40); Cell("총점", 70);
             Cell("피해 점수", 70); Cell("기회·접근", 75); Cell("에너지", 65); Cell("비용 감점", 75);
             Cell("종료 에너지", 80); Cell("이번 피해", 65);
+            Cell("위험 감점", 70); Cell("이탈", 60); Cell("무효 감점", 70); Cell("위험/방어량", 85);
             EditorGUILayout.EndHorizontal();
             for (int i = 0; i < slot.Candidates.Count; i++)
             {
@@ -77,6 +78,9 @@ public sealed class EnemyDecisionScoresWindow : EditorWindow
                 Cell(row.Score.Damage.ToString("F3"), 70); Cell(row.Score.Opportunity.ToString("F3"), 75);
                 Cell(row.Score.Energy.ToString("F3"), 65); Cell(row.Score.CostPenalty.ToString("F3"), 75);
                 Cell(row.EnergyAfter.ToString(), 80); Cell(row.EffectiveDamage.ToString(), 65);
+                Cell(row.Score.RiskPenalty.ToString("F3"), 70); Cell(row.Score.Escape.ToString("F3"), 60);
+                Cell(row.Score.IneffectivePenalty.ToString("F3"), 70);
+                Cell($"{row.Score.RiskDamage}/{row.Score.BlockedDamage}", 85);
                 EditorGUILayout.EndHorizontal(); GUI.backgroundColor = color;
             }
         }

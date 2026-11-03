@@ -51,6 +51,7 @@ namespace DuelHero.Cards
         private bool initialized;
         private bool layoutSettingsDirty;
         public bool IsOpen => panel != null && panel.activeSelf;
+        public event System.Action OpenChanged;
         private IReadOnlyList<CardInstance> Cards => playerSource != null ? playerSource.Cards : source.Cards;
         private CardDatabase Database => playerSource != null ? playerSource.Database : source.Database;
 
@@ -86,11 +87,14 @@ namespace DuelHero.Cards
                 if (category.Layout.gameObject.activeSelf) category.Layout.Reflow();
             Canvas.ForceUpdateCanvases();
             if (scroll != null) scroll.verticalNormalizedPosition = 1f;
+            OpenChanged?.Invoke();
         }
         public void Close()
         {
+            bool wasOpen = IsOpen;
             HideInspection();
             if (panel != null) panel.SetActive(false);
+            if (wasOpen) OpenChanged?.Invoke();
         }
         private void Initialize()
         {
