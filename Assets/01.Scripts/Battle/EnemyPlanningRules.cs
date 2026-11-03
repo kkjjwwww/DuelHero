@@ -13,7 +13,7 @@ namespace DuelHero.Battle
 
         internal static bool Has(CardInstance card, string type)
         {
-            foreach (var effect in card.Definition.effects) if (effect.effectType == type) return true;
+            foreach (var effect in card.Definition.effects) if (effect.effectType == type && !effect.IsCounter) return true;
             return false;
         }
     }

@@ -5,6 +5,11 @@ namespace DuelHero.Battle
     {
         private uint state;
         internal EnemyDecisionRandom(uint seed) => state = seed;
+        internal static EnemyDecisionStyle Style(uint seed)
+        {
+            var random = new EnemyDecisionRandom(CreateSeed(seed, "utility-style", null, 0));
+            return (EnemyDecisionStyle)random.Next(3);
+        }
         internal int Next(int exclusiveMax)
         {
             state = unchecked(state + 0x9E3779B9u);

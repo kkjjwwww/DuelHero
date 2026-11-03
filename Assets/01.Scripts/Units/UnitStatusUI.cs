@@ -43,6 +43,8 @@ namespace DuelHero.Units
             if (healthLabel != null) healthLabel.text = ready ? $"체력 {status.Health} / {status.MaxHealth}" +
                 (shield > 0 || gain > 0 ? $" · 보호막 {(long)shield + gain}" : "") : "체력 --";
             if (energyLabel != null) energyLabel.text = ready ? $"에너지 {status.Energy} / {status.MaxEnergy}" : "에너지 --";
+            if (ready && source != null && source.Bleed > 0 && healthLabel != null)
+                healthLabel.text += $" · 출혈 {source.Bleed}";
             EnergyCostPreviewUI.SegmentView.SetRange(healthFill, 0, health, maximum);
             if (energyFill != null) energyFill.fillAmount = ready && status.MaxEnergy > 0 ? (float)status.Energy / status.MaxEnergy : 0;
             EnergyCostPreviewUI.SegmentView.SetRange(guardFill, health, shieldEnd, maximum);

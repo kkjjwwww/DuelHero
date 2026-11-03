@@ -75,8 +75,8 @@ namespace DuelHero.Battle
             var context = new EnemyDecisionContext(supported,
                 new EnemyPlanningState(movement.GridPosition, stats.Energy, stats.MaxEnergy, movement.Grid.Map),
                 target.GridPosition, round,
-                new EnemyUnitSnapshot(stats.Health, stats.MaxHealth, stats.Energy, stats.MaxEnergy, stats.CaptureGuard(), stats.Stun),
-                new EnemyUnitSnapshot(targetStats.Health, targetStats.MaxHealth, targetStats.Energy, targetStats.MaxEnergy, targetStats.CaptureGuard(), targetStats.Stun),
+                new EnemyUnitSnapshot(stats.Health, stats.MaxHealth, stats.Energy, stats.MaxEnergy, stats.CaptureGuard(), stats.Stun, stats.Bleed),
+                new EnemyUnitSnapshot(targetStats.Health, targetStats.MaxHealth, targetStats.Energy, targetStats.MaxEnergy, targetStats.CaptureGuard(), targetStats.Stun, targetStats.Bleed),
                 LastDecisionSeed, targetDeck.Cards);
             selector ??= new UtilityPlanSelector(utilitySettings ??= new UtilityAiSettings());
             activePlan = selector.Select(context);

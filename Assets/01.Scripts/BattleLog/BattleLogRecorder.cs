@@ -35,6 +35,8 @@ namespace DuelHero.Logging
                 BattleActionKind.GuardApplied => BattleLogKind.GuardApplied,
                 BattleActionKind.GuardExpired => BattleLogKind.GuardExpired,
                 BattleActionKind.BattleEnded => BattleLogKind.BattleEnded,
+                BattleActionKind.StatusDamage => BattleLogKind.StatusDamage,
+                BattleActionKind.CounterTriggered => BattleLogKind.CounterTriggered,
                 _ => throw new ArgumentOutOfRangeException()
             };
             var outcome = result.Outcome switch

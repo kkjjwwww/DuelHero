@@ -13,14 +13,16 @@ namespace DuelHero.Battle
         public int Energy { get; }
         public int MaxEnergy { get; }
         public int Stun { get; }
+        public int Bleed { get; }
         public IReadOnlyList<GuardEffectSnapshot> GuardEffects { get; }
 
         public EnemyUnitSnapshot(int health, int maxHealth, int energy, int maxEnergy,
-            IEnumerable<GuardEffectSnapshot> guardEffects, int stun = 0)
+            IEnumerable<GuardEffectSnapshot> guardEffects, int stun = 0, int bleed = 0)
         {
             Health = health; MaxHealth = maxHealth; Energy = energy; MaxEnergy = maxEnergy;
             GuardEffects = Array.AsReadOnly(guardEffects.ToArray());
             Stun = stun;
+            Bleed = bleed;
         }
     }
 }

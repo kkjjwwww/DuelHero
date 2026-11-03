@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: CardDatabase
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Cards.CardDatabase
   sourceSpreadsheetId: 1pspfXZtUhTmSc9ZTL1iTzQDeBgvfbb_wqwCNs83EFQE
-  importedAtUtc: 2026-11-02T04:54:30.6012220Z
+  importedAtUtc: 2026-11-03T07:00:32.1480959Z
   cards:
   - id: move_up_001
     name: "\uC704 \uC774\uB3D9"
@@ -33,6 +33,8 @@ MonoBehaviour:
       targetType: "\uC790\uC2E0"
       statusId: 
       triggerEffectId: 
+      triggerTiming: 
+      statusMultiplier: 0
       resolutionOrder: 1
       value: 1
       durationSlots: 0
@@ -56,6 +58,8 @@ MonoBehaviour:
       targetType: "\uC790\uC2E0"
       statusId: 
       triggerEffectId: 
+      triggerTiming: 
+      statusMultiplier: 0
       resolutionOrder: 1
       value: 1
       durationSlots: 0
@@ -79,6 +83,8 @@ MonoBehaviour:
       targetType: "\uC790\uC2E0"
       statusId: 
       triggerEffectId: 
+      triggerTiming: 
+      statusMultiplier: 0
       resolutionOrder: 1
       value: 1
       durationSlots: 0
@@ -102,6 +108,8 @@ MonoBehaviour:
       targetType: "\uC790\uC2E0"
       statusId: 
       triggerEffectId: 
+      triggerTiming: 
+      statusMultiplier: 0
       resolutionOrder: 1
       value: 1
       durationSlots: 0
@@ -126,6 +134,8 @@ MonoBehaviour:
       targetType: "\uC790\uC2E0"
       statusId: 
       triggerEffectId: 
+      triggerTiming: 
+      statusMultiplier: 0
       resolutionOrder: 1
       value: 10
       durationSlots: 1
@@ -149,6 +159,8 @@ MonoBehaviour:
       targetType: "\uC790\uC2E0"
       statusId: 
       triggerEffectId: 
+      triggerTiming: 
+      statusMultiplier: 0
       resolutionOrder: 1
       value: 20
       durationSlots: 0
@@ -174,6 +186,8 @@ MonoBehaviour:
       targetType: "\uC801"
       statusId: 
       triggerEffectId: 
+      triggerTiming: 
+      statusMultiplier: 0
       resolutionOrder: 1
       value: 10
       durationSlots: 0
@@ -200,6 +214,8 @@ MonoBehaviour:
       targetType: "\uC801"
       statusId: 
       triggerEffectId: 
+      triggerTiming: 
+      statusMultiplier: 0
       resolutionOrder: 1
       value: 15
       durationSlots: 0
@@ -227,6 +243,8 @@ MonoBehaviour:
       targetType: "\uC801"
       statusId: 
       triggerEffectId: 
+      triggerTiming: 
+      statusMultiplier: 0
       resolutionOrder: 1
       value: 10
       durationSlots: 0
@@ -256,6 +274,8 @@ MonoBehaviour:
       targetType: "\uC801"
       statusId: 
       triggerEffectId: 
+      triggerTiming: 
+      statusMultiplier: 0
       resolutionOrder: 1
       value: 3
       durationSlots: 0
@@ -268,10 +288,128 @@ MonoBehaviour:
       targetType: "\uC801"
       statusId: stun
       triggerEffectId: head_break_001_effect_01
+      triggerTiming: 
+      statusMultiplier: 0
       resolutionOrder: 2
       value: 1
       durationSlots: 0
       rangeOffsets: []
+  - id: bleed_attack_001
+    name: "\uCD9C\uD608 \uACF5\uACA9"
+    description: "\uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574
+      {effect1.value}\uB97C \uC8FC\uACE0 [\uCD9C\uD608]\uC744 {effect2.value} \uBD80\uC5EC\uD55C\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
+    actionType: "\uACF5\uACA9"
+    rarity: "\uACE0\uAE09"
+    energyCost: 15
+    cooldownTurns: 1
+    keywordIds:
+    - direction_select
+    - bleed
+    isObtainable: 1
+    isBasicAction: 0
+    isStarterCard: 0
+    effects:
+    - id: bleed_attack_001_effect_01
+      cardId: bleed_attack_001
+      effectType: damage
+      targetType: "\uC801"
+      statusId: 
+      triggerEffectId: 
+      triggerTiming: action
+      statusMultiplier: 0
+      resolutionOrder: 1
+      value: 4
+      durationSlots: 0
+      rangeOffsets:
+      - {x: 0, y: 0}
+      - {x: 1, y: 0}
+    - id: bleed_attack_001_effect_02
+      cardId: bleed_attack_001
+      effectType: applyStatus
+      targetType: "\uC801"
+      statusId: bleed
+      triggerEffectId: bleed_attack_001_effect_01
+      triggerTiming: action
+      statusMultiplier: 0
+      resolutionOrder: 2
+      value: 3
+      durationSlots: 0
+      rangeOffsets: []
+  - id: riposte_stance_001
+    name: "\uC751\uC218 \uD0DC\uC138"
+    description: "{effect1.durationSlots}\uAC1C \uC2AC\uB86F \uB3D9\uC548 \uC9C0\uC18D\uB418\uB294
+      \uBCF4\uD638\uB9C9\uC744 {effect1.value} \uC5BB\uB294\uB2E4.\n[\uBC18\uACA9]
+      \uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574 {effect2.value}\uB97C
+      \uC900\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
+    actionType: "\uBC29\uC5B4"
+    rarity: "\uD76C\uADC0"
+    energyCost: 20
+    cooldownTurns: 2
+    keywordIds:
+    - direction_select
+    - counter
+    isObtainable: 1
+    isBasicAction: 0
+    isStarterCard: 0
+    effects:
+    - id: riposte_stance_001_effect_01
+      cardId: riposte_stance_001
+      effectType: guard
+      targetType: "\uC790\uC2E0"
+      statusId: 
+      triggerEffectId: 
+      triggerTiming: action
+      statusMultiplier: 0
+      resolutionOrder: 1
+      value: 10
+      durationSlots: 1
+      rangeOffsets:
+      - {x: 0, y: 0}
+    - id: riposte_stance_001_effect_02
+      cardId: riposte_stance_001
+      effectType: damage
+      targetType: "\uC801"
+      statusId: 
+      triggerEffectId: 
+      triggerTiming: counter
+      statusMultiplier: 0
+      resolutionOrder: 2
+      value: 8
+      durationSlots: 0
+      rangeOffsets:
+      - {x: 0, y: 0}
+      - {x: 1, y: 0}
+  - id: tear_wound_001
+    name: "\uC0C1\uCC98 \uCC22\uAE30"
+    description: "\uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574
+      {effect1.value}\uB97C \uC8FC\uACE0, \uB300\uC0C1\uC758 [\uCD9C\uD608] \uC218\uCE58
+      \xD7 {effect1.statusMultiplier}\uB9CC\uD07C \uCD94\uAC00 \uD53C\uD574\uB97C
+      \uC900\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
+    actionType: "\uACF5\uACA9"
+    rarity: "\uC804\uC124"
+    energyCost: 25
+    cooldownTurns: 2
+    keywordIds:
+    - direction_select
+    - bleed
+    isObtainable: 1
+    isBasicAction: 0
+    isStarterCard: 0
+    effects:
+    - id: tear_wound_001_effect_01
+      cardId: tear_wound_001
+      effectType: damage
+      targetType: "\uC801"
+      statusId: bleed
+      triggerEffectId: 
+      triggerTiming: action
+      statusMultiplier: 3
+      resolutionOrder: 1
+      value: 6
+      durationSlots: 0
+      rangeOffsets:
+      - {x: 0, y: 0}
+      - {x: 1, y: 0}
   keywords:
   - id: direction_select
     name: "\uBC29\uD5A5\uC9C0\uC815"
@@ -287,6 +425,7 @@ MonoBehaviour:
       \uACE0\uC815\uB41C\uB2E4."
     triggerTiming: "\uC608\uC57D \uC2DC / \uD589\uB3D9 \uC2E4\uD589 \uC2DC"
     parameters: "\uC5C6\uC74C"
+    textColor: '#FFBA47'
   - id: single_target
     name: "\uB2E8\uC77C\uB300\uC0C1"
     description: "\uBC94\uC704 \uB0B4 \uAC00\uC7A5 \uAC00\uAE4C\uC6B4 \uC801 \uD55C
@@ -304,6 +443,7 @@ MonoBehaviour:
       \uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uC801\uC6A9\uD55C\uB2E4."
     triggerTiming: "\uD589\uB3D9 \uC2E4\uD589 \uC2DC"
     parameters: 
+    textColor: '#FFBA47'
   - id: stun
     name: "\uAE30\uC808"
     description: "\uAE30\uC808 \uC218\uCE58 \uB9CC\uD07C \uB2E4\uC74C \uD589\uB3D9\uC2AC\uB86F\uC744
@@ -320,6 +460,51 @@ MonoBehaviour:
     triggerTiming: "\uC801\uC911 \uC2DC \uBD80\uC5EC / \uB2E4\uC74C \uD589\uB3D9
       \uC2AC\uB86F\uBD80\uD130 \uC801\uC6A9"
     parameters: "\uAE30\uC808 \uC218\uCE58"
+    textColor: '#FFBA47'
+  - id: bleed
+    name: "\uCD9C\uD608"
+    description: "\uAC01 \uD589\uB3D9\uC2AC\uB86F \uC885\uB8CC \uC2DC \uCD9C\uD608
+      \uC218\uCE58\uB9CC\uD07C \uBCF4\uD638\uB9C9\uC744 \uBB34\uC2DC\uD558\uB294
+      \uD53C\uD574\uB97C \uBC1B\uACE0, \uCD9C\uD608 \uC218\uCE58\uAC00 1 \uAC10\uC18C\uD55C\uB2E4."
+    resolutionRule: "\uC911\uCCA9\uC740 \uD569\uC0B0\uD55C\uB2E4. \uBD80\uC5EC\uB41C
+      \uD589\uB3D9\uC2AC\uB86F\uC758 \uC885\uB8CC\uBD80\uD130 \uC801\uC6A9\uD55C\uB2E4.
+      \uCD9C\uD608 3\uC740 \uC2AC\uB86F \uC885\uB8CC\uB9C8\uB2E4 3, 2, 1\uC758 \uD53C\uD574\uB97C
+      \uC900 \uB4A4 \uC0AC\uB77C\uC9C4\uB2E4. \uBC18\uACA9 \uCC98\uB9AC \uD6C4 \uC2AC\uB86F
+      \uC885\uB8CC\uC5D0 \uD53C\uD574\uC640 \uAC10\uC18C\uB97C \uCC98\uB9AC\uD55C\uB2E4.
+      \uB0A8\uC740 \uCD9C\uD608\uC740 \uB2E4\uC74C \uD134\uC73C\uB85C \uC774\uC6D4\uD55C\uB2E4.
+      \uCD9C\uD608 \uD53C\uD574\uB294 \uBC18\uACA9\uC744 \uBC1C\uB3D9\uC2DC\uD0A4\uC9C0
+      \uC54A\uB294\uB2E4."
+    triggerTiming: "\uD589\uB3D9\uC2AC\uB86F \uC885\uB8CC \uC2DC"
+    parameters: "\uCD9C\uD608 \uC218\uCE58"
+    textColor: '#FF5A5A'
+  - id: counter
+    name: "\uBC18\uACA9"
+    description: "\uD574\uB2F9 \uD589\uB3D9\uC2AC\uB86F\uC5D0\uC11C \uC801\uC758
+      \uC9C1\uC811 \uACF5\uACA9\uC744 \uBC1B\uC73C\uBA74, \uC591\uCE21\uC758 \uAE30\uBCF8
+      \uD589\uB3D9\uC774 \uBAA8\uB450 \uB05D\uB09C \uB4A4 \uCE74\uB4DC\uC5D0 \uC9C0\uC815\uB41C
+      \uD6A8\uACFC\uB97C 1\uD68C \uBC1C\uB3D9\uD55C\uB2E4."
+    resolutionRule: "\uD574\uB2F9 \uC2AC\uB86F\uC758 \uC591\uCE21 \uAE30\uBCF8 \uD589\uB3D9
+      \uC644\uB8CC \uD6C4 \uC0DD\uC874\uD55C \uC720\uB2DB\uB9CC \uBC1C\uB3D9\uC744
+      \uD310\uC815\uD55C\uB2E4. \uBC1B\uC740 \uD53C\uD574\uAC00 0\uC774\uC5B4\uB3C4
+      \uC9C1\uC811 \uACF5\uACA9\uC5D0 \uC801\uC911\uD558\uBA74 \uBC1C\uB3D9\uD55C\uB2E4.
+      \uC5EC\uB7EC \uB300\uC0C1\uC5D0\uAC8C \uACF5\uACA9\uBC1B\uC544\uB3C4 \uC2AC\uB86F\uB2F9
+      \uCD5C\uB300 1\uD68C \uBC1C\uB3D9\uD55C\uB2E4. \uAE30\uBCF8 \uD589\uB3D9\uC73C\uB85C
+      \uC0AC\uB9DD\uD55C \uC720\uB2DB\uC740 \uBC1C\uB3D9\uD558\uC9C0 \uC54A\uB294\uB2E4.
+      \uD50C\uB808\uC774\uC5B4 \uBC18\uACA9 \uC5F0\uCD9C \uD6C4 \uC801 \uBC18\uACA9
+      \uC5F0\uCD9C\uC744 \uC7AC\uC0DD\uD558\uACE0 \uC591\uCE21 \uBC18\uACA9 \uD53C\uD574\uB97C
+      \uB3D9\uC2DC\uC5D0 \uC801\uC6A9\uD55C\uB2E4. \uD655\uC815\uB41C \uBC18\uACA9\uC740
+      \uB2E4\uB978 \uBC18\uACA9 \uD53C\uD574\uB85C \uC0AC\uB9DD\uD574\uB3C4 \uD568\uAED8
+      \uC801\uC6A9\uD55C\uB2E4. \uBC18\uACA9 \uD53C\uD574, \uCD9C\uD608 \uBC0F \uB514\uBC84\uD504
+      \uD53C\uD574\uB85C\uB294 \uBC1C\uB3D9\uD558\uC9C0 \uC54A\uB294\uB2E4. \uD6A8\uACFC
+      \uC885\uB958\uC640 \uBC94\uC704\uB294 \uCE74\uB4DC\uBCC4 \uC815\uC758\uB97C
+      \uB530\uB974\uBA70, \uBC94\uC704\uB294 \uBC18\uACA9 \uC2DC \uC790\uC2E0\uC758
+      \uC704\uCE58\uC640 \uC608\uC57D \uBC29\uD5A5\uC744 \uAE30\uC900\uC73C\uB85C
+      \uD310\uC815\uD55C\uB2E4."
+    triggerTiming: "\uC591\uCE21 \uAE30\uBCF8 \uD589\uB3D9 \uC644\uB8CC \uD6C4 /
+      \uC2AC\uB86F \uC885\uB8CC \uCC98\uB9AC \uC804"
+    parameters: "\uC5C6\uC74C (\uD6A8\uACFC\uC640 \uBC94\uC704\uB294 \uCE74\uB4DC\uBCC4
+      \uC815\uC758)"
+    textColor: '#FFBA47'
   statuses:
   - id: stun
     name: "\uAE30\uC808"
@@ -327,3 +512,9 @@ MonoBehaviour:
     keywordId: stun
     stackRule: add
     countUnit: actionSlot
+  - id: bleed
+    name: "\uCD9C\uD608"
+    category: "\uB514\uBC84\uD504"
+    keywordId: bleed
+    stackRule: add
+    countUnit: stack

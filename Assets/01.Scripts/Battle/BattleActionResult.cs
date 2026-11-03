@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 namespace DuelHero.Battle
 {
-    public enum BattleActionKind { Movement, CardExecuted, ExecutionBlocked, TurnStarted, TurnEnded, Damage, GuardApplied, GuardExpired, BattleEnded }
+    public enum BattleActionKind { Movement, CardExecuted, ExecutionBlocked, TurnStarted, TurnEnded, Damage, GuardApplied, GuardExpired, BattleEnded, StatusDamage, CounterTriggered }
     public enum BattleActionOutcome { Success, BoundaryBlocked, UnsupportedEffect, NoTarget, CellFull, ObstacleBlocked }
     public interface IBattleActionSource
     {

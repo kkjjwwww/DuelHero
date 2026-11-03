@@ -2416,6 +2416,7 @@ GameObject:
   - component: {fileID: 185798876}
   - component: {fileID: 185798877}
   - component: {fileID: 185798878}
+  - component: {fileID: 185798879}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -2423,6 +2424,24 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &185798879
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 185798871}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2b659e991b8884a4689f8cc2e9349335, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Units.UnitJumpPresentation
+  sprites: {fileID: 185798877}
+  motionRoot: {fileID: 14030444}
+  takeoffDuration: 0.1
+  flightDuration: 0.3
+  landingDuration: 0.1
+  jumpHeight: 0.3
 --- !u!212 &185798872
 SpriteRenderer:
   serializedVersion: 2
@@ -9039,6 +9058,8 @@ MonoBehaviour:
   presentation: {fileID: 1243114852}
   playerAttackPresentation: {fileID: 185798878}
   enemyAttackPresentation: {fileID: 2024972216}
+  playerJumpPresentation: {fileID: 185798879}
+  unitVisualPlacement: {fileID: 910000004}
   slotDelay: 0.4
   enemyCardRevealDuration: 0.4
   postRevealDelay: 0.5
@@ -13088,7 +13109,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6965a6a86f6522345976197a05a98832, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Cards.PlayerDeck
-  database: {fileID: 11400000, guid: c7ef5d4e09c030144b6a820c990be87e, type: 2}
+  database: {fileID: 11400000, guid: b38eb9bf764792848bf05096af2f0d8d, type: 2}
 --- !u!114 &1243114847
 MonoBehaviour:
   m_ObjectHideFlags: 0

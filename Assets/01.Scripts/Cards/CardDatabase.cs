@@ -11,6 +11,9 @@ namespace DuelHero.Cards
     {
         public string id, cardId, effectType, targetType;
         public string statusId, triggerEffectId;
+        public string triggerTiming;
+        public int statusMultiplier;
+        public bool IsCounter => triggerTiming == "counter";
         public int resolutionOrder, value, durationSlots;
         public Vector2Int[] rangeOffsets;
     }
@@ -29,7 +32,7 @@ namespace DuelHero.Cards
         public string ResolvedDescription(Func<CardEffectDefinition, int, string> formatValue = null,
             Func<int, string> formatCooldown = null)
         {
-            return Regex.Replace(description, @"\[\{cooldownTurns\}턴\]|\{cooldownTurns\}|\{effect(\d+)\.(value|durationSlots)\}", match =>
+            return Regex.Replace(description, @"\[\{cooldownTurns\}턴\]|\{cooldownTurns\}|\{effect(\d+)\.(value|durationSlots|statusMultiplier)\}", match =>
             {
                 if (match.Value == "{cooldownTurns}") return EffectiveCooldownTurns.ToString();
                 if (match.Value == "[{cooldownTurns}턴]")
@@ -42,6 +45,7 @@ namespace DuelHero.Cards
                     throw new InvalidOperationException($"{id}: invalid description placeholder {match.Value}");
                 var effect = effects[index];
                 if (match.Groups[2].Value == "durationSlots") return effect.durationSlots.ToString();
+                if (match.Groups[2].Value == "statusMultiplier") return effect.statusMultiplier.ToString();
                 return formatValue != null ? formatValue(effect, effect.value) : effect.value.ToString();
             });
         }
@@ -53,6 +57,8 @@ namespace DuelHero.Cards
     public class KeywordDefinition
     {
         public string id, name, description, resolutionRule, triggerTiming, parameters;
+        public string textColor;
+        public string TextColor => string.IsNullOrWhiteSpace(textColor) ? "#FFBA47" : textColor;
     }
 
     [Serializable]

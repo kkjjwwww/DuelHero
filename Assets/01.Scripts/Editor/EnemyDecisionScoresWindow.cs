@@ -46,6 +46,9 @@ public sealed class EnemyDecisionScoresWindow : EditorWindow
             return;
         }
         EditorGUILayout.LabelField($"{source.name} · 라운드 {displayedTrace.Round} · 판단 시드 {displayedTrace.DecisionSeed}", EditorStyles.boldLabel);
+        var style = displayedTrace.Style;
+        string styleName = style.Kind == EnemyDecisionStyle.Attack ? "공격" : style.Kind == EnemyDecisionStyle.Maneuver ? "기동" : "정비";
+        EditorGUILayout.LabelField($"라운드 성향: {styleName} · 피해/공격기회 ×{style.Attack:F2} · 접근/이탈 ×{style.Maneuver:F2} · 에너지/비용부담/위험 ×{style.Preparation:F2}");
         EditorGUILayout.HelpBox("총점 = 피해 + 공격 기회·접근 + 에너지 + 이탈 − 비용 부담 − 위험 − 무효 행동. 위험·이탈·무효 감점은 누적이며 슬롯 안에서 비교합니다. " +
             "●는 추첨 후보, ▶는 실제 선택입니다. 허용 점수 차이 안의 상위 후보 중 균등 확률로 선택합니다. " +
             "비용 부족·쿨다운·예약 중·이미 선택한 카드는 평가 대상에서 제외됩니다.", MessageType.None);

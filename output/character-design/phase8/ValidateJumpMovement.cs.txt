@@ -1,0 +1,40 @@
+var flags=System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic;
+System.Action<object,string,object> set=(o,n,v)=>o.GetType().GetField(n,flags).SetValue(o,v);
+System.Action<object,string> call=(o,n)=>o.GetType().GetMethod(n,flags).Invoke(o,null);
+int checks=0;System.Action<bool,string> require=(ok,n)=>{if(!ok)throw new System.Exception(n);checks++;};
+var reports=new System.Collections.Generic.List<object>();var names=new[]{"right","left","up","down","blocked","partial","enter_shared","leave_shared","cancel","obstacle"};
+foreach(var name in names){var scene=UnityEditor.SceneManagement.EditorSceneManager.OpenScene("Assets/00.Scenes/BattleScene.unity",UnityEditor.SceneManagement.OpenSceneMode.Additive);var stack=new System.Collections.Generic.Stack<System.Collections.IEnumerator>();DuelHero.Units.UnitJumpPresentation jump=null;
+try{
+ GridMovement player=null,enemy=null;DuelHero.Battle.UnitVisualPlacement place=null;DuelHero.Battle.CardEffectExecutor effects=null;DuelHero.Battle.BattleTurnController turn=null;
+ foreach(var root in scene.GetRootGameObjects()){foreach(var m in root.GetComponentsInChildren<GridMovement>(true)){if(m.name=="Player")player=m;if(m.name=="Enemy")enemy=m;}var p=root.GetComponentInChildren<DuelHero.Battle.UnitVisualPlacement>(true);if(p!=null)place=p;var e=root.GetComponentInChildren<DuelHero.Battle.CardEffectExecutor>(true);if(e!=null)effects=e;var t=root.GetComponentInChildren<DuelHero.Battle.BattleTurnController>(true);if(t!=null)turn=t;}
+ jump=player.GetComponent<DuelHero.Units.UnitJumpPresentation>();var sprites=player.GetComponent<DuelHero.Units.UnitSpritePresenter>();var motionRoot=player.transform.Find("PlacementRoot/MotionRoot");
+ var start=new UnityEngine.Vector2Int(name=="left"?2:name=="partial"||name=="leave_shared"?1:0,name=="up"?0:2);
+ var direction=name=="left"||name=="blocked"||name=="partial"||name=="leave_shared"?UnityEngine.Vector2Int.left:name=="up"?UnityEngine.Vector2Int.up:name=="down"?UnityEngine.Vector2Int.down:UnityEngine.Vector2Int.right;
+ if(name=="obstacle"){foreach(var cell in player.Grid.GetComponentsInChildren<DuelHero.Battle.GridCell>())if(cell.Coordinate==new UnityEngine.Vector2Int(1,2))set(cell,"terrain",DuelHero.Battle.GridTerrain.LowObstacle);player.Grid.Invalidate();} int steps=name=="partial"?3:name=="enter_shared"||name=="leave_shared"||name=="blocked"?1:2;
+ int expected=name=="blocked"||name=="obstacle"?0:name=="partial"||name=="enter_shared"||name=="leave_shared"||name=="cancel"?1:2;
+ set(player,"gridPosition",start);set(enemy,"gridPosition",new UnityEngine.Vector2Int(name=="enter_shared"||name=="leave_shared"?1:5,2));call(player,"UpdateWorldPosition");call(enemy,"UpdateWorldPosition");call(place,"Awake");call(place,"OnDisable");call(place,"OnEnable");place.Refresh();
+ int moved=0,failed=0;player.ActionResolved+=r=>{if(r.Kind==DuelHero.Battle.BattleActionKind.Movement){if(r.Outcome==DuelHero.Battle.BattleActionOutcome.Success)moved++;else failed++;}};
+ var card=new DuelHero.Cards.CardDefinition{id="test_jump",effects=new[]{new DuelHero.Cards.CardEffectDefinition{effectType="move",targetType="자신",value=steps,rangeOffsets=new[]{direction}}}};
+ var before=jump.MotionWorldPosition;bool wasPlaying=false;int jumps=0;bool cancelled=false;
+ stack.Push(effects.ExecutePreparationAnimated("player_dummy_001",card,1,jump,place));
+ for(int step=0;step<300&&stack.Count>0;step++){
+  var top=stack.Peek();bool more=top.MoveNext();
+  if(jump.IsPlaying&&!wasPlaying){jumps++;wasPlaying=true;require((jump.MotionWorldPosition-before).sqrMagnitude<.00000001f,"Continuous takeoff / "+name);require(sprites.CurrentPose==DuelHero.Units.UnitPose.JumpGround,"Takeoff pose / "+name);}
+  if(!jump.IsPlaying&&wasPlaying){wasPlaying=false;require(sprites.CurrentPose==DuelHero.Units.UnitPose.Idle,"Idle between steps / "+name);before=jump.MotionWorldPosition;}
+  var tween=jump.GetType().GetField("motion",flags).GetValue(jump) as DG.Tweening.Tween;
+  if(tween!=null&&DG.Tweening.TweenExtensions.IsActive(tween)&&!DG.Tweening.TweenExtensions.IsComplete(tween)){
+   DG.Tweening.TweenExtensions.Goto(tween,.15f,false);require(sprites.CurrentPose==DuelHero.Units.UnitPose.JumpAir,"Air pose / "+name);
+   if(name=="cancel"){call(turn,"OnDisable");require(!jump.IsPlaying&&sprites.CurrentPose==DuelHero.Units.UnitPose.Idle&&motionRoot.localPosition==UnityEngine.Vector3.zero,"Controller interruption restores jump");DG.Tweening.TweenExtensions.Complete(tween,false);cancelled=true;break;}
+   DG.Tweening.TweenExtensions.Complete(tween,false);
+  }
+  if(!more){var d=top as System.IDisposable;if(d!=null)d.Dispose();stack.Pop();continue;}
+  var nested=top.Current as System.Collections.IEnumerator;if(nested!=null)stack.Push(nested);
+ }
+ require(cancelled||stack.Count==0,"Movement coroutine completes / "+name);
+ require(moved==expected&&jumps==expected,"One jump per successful step / "+name);
+ require(player.GridPosition==start+direction*expected,"Final cell / "+name);
+ require(failed==(name=="blocked"||name=="partial"||name=="obstacle"?1:0),"Blocked movement / "+name);
+ require(!jump.IsPlaying&&sprites.CurrentPose==DuelHero.Units.UnitPose.Idle,"Final idle / "+name);
+ reports.Add(new{name=name,moves=moved,jumps=jumps,blocked=failed,cell=player.GridPosition.ToString()});call(place,"OnDisable");
+}finally{if(jump!=null)jump.Cancel();foreach(var item in stack){var d=item as System.IDisposable;if(d!=null)d.Dispose();}UnityEditor.SceneManagement.EditorSceneManager.CloseScene(scene,true);}}
+return new{checks=checks,cases=reports,mode="Editor integration, waits stepped manually."};

@@ -1,2 +1,3 @@
 "id","name","category","keywordId","stackRule","countUnit"
 "stun","기절","디버프","stun","add","actionSlot"
+"bleed","출혈","디버프","bleed","add","stack"

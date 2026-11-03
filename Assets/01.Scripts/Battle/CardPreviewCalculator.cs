@@ -104,7 +104,7 @@ namespace DuelHero.Battle
                 {
                     energy = afterCost;
                     // Matches BattleTurnController: all preparation, then damage from the final position.
-                    foreach (var effect in card.effects.OrderBy(e => e.resolutionOrder))
+                    foreach (var effect in card.effects.Where(e => !e.IsCounter).OrderBy(e => e.resolutionOrder))
                     {
                         if (effect.effectType == "move")
                         {

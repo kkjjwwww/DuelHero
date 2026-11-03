@@ -10,6 +10,22 @@ namespace DuelHero.Units
         public int Energy { get; private set; }
         public int MaxEnergy { get; private set; }
         public int Stun { get; private set; }
+        public int Bleed { get; private set; }
+        public void ApplyBleed(int amount)
+        {
+            Validate(amount);
+            Bleed = checked(Bleed + amount);
+            Changed?.Invoke();
+        }
+        public int TickBleed()
+        {
+            if (Health <= 0 || Bleed <= 0) return 0;
+            int damage = Math.Min(Health, Bleed);
+            Health -= damage;
+            Bleed--;
+            Changed?.Invoke();
+            return damage;
+        }
         public void ApplyStun(int amount)
         {
             Validate(amount);

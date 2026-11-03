@@ -14,6 +14,7 @@ namespace DuelHero.Battle
         public GridMap Map { get; private set; }
         internal int TargetHealth { get; private set; }
         internal int TotalEffectiveDamage { get; private set; }
+        private int targetBleed;
         private GuardState actorGuard, targetGuard;
         internal int GuardAmount => actorGuard.Reduction;
         internal int PreviewGuard { get; private set; }
@@ -37,7 +38,7 @@ namespace DuelHero.Battle
             for (int i = 0; i < action.Effects.Length; i++)
             {
                 var effect = action.Effects[i];
-                if (effect.effectType == "energyRestore") Energy += Math.Min(effect.value, MaxEnergy - Energy);
+                if (effect.effectType == "energyRestore" && !effect.IsCounter) Energy += Math.Min(effect.value, MaxEnergy - Energy);
             }
         }
 
@@ -46,6 +47,7 @@ namespace DuelHero.Battle
             Position = context.State.Position; Energy = context.State.Energy;
             MaxEnergy = context.State.MaxEnergy; Map = context.State.Map;
             TargetHealth = context.TargetUnit.Health; TotalEffectiveDamage = 0;
+            targetBleed = context.TargetUnit.Bleed;
             actorGuard ??= new GuardState(); targetGuard ??= new GuardState();
             actorGuard.Reset(context.Actor.GuardEffects); targetGuard.Reset(context.TargetUnit.GuardEffects);
         }
@@ -54,6 +56,7 @@ namespace DuelHero.Battle
         {
             Position = source.Position; Energy = source.Energy; MaxEnergy = source.MaxEnergy; Map = source.Map;
             TargetHealth = source.TargetHealth; TotalEffectiveDamage = source.TotalEffectiveDamage;
+            targetBleed = source.targetBleed;
         }
 
         // Value-only candidate preview. With the currently supported effects, all damage targets
@@ -64,11 +67,13 @@ namespace DuelHero.Battle
             Apply(action);
             long guard = source.GuardAmount;
             for (int i = 0; i < action.Effects.Length; i++)
-                if (action.Effects[i].effectType == "guard") guard += action.Effects[i].value;
+                if (action.Effects[i].effectType == "guard" && !action.Effects[i].IsCounter) guard += action.Effects[i].value;
             PreviewGuard = (int)Math.Min(int.MaxValue, guard);
-            int raw = action.RawDamage(Position, context.Target);
+            int raw = action.RawDamage(Position, context.Target, targetBleed);
             int damage = Math.Min(TargetHealth, Math.Max(0, raw - source.targetGuard.Reduction));
             TargetHealth -= damage; TotalEffectiveDamage += damage;
+            targetBleed += action.AppliedBleed(Position, context.Target);
+            TickTargetBleed();
             return raw;
         }
 
@@ -84,25 +89,37 @@ namespace DuelHero.Battle
             for (int i = 0; i < prepared.Effects.Length; i++)
             {
                 var effect = prepared.Effects[i];
-                if (effect.effectType == "guard") actorGuard.Apply(effect.value, effect.durationSlots);
+                if (effect.effectType == "guard" && !effect.IsCounter) actorGuard.Apply(effect.value, effect.durationSlots);
             }
             int raw = 0, absorbed = 0, effective = 0;
             for (int i = 0; i < prepared.Effects.Length; i++)
             {
                 var effect = prepared.Effects[i];
-                if (effect.effectType != "damage" || !prepared.Hits(effect, Position, context.Target)) continue;
-                raw += effect.value;
-                int damage = targetGuard.ReduceDamage(effect.value);
-                absorbed += effect.value - damage;
+                if (effect.effectType != "damage" || effect.IsCounter || !prepared.Hits(effect, Position, context.Target)) continue;
+                int value = effect.value + (effect.statusId == "bleed" ? targetBleed * effect.statusMultiplier : 0);
+                raw += value;
+                int damage = targetGuard.ReduceDamage(value);
+                absorbed += value - damage;
                 int dealt = Math.Min(TargetHealth, damage);
                 effective += dealt; TargetHealth -= dealt;
             }
+            targetBleed += prepared.AppliedBleed(Position, context.Target);
+            int bleedRaw = TargetHealth > 0 ? targetBleed : 0;
+            int bleedDamage = TickTargetBleed();
+            raw += bleedRaw; effective += bleedDamage;
             int guardDuring = actorGuard.Reduction;
-            actorGuard.EndSlot(); targetGuard.EndSlot(); TotalEffectiveDamage += effective;
+            actorGuard.EndSlot(); targetGuard.EndSlot(); TotalEffectiveDamage += effective - bleedDamage;
             return new EnemyActionSimulation(slot, action, positionBefore, Position,
                 energyBefore, energyBefore - prepared.EnergyCost, Energy,
                 raw, absorbed, effective, healthBefore, TargetHealth, guardBefore, guardDuring, actorGuard.Reduction,
                 targetGuardBefore, targetGuard.Reduction);
+        }
+        private int TickTargetBleed()
+        {
+            if (TargetHealth <= 0 || targetBleed <= 0) return 0;
+            int damage = Math.Min(TargetHealth, targetBleed);
+            TargetHealth -= damage; targetBleed--; TotalEffectiveDamage += damage;
+            return damage;
         }
 
         // Baseline model: the target stays at its public position and takes no new actions.

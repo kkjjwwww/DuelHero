@@ -13,7 +13,7 @@ public static class StunValidation
     private const BindingFlags Private = BindingFlags.NonPublic | BindingFlags.Instance;
     private static void Set(object target, string field, object value) => target.GetType().GetField(field, Private).SetValue(target, value);
     private static void Check(bool condition, string message) { if (!condition) throw new Exception("Stun validation: " + message); }
-    private sealed class Fixture : IDisposable
+    internal sealed class Fixture : IDisposable
     {
         public readonly GameObject Root = new GameObject("StunValidation");
         public UnitStats Player, Enemy;

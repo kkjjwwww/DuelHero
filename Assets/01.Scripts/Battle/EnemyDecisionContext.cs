@@ -13,6 +13,7 @@ namespace DuelHero.Battle
         public Vector2Int Target { get; }
         public int Round { get; }
         public uint DecisionSeed { get; }
+        public EnemyDecisionStyle Style { get; }
         public EnemyUnitSnapshot Actor { get; }
         public EnemyUnitSnapshot TargetUnit { get; }
         private readonly Dictionary<(CardDefinition, Vector2Int), EnemyPreparedAction> prepared = new();
@@ -30,6 +31,7 @@ namespace DuelHero.Battle
             Cards = System.Array.AsReadOnly(cards.ToArray()); State = state; Target = target; Round = round;
             Actor = actor; TargetUnit = targetUnit;
             DecisionSeed = decisionSeed;
+            Style = EnemyDecisionRandom.Style(decisionSeed);
             // Snapshot only definition/cooldown/energy, never private reservation state.
             if (targetCards != null)
             {
@@ -47,12 +49,12 @@ namespace DuelHero.Battle
                         for (int e = 0; e < action.Effects.Length; e++)
                         {
                             var effect = action.Effects[e];
-                            if (effect.effectType != "damage") continue;
+                            if (effect.effectType != "damage" || effect.IsCounter) continue;
                             for (int o = 0; o < effect.rangeOffsets.Length; o++)
                             {
                                 var cell = action.AttackCell(origin, effect.rangeOffsets[o]);
                                 if (!state.Map.CanEnter(cell)) continue;
-                                int damage = action.RawDamage(origin, cell);
+                                int damage = action.RawDamage(origin, cell, actor.Bleed);
                                 if (damage > RiskAt(cell)) risks[cell] = damage;
                             }
                         }

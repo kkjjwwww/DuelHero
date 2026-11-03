@@ -126,7 +126,7 @@ namespace DuelHero.Cards
                 linkedKeywords.TryGetValue(match.Groups[1].Value, out var keyword)
                     ? keyword.id == CooldownLinkId
                         ? $"<link=\"{keyword.id}\"><color=#999999>[{card.EffectiveCooldownTurns}턴]</color></link>"
-                        : $"<link=\"{keyword.id}\"><color=#FFBA47>[{keyword.name}]</color></link>"
+                        : $"<link=\"{keyword.id}\"><color={keyword.TextColor}>[{keyword.name}]</color></link>"
                     : match.Value);
             if (keywordHover == null) keywordHover = descriptionLabel.GetComponent<KeywordHoverLink>();
             keywordHover.Initialize(this, descriptionLabel, linkedKeywords.Values);

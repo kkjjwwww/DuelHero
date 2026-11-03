@@ -1,0 +1,200 @@
+{
+  "validationMode": "Unity Editor integration: IEnumerator waits stepped manually; Tweens advanced explicitly. Real-time Play Mode feel not measured.",
+  "movement": {
+    "checks": 98,
+    "cases": [
+      {
+        "name": "right",
+        "moves": 2,
+        "jumps": 2,
+        "blocked": 0,
+        "cell": "(2, 2)"
+      },
+      {
+        "name": "left",
+        "moves": 2,
+        "jumps": 2,
+        "blocked": 0,
+        "cell": "(0, 2)"
+      },
+      {
+        "name": "up",
+        "moves": 2,
+        "jumps": 2,
+        "blocked": 0,
+        "cell": "(0, 2)"
+      },
+      {
+        "name": "down",
+        "moves": 2,
+        "jumps": 2,
+        "blocked": 0,
+        "cell": "(0, 0)"
+      },
+      {
+        "name": "blocked",
+        "moves": 0,
+        "jumps": 0,
+        "blocked": 1,
+        "cell": "(0, 2)"
+      },
+      {
+        "name": "partial",
+        "moves": 1,
+        "jumps": 1,
+        "blocked": 1,
+        "cell": "(0, 2)"
+      },
+      {
+        "name": "enter_shared",
+        "moves": 1,
+        "jumps": 1,
+        "blocked": 0,
+        "cell": "(1, 2)"
+      },
+      {
+        "name": "leave_shared",
+        "moves": 1,
+        "jumps": 1,
+        "blocked": 0,
+        "cell": "(0, 2)"
+      },
+      {
+        "name": "cancel",
+        "moves": 1,
+        "jumps": 1,
+        "blocked": 0,
+        "cell": "(1, 2)"
+      },
+      {
+        "name": "obstacle",
+        "moves": 0,
+        "jumps": 0,
+        "blocked": 1,
+        "cell": "(0, 2)"
+      }
+    ],
+    "mode": "Editor integration, waits stepped manually."
+  },
+  "combat": {
+    "checks": 817,
+    "scenarios": [
+      {
+        "name": "both",
+        "trace": [
+          "reveal",
+          "player_start",
+          "player_idle",
+          "enemy_start",
+          "enemy_end",
+          "damage:player_dummy_001",
+          "damage:enemy_dummy_001"
+        ],
+        "playerHealth": 90,
+        "enemyHealth": 90,
+        "outcome": "Running"
+      },
+      {
+        "name": "player_only",
+        "trace": [
+          "reveal",
+          "player_start",
+          "player_idle",
+          "damage:player_dummy_001"
+        ],
+        "playerHealth": 100,
+        "enemyHealth": 90,
+        "outcome": "Running"
+      },
+      {
+        "name": "enemy_only",
+        "trace": [
+          "reveal",
+          "enemy_start",
+          "enemy_end",
+          "damage:enemy_dummy_001"
+        ],
+        "playerHealth": 90,
+        "enemyHealth": 100,
+        "outcome": "Running"
+      },
+      {
+        "name": "neither",
+        "trace": [
+          "reveal"
+        ],
+        "playerHealth": 100,
+        "enemyHealth": 100,
+        "outcome": "Running"
+      },
+      {
+        "name": "miss",
+        "trace": [
+          "reveal",
+          "player_start",
+          "player_idle",
+          "enemy_start",
+          "enemy_end",
+          "damage:player_dummy_001",
+          "damage:enemy_dummy_001"
+        ],
+        "playerHealth": 100,
+        "enemyHealth": 100,
+        "outcome": "Running"
+      },
+      {
+        "name": "lethal_both",
+        "trace": [
+          "reveal",
+          "player_start",
+          "player_idle",
+          "enemy_start",
+          "enemy_end",
+          "damage:player_dummy_001",
+          "damage:enemy_dummy_001"
+        ],
+        "playerHealth": 0,
+        "enemyHealth": 0,
+        "outcome": "Defeat"
+      },
+      {
+        "name": "move_attack",
+        "trace": [
+          "reveal",
+          "jump",
+          "land_idle",
+          "player_start",
+          "player_idle",
+          "enemy_start",
+          "enemy_end",
+          "damage:player_dummy_001",
+          "damage:enemy_dummy_001"
+        ],
+        "playerHealth": 90,
+        "enemyHealth": 90,
+        "outcome": "Running"
+      },
+      {
+        "name": "guard",
+        "trace": [
+          "reveal",
+          "player_start",
+          "player_idle",
+          "damage:player_dummy_001"
+        ],
+        "playerHealth": 100,
+        "enemyHealth": 94,
+        "outcome": "Running"
+      },
+      {
+        "name": "stun_move",
+        "trace": [
+          "reveal"
+        ],
+        "playerHealth": 100,
+        "enemyHealth": 100,
+        "outcome": "Running"
+      }
+    ]
+  }
+}

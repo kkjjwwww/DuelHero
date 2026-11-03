@@ -19,6 +19,8 @@ namespace DuelHero.Battle
         [SerializeField] private BattlePresentation presentation;
         [SerializeField] private UnitAttackPresentation playerAttackPresentation;
         [SerializeField] private UnitAttackPresentation enemyAttackPresentation;
+        [SerializeField] private UnitJumpPresentation playerJumpPresentation;
+        [SerializeField] private UnitVisualPlacement unitVisualPlacement;
         public bool IsInputLocked => (playerQueue != null && playerQueue.IsExecuting) ||
             (presentation != null && presentation.IsActive);
         [SerializeField, Min(0.01f)] private float slotDelay = 0.4f;
@@ -153,9 +155,9 @@ namespace DuelHero.Battle
         }
         private IEnumerator Execute(CardDefinition[] playerCards, CardDefinition[] enemyCards)
         {
-            CancelAttackPresentations();
+            CancelUnitPresentations();
             try { yield return ExecuteSlots(playerCards, enemyCards); }
-            finally { CancelAttackPresentations(); }
+            finally { CancelUnitPresentations(); }
         }
         private IEnumerator ExecuteSlots(CardDefinition[] playerCards, CardDefinition[] enemyCards)
         {
@@ -184,7 +186,8 @@ namespace DuelHero.Battle
                 playerStats.TrySpendEnergy(pc?.energyCost ?? 0); enemyStats.TrySpendEnergy(ec?.energyCost ?? 0);
                 if (pc != null && !StunCard.IsStun(pc)) Publish(BattleActionKind.CardExecuted, playerId, pc.id);
                 if (ec != null && !StunCard.IsStun(ec)) Publish(BattleActionKind.CardExecuted, enemyId, ec.id);
-                effects.ExecutePreparation(playerId, pc, round);
+                yield return effects.ExecutePreparationAnimated(playerId, pc, round,
+                    playerJumpPresentation, unitVisualPlacement);
                 var enemyPath = new List<Vector2Int> { enemyMovement.GridPosition };
                 void RecordMovement(BattleActionResult result)
                 {
@@ -209,6 +212,33 @@ namespace DuelHero.Battle
                 enemyExecutions[slot] = new ExecutedCardPreview(enemyPath,
                     damage.AttackCells.TryGetValue(enemyId, out var cells) ? cells : Array.Empty<Vector2Int>());
                 combatEffects.ApplyDamageBatch(damage);
+                // Only direct hits from the base actions arm counters. Determine both survivors
+                // before either counter animation or damage; the counter batch never re-arms them.
+                bool playerCounter = CanCounter(playerId, pc, playerStats, damage);
+                bool enemyCounter = CanCounter(enemyId, ec, enemyStats, damage);
+                if (playerCounter || enemyCounter)
+                {
+                    if (playerCounter)
+                    {
+                        Publish(BattleActionKind.CounterTriggered, playerId, pc.id);
+                        if (playerAttackPresentation != null) yield return playerAttackPresentation.PlayAttack();
+                    }
+                    if (enemyCounter)
+                    {
+                        Publish(BattleActionKind.CounterTriggered, enemyId, ec.id);
+                        if (enemyAttackPresentation != null) yield return enemyAttackPresentation.PlayAttack();
+                    }
+                    var counterAttacks = new List<CombatEffectResolver.AttackRequest>();
+                    if (playerCounter) { effects.ExecutePreparation(playerId, pc, round, true); AddAttacks(counterAttacks, playerId, pc, true); }
+                    if (enemyCounter) { effects.ExecutePreparation(enemyId, ec, round, true); AddAttacks(counterAttacks, enemyId, ec, true); }
+                    var counters = combatEffects.CalculateDamageBatch(counterAttacks, round);
+                    if (counters.AttackCells.TryGetValue(enemyId, out var counterCells))
+                    {
+                        enemyExecutions[slot] = new ExecutedCardPreview(enemyPath,
+                            damage.AttackCells.TryGetValue(enemyId, out var baseCells) ? baseCells.Concat(counterCells).Distinct() : counterCells);
+                    }
+                    combatEffects.ApplyDamageBatch(counters);
+                }
                 playerQueue.BlockFutureSlots(slot + 1, playerStats.Stun);
                 for (int future = slot + 1; future < Math.Min(3, slot + 1 + enemyStats.Stun); future++)
                 {
@@ -305,27 +335,31 @@ namespace DuelHero.Battle
             if (PrepareEnemyPlan()) Publish(BattleActionKind.TurnStarted);
             PhaseChanged?.Invoke();
         }
-        private static void AddAttacks(List<CombatEffectResolver.AttackRequest> requests, string actor, CardDefinition card)
+        private static bool CanCounter(string actor, CardDefinition card, UnitStats stats, CombatEffectResolver.DamageBatch directDamage) =>
+            stats.Health > 0 && card != null && card.effects.Any(effect => effect.IsCounter) && directDamage.WasHit(actor);
+
+        private static void AddAttacks(List<CombatEffectResolver.AttackRequest> requests, string actor, CardDefinition card, bool counter = false)
         {
             if (card == null) return;
             foreach (var effect in card.effects.OrderBy(e => e.resolutionOrder))
             {
-                if (effect.effectType == "damage") requests.Add(new CombatEffectResolver.AttackRequest(actor, card, effect));
+                if (effect.effectType == "damage" && effect.IsCounter == counter) requests.Add(new CombatEffectResolver.AttackRequest(actor, card, effect));
 
             }
         }
         public static BattleOutcome EvaluateOutcome(int playerHealth, int enemyHealth) => playerHealth <= 0
             ? BattleOutcome.Defeat
             : enemyHealth <= 0 ? BattleOutcome.Victory : BattleOutcome.Running;
-        private void CancelAttackPresentations()
+        private void CancelUnitPresentations()
         {
             if (playerAttackPresentation != null) playerAttackPresentation.Cancel();
             if (enemyAttackPresentation != null) enemyAttackPresentation.Cancel();
+            if (playerJumpPresentation != null) playerJumpPresentation.Cancel();
         }
         private void OnDisable()
         {
             StopAllCoroutines();
-            CancelAttackPresentations();
+            CancelUnitPresentations();
             FinishExecution();
         }
     }

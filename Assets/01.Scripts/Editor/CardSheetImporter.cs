@@ -126,7 +126,8 @@ public static class CardSheetImporter
         var keywords = keywordRows.Select(r => new KeywordDefinition
         {
             id = Required(r, "id"), name = Required(r, "name"), description = Required(r, "description"),
-            resolutionRule = Required(r, "resolutionRule"), triggerTiming = Required(r, "triggerTiming"), parameters = r["parameters"]
+            resolutionRule = Required(r, "resolutionRule"), triggerTiming = Required(r, "triggerTiming"), parameters = r["parameters"],
+            textColor = r.TryGetValue("textColor", out var color) ? color : string.Empty
         }).ToArray();
         var effects = effectRows.Select(r => new CardEffectDefinition
         {
@@ -134,29 +135,42 @@ public static class CardSheetImporter
             resolutionOrder = Number(r, "resolutionOrder"), value = Number(r, "value"), durationSlots = Number(r, "durationSlots"),
             statusId = r.TryGetValue("statusId", out var status) ? status : string.Empty,
             triggerEffectId = r.TryGetValue("triggerEffectId", out var trigger) ? trigger : string.Empty,
+            triggerTiming = r.TryGetValue("triggerTiming", out var timing) ? timing : string.Empty,
+            statusMultiplier = r.TryGetValue("statusMultiplier", out var multiplier) && !string.IsNullOrWhiteSpace(multiplier) ? Number(r, "statusMultiplier") : 0,
             rangeOffsets = Offsets(r["rangeOffsets"]), targetType = Required(r, "targetType")
         }).ToArray();
         if (cards.Length == 0) throw new FormatException("No card rows with an id.");
         Unique(cards.Select(c => c.id), "card id"); Unique(effects.Select(e => e.id), "effect id"); Unique(keywords.Select(k => k.id), "keyword id");
         var cardIds = new HashSet<string>(cards.Select(c => c.id));
         var keywordIds = new HashSet<string>(keywords.Select(k => k.id));
+        foreach (var keyword in keywords)
+            if (!string.IsNullOrWhiteSpace(keyword.textColor) && !Regex.IsMatch(keyword.textColor, @"^#[0-9a-fA-F]{6}$"))
+                throw new FormatException($"{keyword.id}: textColor must be #RRGGBB");
         Unique(statuses.Select(s => s.id), "status id");
         foreach (var status in statuses)
-            if (status.id != "stun" || status.category != "디버프" || status.stackRule != "add" || status.countUnit != "actionSlot" || !keywordIds.Contains(status.keywordId))
+            if ((status.id != "stun" && status.id != "bleed") || status.category != "디버프" || status.stackRule != "add" ||
+                status.countUnit != (status.id == "bleed" ? "stack" : "actionSlot") || !keywordIds.Contains(status.keywordId))
                 throw new FormatException($"{status.id}: unsupported status definition or missing keyword");
         foreach (var effect in effects)
         {
             if (!cardIds.Contains(effect.cardId)) throw new FormatException($"{effect.id}: missing cardId {effect.cardId}");
-            if (!new[] { "move", "guard", "damage", "energyRestore", "applyStatus" }.Contains(effect.effectType))
+            if (!new[] { "move", "guard", "damage", "energyRestore", "healthRestore", "applyStatus" }.Contains(effect.effectType))
                 throw new FormatException($"{effect.id}: unsupported effectType {effect.effectType}");
             if (effect.resolutionOrder < 1) throw new FormatException($"{effect.id}: resolutionOrder must be positive");
+            if (!string.IsNullOrEmpty(effect.triggerTiming) && effect.triggerTiming != "action" && !effect.IsCounter)
+                throw new FormatException($"{effect.id}: unsupported triggerTiming");
+            if (effect.IsCounter && (effect.effectType == "move" || effect.effectType == "applyStatus" ||
+                !cards.Single(c => c.id == effect.cardId).keywordIds.Contains("counter")))
+                throw new FormatException($"{effect.id}: unsupported counter effect or missing keyword");
+            if (effect.statusMultiplier > 0 && (effect.effectType != "damage" || effect.statusId != "bleed" || !statuses.Any(s => s.id == "bleed")))
+                throw new FormatException($"{effect.id}: unsupported status scaling");
             if (effect.effectType == "move" && (effect.rangeOffsets.Length != 1 ||
                 Math.Abs((long)effect.rangeOffsets[0].x) + Math.Abs((long)effect.rangeOffsets[0].y) != 1))
                 throw new FormatException($"{effect.id}: move requires one cardinal unit offset");
             if (!new[] { "자신", "적" }.Contains(effect.targetType)) throw new FormatException($"{effect.id}: invalid targetType");
             if (effect.effectType == "applyStatus" && (effect.value <= 0 || effect.durationSlots != 0 || effect.targetType != "적" ||
                 !statuses.Any(s => s.id == effect.statusId) || !effects.Any(hit => hit.cardId == effect.cardId && hit.id == effect.triggerEffectId &&
-                    hit.effectType == "damage" && hit.resolutionOrder < effect.resolutionOrder)))
+                    hit.effectType == "damage" && hit.resolutionOrder < effect.resolutionOrder && hit.IsCounter == effect.IsCounter)))
                 throw new FormatException($"{effect.id}: invalid status or hit-effect reference");
         }
         foreach (var card in cards)

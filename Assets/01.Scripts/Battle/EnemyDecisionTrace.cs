@@ -76,8 +76,10 @@ namespace DuelHero.Battle
         private readonly List<Slot> slots = new List<Slot>(3);
         public int Round { get; }
         public uint DecisionSeed { get; }
+        public EnemyRoundStyle Style { get; }
         public IReadOnlyList<Slot> Slots { get; }
-        internal EnemyDecisionTrace(int round, uint seed) { Round = round; DecisionSeed = seed; Slots = slots.AsReadOnly(); }
+        internal EnemyDecisionTrace(int round, uint seed, EnemyRoundStyle style)
+        { Round = round; DecisionSeed = seed; Style = style; Slots = slots.AsReadOnly(); }
         internal Slot BeginSlot(int index, EnemyPlanningState state)
         {
             var slot = new Slot(index, state); slots.Add(slot); return slot;

@@ -81,7 +81,7 @@ internal static class EnemyPlanSimulationValidation
             resolver.ActionResolved += result => { if (result.Kind == BattleActionKind.Damage) damageEvents.Add(result); };
             var context = Context(cards, grid.Map, actor.movement.GridPosition, target.movement.GridPosition,
                 actor.stats, target.stats);
-            var plan = utility ? new UtilityPlanSelector(new UtilityAiSettings { randomCandidateCount = 1 }).Select(context) :
+            var plan = utility ? new UtilityPlanSelector(new UtilityAiSettings { attackStyleMultiplier = 1, maneuverStyleMultiplier = 1, preparationStyleMultiplier = 1, randomCandidateCount = 1 }).Select(context) :
                 cards.Select(c => new EnemyPlannedAction(c, direction)).ToArray();
             int[] available = cards.Select(c => c.AvailableFromRound).ToArray();
             var definitionsBefore = DefinitionSignature(cards);
@@ -264,7 +264,7 @@ internal static class EnemyPlanSimulationValidation
     public static void RunUtility()
     {
         Run();
-        var settings = new UtilityAiSettings { randomCandidateCount = 1 };
+        var settings = new UtilityAiSettings { attackStyleMultiplier = 1, maneuverStyleMultiplier = 1, preparationStyleMultiplier = 1, randomCandidateCount = 1 };
         var selector = new UtilityPlanSelector(settings);
         var evaluator = new EnemyPlanEvaluator(settings);
         Require(evaluator.AttackCostPenalty(20, 20) > evaluator.AttackCostPenalty(20, 100) &&
@@ -343,6 +343,7 @@ internal static class EnemyPlanSimulationValidation
         ValidateDecisionScores();
         ValidateRandomSelection();
         ValidateTacticalScores();
+        ValidateRoundStyles();
         ProfileUtility();
         Debug.Log($"슬롯별 유틸리티 AI 검증 통과: 이동·회복 후 공격, 저에너지 감점, 동점 순서·카드 제한·반복 대기, 경계·실행 대조 {cases}개.");
     }
@@ -353,7 +354,7 @@ internal static class EnemyPlanSimulationValidation
         UtilityPlanSelector.CaptureScores = true;
         try
         {
-            var selector = new UtilityPlanSelector(new UtilityAiSettings { randomCandidateCount = 1 });
+            var selector = new UtilityPlanSelector(new UtilityAiSettings { attackStyleMultiplier = 1, maneuverStyleMultiplier = 1, preparationStyleMultiplier = 1, randomCandidateCount = 1 });
             var map = Map();
             var origin = new Vector2Int(2, 2);
             var target = new Vector2Int(3, 2);
@@ -438,6 +439,112 @@ internal static class EnemyPlanSimulationValidation
         finally { UtilityPlanSelector.CaptureScores = recording; }
     }
 
+    private static void ValidateRoundStyles()
+    {
+        bool recording = UtilityPlanSelector.CaptureScores;
+        UtilityPlanSelector.CaptureScores = true;
+        try
+        {
+            var settings = new UtilityAiSettings { randomCandidateCount = 1 };
+            var selector = new UtilityPlanSelector(settings);
+            var neutral = new UtilityPlanSelector(new UtilityAiSettings { randomCandidateCount = 1,
+                attackStyleMultiplier = 1, maneuverStyleMultiplier = 1, preparationStyleMultiplier = 1 });
+            var map = Map();
+            var origin = new Vector2Int(2, 2); var target = new Vector2Int(3, 2);
+            var cards = new[] { Attack("attack", 0, 5), Restore(60), Move("move", 1) };
+            var styles = new HashSet<EnemyDecisionStyle>();
+            var actions = new HashSet<string>();
+            for (uint seed = 0; seed < 96; seed++)
+            {
+                var context = Context(cards, map, origin, target, 10, 100, seed);
+                var first = selector.Select(context);
+                var trace = selector.LastTrace;
+                var style = trace.Style;
+                styles.Add(style.Kind); actions.Add(first[0].Card.Definition.id);
+                int cumulativeDamage = 0;
+                foreach (var slot in trace.Slots)
+                {
+                    foreach (var row in slot.Candidates)
+                        Require(Math.Abs(row.Score.Damage - (cumulativeDamage + row.EffectiveDamage) * style.Attack) < .0001f &&
+                            Math.Abs(row.Score.Energy - row.EnergyAfter * .03f * style.Preparation) < .0001f,
+                            "라운드 도중 성향 배율이 달라졌습니다.");
+                    if (slot.SelectedIndex >= 0) cumulativeDamage += slot.Candidates[slot.SelectedIndex].EffectiveDamage;
+                }
+                Require(style.Kind == context.Style && style.Kind == selector.LastStyle.Kind,
+                    "문맥·선택기·디버그 성향 불일치");
+                neutral.Select(context);
+                foreach (var row in trace.Slots[0].Candidates)
+                {
+                    var baseline = neutral.LastTrace.Slots[0].Candidates.First(c => c.CardIndex == row.CardIndex && c.Direction == row.Direction);
+                    Require(Math.Abs(row.Score.Damage - baseline.Score.Damage * style.Attack) < .0001f &&
+                        Math.Abs(row.Score.Energy - baseline.Score.Energy * style.Preparation) < .0001f &&
+                        row.Score.IneffectivePenalty == baseline.Score.IneffectivePenalty, "성향 배율 또는 무효 감점 적용 오류");
+                    if (row.PositionAfter == origin)
+                        Require(Math.Abs(row.Score.Opportunity - baseline.Score.Opportunity * style.Attack) < .0001f,
+                            "다음 공격 기회 배율 오류");
+                }
+                UtilityPlanSelector.CaptureScores = false;
+                var replay = selector.Select(context);
+                Require(first.Select(a => a.Card.Definition.id + a.Direction).SequenceEqual(
+                    replay.Select(a => a.Card.Definition.id + a.Direction)), "성향·계획 재현 또는 기록 독립성 오류");
+                UtilityPlanSelector.CaptureScores = true;
+                Require(settings.damageWeight == 1 && settings.opportunityWeight == 3 && settings.remainingEnergyWeight == .03f &&
+                    settings.attackStyleMultiplier == 1.2f && trace.Style.Attack == style.Attack,
+                    "성향 선택이 기본 가중치 또는 기존 기록을 변경했습니다.");
+            }
+            Require(styles.Count == 3 && actions.Contains("attack") && actions.Contains("restore"),
+                "동일 공개 상황에서 성향에 따른 공격·회복 변화가 없습니다.");
+
+            var priced = new[] { Attack("priced", 10, 20), Move("approach", 1), Attack("spare", 10, 20) };
+            for (uint seed = 0; seed < 24; seed++)
+            {
+                var context = Context(priced, map, origin, new Vector2Int(4, 2), 30, 100, seed);
+                selector.Select(context); neutral.Select(context);
+                var style = selector.LastTrace.Style;
+                foreach (var row in selector.LastTrace.Slots[0].Candidates)
+                {
+                    var baseline = neutral.LastTrace.Slots[0].Candidates.First(c => c.CardIndex == row.CardIndex && c.Direction == row.Direction);
+                    Require(Math.Abs(row.Score.CostPenalty - baseline.Score.CostPenalty * style.Preparation) < .0001f,
+                        "공격 비용 부담 배율 오류");
+                    if (row.CardId == "approach" && row.Direction == Vector2Int.right)
+                        Require(Math.Abs(row.Score.Opportunity - (3 * style.Attack + 1.5f * style.Maneuver)) < .0001f,
+                            "공격 기회와 위치 접근의 배율을 분리하지 않았습니다.");
+                }
+            }
+
+            // Separate component checks use the same seed/context so candidate lottery cannot explain differences.
+            var threat = Attack("threat", 0, 20);
+            var variants = new[] { Guard(), Restore(0), Move("escape", 1) };
+            for (uint seed = 0; seed < 32; seed++)
+            {
+                var context = new EnemyDecisionContext(variants, new EnemyPlanningState(origin, 0, 100, map), target, 1,
+                    new EnemyUnitSnapshot(100, 100, 0, 100, Array.Empty<GuardEffectSnapshot>()),
+                    new EnemyUnitSnapshot(100, 100, 50, 100, Array.Empty<GuardEffectSnapshot>()), seed, new[] { threat });
+                selector.Select(context); neutral.Select(context);
+                var style = selector.LastTrace.Style;
+                var picked = selector.LastTrace.Slots[0];
+                Require(picked.Candidates[picked.SelectedIndex].CardId == "escape" &&
+                    picked.Candidates[picked.SelectedIndex].Score.RiskDamage == 0,
+                    "성향 때문에 안전 이탈 대신 무효 행동을 선택했습니다.");
+                foreach (var row in selector.LastTrace.Slots[0].Candidates)
+                {
+                    var baseline = neutral.LastTrace.Slots[0].Candidates.First(c => c.CardIndex == row.CardIndex && c.Direction == row.Direction);
+                    Require(Math.Abs(row.Score.RiskPenalty - baseline.Score.RiskPenalty * style.Preparation) < .0001f &&
+                        Math.Abs(row.Score.Escape - baseline.Score.Escape * style.Maneuver) < .0001f,
+                        "위험·방어·이탈 배율 오류");
+                }
+            }
+            var dominant = new[] { Attack("dominant", 0, 80), Attack("weak", 0, 5), Restore(20) };
+            for (uint seed = 0; seed < 24; seed++)
+                Require(selector.Select(Context(dominant, map, origin, target, 100, 100, seed))[0].Card == dominant[0],
+                    "성향이 확실히 유리한 공격을 포기했습니다.");
+            Reject(() => new UtilityPlanSelector(new UtilityAiSettings { attackStyleMultiplier = float.NaN }).Select(
+                Context(cards, map, origin, target, 10, 100)));
+            Debug.Log("라운드 성향 검증 통과: 96개 시드·3성향, 동일 상황 공격/회복 변화, 배율·재현·기록 독립·기본 설정 불변.");
+        }
+        finally { UtilityPlanSelector.CaptureScores = recording; }
+    }
+
     private static void ProfileUtility()
     {
         bool recording = UtilityPlanSelector.CaptureScores;
@@ -453,7 +560,7 @@ internal static class EnemyPlanSimulationValidation
         {
             var cards = new[] { Move("move", 1), Attack("attack", 10, 7), Restore(20) };
             var context = Context(cards, Map(), new Vector2Int(2, 2), new Vector2Int(4, 2), 30, 100);
-            var selector = new UtilityPlanSelector(new UtilityAiSettings());
+            var selector = new UtilityPlanSelector(new UtilityAiSettings { attackStyleMultiplier = 1, maneuverStyleMultiplier = 1, preparationStyleMultiplier = 1 });
             UtilityPlanSelector.CaptureScores = false;
             var plain = selector.Select(context);
             Require(selector.LastTrace == null, "기록을 껐는데 후보 기록을 생성했습니다.");
@@ -503,7 +610,7 @@ internal static class EnemyPlanSimulationValidation
             var map = Map();
             var cards = Enumerable.Range(0, 5).Select(i => Attack("equal" + i, 0, 20)).ToArray();
             foreach (var card in cards) card.Definition.effects[0].rangeOffsets = Directions;
-            var selector = new UtilityPlanSelector(new UtilityAiSettings());
+            var selector = new UtilityPlanSelector(new UtilityAiSettings { attackStyleMultiplier = 1, maneuverStyleMultiplier = 1, preparationStyleMultiplier = 1 });
             var observed = new HashSet<int>();
             for (uint seed = 0; seed < 64; seed++)
             {
@@ -544,8 +651,7 @@ internal static class EnemyPlanSimulationValidation
             UtilityPlanSelector.CaptureScores = true;
             var decisive = new[] { Attack("best", 0, 50), Attack("weak", 0, 5) };
             var negative = new[] { Attack("negativeA", 10, 5), Attack("negativeB", 10, 5), Attack("outside", 11, 5) };
-            var negativeSelector = new UtilityPlanSelector(new UtilityAiSettings
-                { damageWeight = 0, opportunityWeight = 0, remainingEnergyWeight = 0, attackCostWeight = 1 });
+            var negativeSelector = new UtilityPlanSelector(new UtilityAiSettings { attackStyleMultiplier = 1, maneuverStyleMultiplier = 1, preparationStyleMultiplier = 1, damageWeight = 0, opportunityWeight = 0, remainingEnergyWeight = 0, attackCostWeight = 1 });
             for (uint seed = 0; seed < 32; seed++)
             {
                 var context = Context(decisive, map, new Vector2Int(2, 2), new Vector2Int(3, 2), 100, 100, seed);
@@ -557,8 +663,7 @@ internal static class EnemyPlanSimulationValidation
                 Require(slot.BestScore < 0 && Math.Abs(slot.MinimumScore - (-1.1f)) < .0001f &&
                     slot.EligibleIndices.All(i => slot.Candidates[i].Score.Total >= slot.MinimumScore), "음수 점수 경계 오류");
             }
-            var zero = new UtilityPlanSelector(new UtilityAiSettings
-                { damageWeight = 0, opportunityWeight = 0, remainingEnergyWeight = 0, attackCostWeight = 0 });
+            var zero = new UtilityPlanSelector(new UtilityAiSettings { attackStyleMultiplier = 1, maneuverStyleMultiplier = 1, preparationStyleMultiplier = 1, damageWeight = 0, opportunityWeight = 0, remainingEnergyWeight = 0, attackCostWeight = 0 });
             zero.Select(Context(cards, map, new Vector2Int(2, 2), new Vector2Int(3, 2), 100, 100, 42));
             Require(zero.LastTrace.Slots[0].BestScore == 0 && zero.LastTrace.Slots[0].EligibleIndices.Count == 3,
                 "0점 후보 추첨 오류");
@@ -571,9 +676,9 @@ internal static class EnemyPlanSimulationValidation
                 combined != (uint)seedMethod.Invoke(null, new object[] { 123u, "nodeB", "enemyA", 1 }) &&
                 combined != (uint)seedMethod.Invoke(null, new object[] { 123u, "nodeA", "enemyB", 1 }) &&
                 combined != (uint)seedMethod.Invoke(null, new object[] { 123u, "nodeA", "enemyA", 2 }), "판단 시드 구성 요소 누락");
-            Reject(() => new UtilityPlanSelector(new UtilityAiSettings { randomCandidateCount = 0 }).Select(
+            Reject(() => new UtilityPlanSelector(new UtilityAiSettings { attackStyleMultiplier = 1, maneuverStyleMultiplier = 1, preparationStyleMultiplier = 1, randomCandidateCount = 0 }).Select(
                 Context(cards, map, new Vector2Int(2, 2), new Vector2Int(3, 2), 100, 100)));
-            Reject(() => new UtilityPlanSelector(new UtilityAiSettings { randomScoreTolerance = float.NaN }).Select(
+            Reject(() => new UtilityPlanSelector(new UtilityAiSettings { attackStyleMultiplier = 1, maneuverStyleMultiplier = 1, preparationStyleMultiplier = 1, randomScoreTolerance = float.NaN }).Select(
                 Context(cards, map, new Vector2Int(2, 2), new Vector2Int(3, 2), 100, 100)));
 #if UNITY_6000_0_OR_NEWER
             Require(globalRandom.Equals(UnityEngine.Random.state), "Unity 전역 난수 상태를 변경했습니다.");

@@ -41,8 +41,8 @@ namespace DuelHero.Battle
             else Effects = original.Effects;
             for (int i = 0; i < Effects.Length; i++)
             {
-                if (Effects[i].effectType == "damage") HasDamage = true;
-                if (Effects[i].effectType == "move") hasMove = true;
+                if (Effects[i].effectType == "damage" && !Effects[i].IsCounter) HasDamage = true;
+                if (Effects[i].effectType == "move" && !Effects[i].IsCounter) hasMove = true;
             }
         }
 
@@ -52,7 +52,7 @@ namespace DuelHero.Battle
             for (int i = 0; i < Effects.Length; i++)
             {
                 var effect = Effects[i];
-                if (effect.effectType == "move" && CardEffectExecutor.TryDirection(effect.rangeOffsets, out var direction))
+                if (!effect.IsCounter && effect.effectType == "move" && CardEffectExecutor.TryDirection(effect.rangeOffsets, out var direction))
                     origin = map.Move(origin, CardDirectionRules.Rotate(direction, this.direction), effect.value);
             }
             return origin;
@@ -64,22 +64,33 @@ namespace DuelHero.Battle
             for (int i = 0; i < Effects.Length; i++)
             {
                 var effect = Effects[i];
-                if (effect.effectType == "damage" && Hits(effect, origin, target))
+                if (effect.effectType == "damage" && !effect.IsCounter && Hits(effect, origin, target))
                     return true;
             }
             return false;
         }
 
-        internal int RawDamage(Vector2Int origin, Vector2Int target)
+        internal int RawDamage(Vector2Int origin, Vector2Int target, int bleed = 0)
         {
             int damage = 0;
             if (!HasDamage) return damage;
             for (int i = 0; i < Effects.Length; i++)
             {
                 var effect = Effects[i];
-                if (effect.effectType == "damage" && Hits(effect, origin, target)) damage += effect.value;
+                if (effect.effectType == "damage" && !effect.IsCounter && Hits(effect, origin, target))
+                    damage += effect.value + (effect.statusId == "bleed" ? bleed * effect.statusMultiplier : 0);
             }
             return damage;
+        }
+        internal int AppliedBleed(Vector2Int origin, Vector2Int target)
+        {
+            int amount = 0;
+            foreach (var effect in Effects)
+                if (effect.effectType == "applyStatus" && effect.statusId == "bleed" && !effect.IsCounter)
+                    foreach (var hit in Effects)
+                        if (hit.id == effect.triggerEffectId && hit.effectType == "damage" && !hit.IsCounter && Hits(hit, origin, target))
+                            amount += effect.value;
+            return amount;
         }
 
         internal bool Hits(CardEffectDefinition effect, Vector2Int origin, Vector2Int target)

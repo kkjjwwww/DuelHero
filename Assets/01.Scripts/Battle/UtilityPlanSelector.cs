@@ -41,6 +41,7 @@ namespace DuelHero.Battle
         public EnemySearchMetrics LastSearch { get; private set; }
         public static bool CaptureScores { get; set; }
         public EnemyDecisionTrace LastTrace { get; private set; }
+        public EnemyRoundStyle LastStyle { get; private set; }
 
         public UtilityPlanSelector(UtilityAiSettings settings)
         { this.settings = settings ?? throw new ArgumentNullException(nameof(settings)); evaluator = new EnemyPlanEvaluator(settings); }
@@ -49,9 +50,11 @@ namespace DuelHero.Battle
         {
             long bytes = GC.GetAllocatedBytesForCurrentThread(), start = Stopwatch.GetTimestamp();
             settings.Validate();
+            var style = new EnemyRoundStyle(context.Style, settings);
+            LastStyle = style;
             state.Reset(context);
             LastTrace = null;
-            var trace = CaptureScores ? new EnemyDecisionTrace(context.Round, context.DecisionSeed) : null;
+            var trace = CaptureScores ? new EnemyDecisionTrace(context.Round, context.DecisionSeed, style) : null;
             var random = new EnemyDecisionRandom(context.DecisionSeed);
             var plan = new EnemyPlannedAction[3];
             int previews = 0, applied = 0;
@@ -88,9 +91,9 @@ namespace DuelHero.Battle
                         var prepared = context.GetPreparedAction(action);
                         preview.CopyValuesFrom(state);
                         int rawDamage = preview.PreviewAction(context, prepared, state);
-                        float burden = attackBurden + (prepared.HasDamage ? evaluator.AttackCostPenalty(prepared.EnergyCost, state.Energy) : 0);
+                        float burden = attackBurden + (prepared.HasDamage ? evaluator.AttackCostPenalty(prepared.EnergyCost, state.Energy) * style.Preparation : 0);
                         plan[slot] = action;
-                        var score = evaluator.Evaluate(context, preview, plan, slot + 1, burden, state, escape, prefix);
+                        var score = evaluator.Evaluate(context, preview, plan, slot + 1, burden, state, escape, prefix, style);
                         debugSlot?.Add(cardIndex, card, action.Direction, state, preview, score);
                         previews++;
                         Retain(new Candidate { Action = action, Score = score.Total, Burden = burden, Breakdown = score,
@@ -144,7 +147,7 @@ namespace DuelHero.Battle
         {
             int risk = state.TargetHealth > 0 ? context.RiskAt(state.Position) : 0;
             return new EnemyActionScore(prefix.Damage, prefix.Opportunity, prefix.Energy, prefix.CostPenalty,
-                prefix.RiskPenalty + settings.riskWeight * Math.Max(0, risk - state.GuardAmount),
+                prefix.RiskPenalty + settings.riskWeight * LastStyle.Preparation * Math.Max(0, risk - state.GuardAmount),
                 prefix.Escape, prefix.IneffectivePenalty);
         }
 

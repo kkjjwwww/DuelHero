@@ -23,7 +23,7 @@ namespace DuelHero.Cards
         public void Show(KeywordDefinition keyword, Vector2 screenPosition)
         {
             ShowText(string.IsNullOrEmpty(keyword.name) ? keyword.description
-                : $"<color=#FFBA47>[{keyword.name}]</color>\n{keyword.description}", screenPosition);
+                : $"<color={keyword.TextColor}>[{keyword.name}]</color>\n{keyword.description}", screenPosition);
         }
         public void Show(string text, Vector2 screenPosition) => ShowText(text, screenPosition);
         private void ShowText(string text, Vector2 screenPosition)

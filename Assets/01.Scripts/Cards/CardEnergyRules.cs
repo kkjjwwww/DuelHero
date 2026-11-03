@@ -32,7 +32,7 @@ namespace DuelHero.Cards
                 if (card.effects == null) continue;
                 foreach (var effect in card.effects.OrderBy(e => e.resolutionOrder))
                 {
-                    if (effect.effectType != "energyRestore") continue;
+                    if (effect.effectType != "energyRestore" || effect.IsCounter) continue;
                     if (effect.value < 0 || effect.targetType != "자신") { reason = "지원하지 않는 에너지 회복 효과입니다."; return false; }
                     energy = Restore(energy, effect.value, maxEnergy);
                 }
