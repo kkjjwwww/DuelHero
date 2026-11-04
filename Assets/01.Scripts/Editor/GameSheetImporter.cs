@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
 
-public enum SheetSyncScope { All, Cards, Units, BattleConfig }
+public enum SheetSyncScope { All, Cards, Units, BattleConfig, Economy }
 
 // Coordinates validation and saving; individual importers own their schemas.
 public static class GameSheetImporter
@@ -28,6 +28,9 @@ public static class GameSheetImporter
             foreach (var file in await GoogleSheetSyncClient.DownloadCsvAsync(id, new[] { "Player Data", "Enemy Data" }, new[] { "Players.csv", "Enemies.csv" }, "id", cancellation)) output.Add(file.Key, file.Value);
         if (scope == SheetSyncScope.All || scope == SheetSyncScope.BattleConfig)
             foreach (var file in await GoogleSheetSyncClient.DownloadCsvAsync(id, new[] { "BattleConfig" }, new[] { "BattleConfig.csv" }, "key", cancellation)) output.Add(file.Key, file.Value);
+        if (scope == SheetSyncScope.All || scope == SheetSyncScope.Economy)
+            foreach (var file in await GoogleSheetSyncClient.DownloadCsvAsync(id, EconomyConfigSheetImporter.Names,
+                EconomyConfigSheetImporter.Names.Select(n => n + ".csv").ToArray(), "key", cancellation)) output.Add(file.Key, file.Value);
         return output;
     }
     public static string ImportFolder(string folder, string spreadsheetId, SheetSyncScope scope)
@@ -53,6 +56,12 @@ public static class GameSheetImporter
                 assets.Add(new Pending { Path = BattleConfigSheetImporter.DatabasePath, Parsed = BattleConfigSheetImporter.ParseFolder(folder) });
                 files.Add(Path.Combine(BattleConfigSheetImporter.SourceFolder, "BattleConfig.csv"), Path.Combine(folder, "BattleConfig.csv"));
             }
+            if (scope == SheetSyncScope.All || scope == SheetSyncScope.Economy)
+                foreach (string name in EconomyConfigSheetImporter.Names)
+                {
+                    assets.Add(new Pending { Path = EconomyConfigSheetImporter.AssetPath(name), Parsed = EconomyConfigSheetImporter.Parse(folder, name) });
+                    files.Add(Path.Combine(EconomyConfigSheetImporter.SourceFolder, name + ".csv"), Path.Combine(folder, name + ".csv"));
+                }
             if (assets.Count == 0) throw new ArgumentOutOfRangeException(nameof(scope));
             var incoming = files.ToDictionary(file => file.Key, file => File.ReadAllBytes(file.Value));
             foreach (var file in files) previousFiles.Add(file.Key, File.Exists(file.Key) ? File.ReadAllBytes(file.Key) : null);
@@ -110,7 +119,7 @@ public static class GameSheetImporter
                 throw;
             }
             if (scope == SheetSyncScope.All || scope == SheetSyncScope.Cards) CardSheetImporter.RefreshDeckViews();
-            return string.Join(" / ", assets.Select(asset => asset.Parsed is DuelHero.Data.UnitDatabase units ? $"플레이어 {units.players.Length}, 적 {units.enemies.Length}" : asset.Parsed is DuelHero.Cards.CardDatabase cards ? $"카드 {cards.cards.Length}" : "전투 설정 갱신"));
+            return string.Join(" / ", assets.Select(asset => asset.Parsed is DuelHero.Data.UnitDatabase units ? $"플레이어 {units.players.Length}, 적 {units.enemies.Length}" : asset.Parsed is DuelHero.Cards.CardDatabase cards ? $"카드 {cards.cards.Length}" : asset.Parsed.GetType().Name + " 갱신"));
         }
         finally { foreach (var asset in assets) if (asset.Parsed != null) UnityEngine.Object.DestroyImmediate(asset.Parsed); }
     }

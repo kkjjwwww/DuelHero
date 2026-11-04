@@ -8,10 +8,10 @@ namespace DuelHero.Run
         public static RunSession Current { get; private set; }
 
         public static RunSession StartNew(uint seed, int startingHealth, int maxHealth,
-            IEnumerable<string> startingCardIds)
+            IEnumerable<string> startingCardIds, int startingGold = 0)
         {
             // Construct first so invalid input cannot discard the current run.
-            var session = new RunSession(seed, startingHealth, maxHealth, startingCardIds);
+            var session = new RunSession(seed, startingHealth, maxHealth, startingCardIds, startingGold);
             Current = session;
             return session;
         }

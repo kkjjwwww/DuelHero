@@ -50,6 +50,7 @@ namespace DuelHero.Cards
         private CardFanLayout fanLayout;
         private CachedCard hoveredCard;
         private KeywordTooltip keywordTooltip;
+        private CardRangePreview rangePreview;
         private bool cacheInitialized;
         private bool synchronizing;
         public IReadOnlyList<CardInstance> Deck => deck;
@@ -263,6 +264,12 @@ namespace DuelHero.Cards
         }
         private void HandleFanFocusChanged(CardView view)
         {
+            if (rangePreview != null && hoveredCard != null) rangePreview.Hide(hoveredCard.View);
+            if (view != null)
+            {
+                if (rangePreview == null) rangePreview = CardRangePreview.GetOrCreate(GetComponentInParent<Canvas>().rootCanvas);
+                rangePreview.Show(view);
+            }
             if (keywordTooltip != null) keywordTooltip.Hide();
             if (Application.isPlaying && hoveredCard?.Instance != null) battlePreview?.ClearCard(hoveredCard.Instance);
             hoveredCard = null;

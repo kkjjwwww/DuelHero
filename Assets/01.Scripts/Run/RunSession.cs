@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using DuelHero.Map;
+using DuelHero.Cards;
+using DuelHero.Data;
+using DuelHero.Shop;
 
 namespace DuelHero.Run
 {
@@ -15,16 +18,22 @@ namespace DuelHero.Run
         public RouteMap Map { get; }
         public RouteMapProgress Progress { get; }
         public string PendingBattleNodeId { get; private set; }
+        public string PendingShopNodeId { get; private set; }
+        public int Gold { get; private set; }
+        private ShopOffer[] shopOffers = Array.Empty<ShopOffer>();
+        public IReadOnlyList<ShopOffer> ShopOffers => Array.AsReadOnly(shopOffers);
         public int PlayerHealth { get; private set; }
         public int PlayerMaxHealth { get; }
         public IReadOnlyList<string> CardIds => cardIdsView;
 
-        public RunSession(uint seed, int startingHealth, int maxHealth, IEnumerable<string> startingCardIds)
+        public RunSession(uint seed, int startingHealth, int maxHealth, IEnumerable<string> startingCardIds, int startingGold = 0)
         {
             if (maxHealth <= 0 || startingHealth <= 0 || startingHealth > maxHealth)
                 throw new ArgumentOutOfRangeException(nameof(startingHealth), "런 시작 체력과 최대 체력을 확인해주세요.");
 
             cardIds = CopyCardIds(startingCardIds);
+            if (startingGold < 0) throw new ArgumentOutOfRangeException(nameof(startingGold));
+            Gold = startingGold;
             cardIdsView = cardIds.AsReadOnly();
             PlayerHealth = startingHealth;
             PlayerMaxHealth = maxHealth;
@@ -34,7 +43,7 @@ namespace DuelHero.Run
 
         public bool TryBeginBattle(string nodeId)
         {
-            if (PlayerHealth <= 0 || PendingBattleNodeId != null || !Progress.CanSelect(nodeId)) return false;
+            if (PlayerHealth <= 0 || PendingBattleNodeId != null || PendingShopNodeId != null || !Progress.CanSelect(nodeId)) return false;
             var type = Map.GetNode(nodeId).Type;
             if (type != RouteNodeType.Battle && type != RouteNodeType.Boss) return false;
 
@@ -43,15 +52,18 @@ namespace DuelHero.Run
             return true;
         }
 
-        public bool TryCompleteBattle(int remainingHealth, IEnumerable<string> ownedCardIds)
+        public bool TryCompleteBattle(int remainingHealth, IEnumerable<string> ownedCardIds, int goldReward = 0)
         {
             if (PendingBattleNodeId == null || PlayerHealth <= 0) return false;
             if (remainingHealth <= 0 || remainingHealth > PlayerMaxHealth)
                 throw new ArgumentOutOfRangeException(nameof(remainingHealth), "승리 후 체력은 1 이상, 최대 체력 이하여야 합니다.");
 
             var nextCards = CopyCardIds(ownedCardIds);
+            if (goldReward < 0) throw new ArgumentOutOfRangeException(nameof(goldReward));
+            int nextGold = checked(Gold + goldReward);
             if (!Progress.TrySelect(PendingBattleNodeId)) return false;
             ApplyPlayerState(remainingHealth, nextCards);
+            Gold = nextGold;
             PendingBattleNodeId = null;
             return true;
         }
@@ -61,6 +73,36 @@ namespace DuelHero.Run
             if (nodeId == null || PendingBattleNodeId != nodeId) return false;
             PendingBattleNodeId = null;
             return true;
+        }
+
+        public bool TryBeginShop(string nodeId, IEnumerable<CardDefinition> definitions, ShopConfig config)
+        {
+            if (PlayerHealth <= 0 || PendingBattleNodeId != null || PendingShopNodeId != null || !Progress.CanSelect(nodeId) ||
+                Map.GetNode(nodeId).Type != RouteNodeType.Shop) return false;
+            var offers = ShopOfferSelector.Generate(definitions, config, Map.Seed, nodeId);
+            shopOffers = offers; PendingShopNodeId = nodeId; return true;
+        }
+
+        // Only used when entry failed before the shop scene opened. No purchase is discarded.
+        public bool TryCancelShopEntry(string nodeId)
+        {
+            if (PendingShopNodeId != nodeId || Array.Exists(shopOffers, o => o.Sold)) return false;
+            PendingShopNodeId = null; shopOffers = Array.Empty<ShopOffer>(); return true;
+        }
+
+        public bool TryBuyShopOffer(string nodeId, int index)
+        {
+            if (PlayerHealth <= 0 || nodeId == null || PendingShopNodeId != nodeId || index < 0 || index >= shopOffers.Length) return false;
+            var offer = shopOffers[index];
+            if (offer.Sold || Gold < offer.Price) return false;
+            cardIds.Add(offer.CardId);
+            Gold -= offer.Price; offer.Sold = true; return true;
+        }
+
+        public bool TryCompleteShop(string nodeId)
+        {
+            if (nodeId == null || PendingShopNodeId != nodeId || !Progress.TrySelect(nodeId)) return false;
+            PendingShopNodeId = null; shopOffers = Array.Empty<ShopOffer>(); return true;
         }
 
         public void SavePlayerState(int health, IEnumerable<string> ownedCardIds)

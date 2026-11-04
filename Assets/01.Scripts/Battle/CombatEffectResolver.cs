@@ -29,10 +29,11 @@ namespace DuelHero.Battle
             public readonly string ActorId, CardId;
             public readonly CardEffectDefinition Effect;
             public readonly CardDefinition Card;
+            public readonly IReadOnlyList<Vector2Int> MovementPath;
             public AttackRequest(string actorId, string cardId, CardEffectDefinition effect)
             { ActorId = actorId; CardId = cardId; Effect = effect; }
-            public AttackRequest(string actorId, CardDefinition card, CardEffectDefinition effect)
-                : this(actorId, card.id, effect) { Card = card; }
+            public AttackRequest(string actorId, CardDefinition card, CardEffectDefinition effect, IReadOnlyList<Vector2Int> movementPath = null)
+                : this(actorId, card.id, effect) { Card = card; MovementPath = movementPath; }
         }
         public sealed class DamageBatch
         {
@@ -106,7 +107,7 @@ namespace DuelHero.Battle
                 var actor = units.Single(u => u.id == attack.ActorId);
                 if (actor.stats.Health <= 0 || !actor.stats.gameObject.activeInHierarchy) continue;
 
-                var range = AttackRangeCalculator.Calculate(actor.movement.GridPosition, effect.rangeOffsets);
+                var range = AttackRangeCalculator.Calculate(actor.movement.GridPosition, effect, attack.MovementPath);
                 if (!batch.AttackCells.TryGetValue(attack.ActorId, out var cells))
                     batch.AttackCells[attack.ActorId] = cells = new HashSet<Vector2Int>();
                 foreach (var cell in range)

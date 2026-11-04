@@ -163,7 +163,7 @@ namespace DuelHero.Battle
         private IEnumerator ExecuteSlots(CardDefinition[] playerCards, CardDefinition[] enemyCards)
         {
             if (presentation != null) yield return presentation.Animate(true);
-            combatEffects.TryGetUnit(playerId, out _, out var playerStats);
+            combatEffects.TryGetUnit(playerId, out var playerMovement, out var playerStats);
             combatEffects.TryGetUnit(enemyId, out var enemyMovement, out var enemyStats);
             int round = executionRound;
             for (int slot = 0; slot < 3; slot++)
@@ -187,36 +187,29 @@ namespace DuelHero.Battle
                 playerStats.TrySpendEnergy(pc?.energyCost ?? 0); enemyStats.TrySpendEnergy(ec?.energyCost ?? 0);
                 if (pc != null && !StunCard.IsStun(pc)) Publish(BattleActionKind.CardExecuted, playerId, pc.id);
                 if (ec != null && !StunCard.IsStun(ec)) Publish(BattleActionKind.CardExecuted, enemyId, ec.id);
-                yield return effects.ExecutePreparationAnimated(playerId, pc, round,
-                    playerJumpPresentation, unitVisualPlacement);
+                var playerPath = new List<Vector2Int> { playerMovement.GridPosition };
                 var enemyPath = new List<Vector2Int> { enemyMovement.GridPosition };
-                void RecordMovement(BattleActionResult result)
-                {
-                    if (result.Kind == BattleActionKind.Movement && result.Outcome == BattleActionOutcome.Success)
-                        enemyPath.Add(result.To);
-                }
-                enemyMovement.ActionResolved += RecordMovement;
-                try
-                {
-                    yield return effects.ExecutePreparationAnimated(enemyId, ec, round,
-                        enemyJumpPresentation, unitVisualPlacement);
-                }
-                finally { enemyMovement.ActionResolved -= RecordMovement; }
+                yield return effects.ExecutePreparationAnimated(playerId, pc, round,
+                    playerJumpPresentation, unitVisualPlacement, attack: playerAttackPresentation, movementPath: playerPath);
+                yield return effects.ExecutePreparationAnimated(enemyId, ec, round,
+                    enemyJumpPresentation, unitVisualPlacement, attack: enemyAttackPresentation, movementPath: enemyPath);
 
                 var attacks = new List<CombatEffectResolver.AttackRequest>();
-                AddAttacks(attacks, playerId, pc);
-                AddAttacks(attacks, enemyId, ec);
+                AddAttacks(attacks, playerId, pc, movementPath: playerPath);
+                AddAttacks(attacks, enemyId, ec, movementPath: enemyPath);
 
                 // Each actor returns to idle before the next actor starts. Damage remains simultaneous.
-                if (playerAttackPresentation != null && attacks.Any(a => a.ActorId == playerId))
+                if (playerAttackPresentation != null && !HasDash(pc) && attacks.Any(a => a.ActorId == playerId))
                     yield return playerAttackPresentation.PlayAttack();
-                if (enemyAttackPresentation != null && attacks.Any(a => a.ActorId == enemyId))
+                if (enemyAttackPresentation != null && !HasDash(ec) && attacks.Any(a => a.ActorId == enemyId))
                     yield return enemyAttackPresentation.PlayAttack();
 
                 var damage = combatEffects.CalculateDamageBatch(attacks, round);
                 enemyExecutions[slot] = new ExecutedCardPreview(enemyPath,
                     damage.AttackCells.TryGetValue(enemyId, out var cells) ? cells : Array.Empty<Vector2Int>());
                 combatEffects.ApplyDamageBatch(damage);
+                if (HasDash(pc)) playerAttackPresentation?.Cancel();
+                if (HasDash(ec)) enemyAttackPresentation?.Cancel();
                 effects.CancelPreparationPresentation(playerId);
                 effects.CancelPreparationPresentation(enemyId);
                 // Only direct hits from the base actions arm counters. Determine both survivors
@@ -344,15 +337,17 @@ namespace DuelHero.Battle
             if (PrepareEnemyPlan()) Publish(BattleActionKind.TurnStarted);
             PhaseChanged?.Invoke();
         }
+        private static bool HasDash(CardDefinition card) => card?.effects?.Any(e => e.IsDash) == true;
+
         private static bool CanCounter(string actor, CardDefinition card, UnitStats stats, CombatEffectResolver.DamageBatch directDamage) =>
             stats.Health > 0 && card != null && card.effects.Any(effect => effect.IsCounter) && directDamage.WasHit(actor);
 
-        private static void AddAttacks(List<CombatEffectResolver.AttackRequest> requests, string actor, CardDefinition card, bool counter = false)
+        private static void AddAttacks(List<CombatEffectResolver.AttackRequest> requests, string actor, CardDefinition card, bool counter = false, IReadOnlyList<Vector2Int> movementPath = null)
         {
             if (card == null) return;
             foreach (var effect in card.effects.OrderBy(e => e.resolutionOrder))
             {
-                if (effect.effectType == "damage" && effect.IsCounter == counter) requests.Add(new CombatEffectResolver.AttackRequest(actor, card, effect));
+                if (effect.effectType == "damage" && effect.IsCounter == counter) requests.Add(new CombatEffectResolver.AttackRequest(actor, card, effect, movementPath));
 
             }
         }

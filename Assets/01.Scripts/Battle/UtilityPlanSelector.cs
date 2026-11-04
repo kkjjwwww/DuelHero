@@ -105,7 +105,7 @@ namespace DuelHero.Battle
                         previews++;
                         // A missed attack may still be useful as a preparation card, but
                         // never keep an empty swing merely because other candidates score poorly.
-                        bool missedAttack = prepared.HasDamage && !prepared.CanHit(preview.Position, context.Target);
+                        bool missedAttack = prepared.HasDamage && !prepared.CanHit(preview.Position, context.Target, preview.MovementPath);
                         bool usefulMovement = preview.Position != state.Position && !score.UnproductiveMove;
                         bool usefulGuard = score.BlockedDamage > Math.Min(score.RiskDamage, state.GuardAmount);
                         if (missedAttack && !usefulMovement && preview.Energy <= state.Energy && !usefulGuard)

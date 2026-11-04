@@ -9,6 +9,13 @@ namespace DuelHero.Battle
         [SerializeField] private Text resultLabel;
         [SerializeField] private Button restartButton;
         [SerializeField] private Text actionLabel;
+        [SerializeField] private Text goldRewardLabel;
+        public void ShowGold(int? amount, bool awarded)
+        {
+            if (goldRewardLabel == null) return;
+            goldRewardLabel.gameObject.SetActive(amount.HasValue);
+            goldRewardLabel.text = amount.HasValue ? (awarded ? "획득 골드  +" : "획득 예정 골드  +") + amount.Value : string.Empty;
+        }
         public event Action ActionRequested;
         private void OnEnable()
         {

@@ -30,9 +30,6 @@ namespace DuelHero.Cards
         [SerializeField] private TextMeshProUGUI nameLabel;
         [SerializeField] private TextMeshProUGUI energyLabel;
         [SerializeField] private TextMeshProUGUI descriptionLabel;
-        [SerializeField] private RectTransform descriptionArea;
-        [SerializeField] private RectTransform rangeArea;
-        [SerializeField] private CardRangeGraphic rangeGraphic;
         [SerializeField] private Image typeBadge;
         [SerializeField] private Text cooldownLabel;
         [SerializeField] private CardReservationOutline reservationOutline;
@@ -72,6 +69,7 @@ namespace DuelHero.Cards
         private static readonly string[] ReservationNumbers = { "1", "2", "3" };
         private bool informationMasked;
 
+        public Vector2Int[] RangeOffsets { get; private set; } = Array.Empty<Vector2Int>();
         public Button Button => button;
         public RectTransform VisualRoot => visualRoot;
 
@@ -140,9 +138,7 @@ namespace DuelHero.Cards
                 .SelectMany(effect => effect.rangeOffsets)
                 .Distinct().ToArray();
             bool hasRange = !typeOnly && !selfOnly && range.Length > 0;
-            rangeArea.gameObject.SetActive(hasRange);
-            rangeGraphic.SetOffsets(range);
-            descriptionArea.anchorMin = new Vector2(descriptionArea.anchorMin.x, hasRange ? 0.18f : 0.085f);
+            RangeOffsets = hasRange ? range : Array.Empty<Vector2Int>();
             if (typeOnly)
             {
                 nameLabel.text = energyLabel.text = descriptionLabel.text = "?";

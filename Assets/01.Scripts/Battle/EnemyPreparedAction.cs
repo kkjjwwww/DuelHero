@@ -1,4 +1,5 @@
 using DuelHero.Cards;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace DuelHero.Battle
@@ -15,6 +16,7 @@ namespace DuelHero.Battle
         // materializes rotated effect arrays. Prediction rotates range checks without allocations.
         internal readonly CardEffectDefinition[] Effects;
         public bool HasDamage { get; }
+        internal bool HasPathDamage { get; }
         private readonly bool hasMove;
         internal bool HasMovement => hasMove;
         internal Vector2Int AttackCell(Vector2Int origin, Vector2Int offset) => origin + CardDirectionRules.Rotate(offset, direction);
@@ -42,59 +44,75 @@ namespace DuelHero.Battle
             for (int i = 0; i < Effects.Length; i++)
             {
                 if (Effects[i].effectType == "damage" && !Effects[i].IsCounter) HasDamage = true;
+                if (Effects[i].UsesMovementPath) HasPathDamage = true;
                 if (Effects[i].effectType == "move" && !Effects[i].IsCounter) hasMove = true;
             }
         }
 
-        internal Vector2Int MoveFrom(Vector2Int origin, GridMap map)
+        internal Vector2Int MoveFrom(Vector2Int origin, GridMap map, List<Vector2Int> path = null)
         {
+            path?.Clear(); path?.Add(origin);
             if (!hasMove) return origin;
             for (int i = 0; i < Effects.Length; i++)
             {
                 var effect = Effects[i];
                 if (!effect.IsCounter && effect.effectType == "move" && CardEffectExecutor.TryDirection(effect.rangeOffsets, out var direction))
-                    origin = map.Move(origin, CardDirectionRules.Rotate(direction, this.direction), effect.value);
+                {
+                    var rotated = CardDirectionRules.Rotate(direction, this.direction);
+                    for (int step = 0; step < effect.value; step++)
+                    {
+                        var next = map.Move(origin, rotated, 1);
+                        if (next == origin) break;
+                        origin = next; path?.Add(origin);
+                    }
+                }
             }
             return origin;
         }
 
-        internal bool CanHit(Vector2Int origin, Vector2Int target)
+        internal bool CanHit(Vector2Int origin, Vector2Int target, IReadOnlyList<Vector2Int> path = null)
         {
             if (!HasDamage) return false;
             for (int i = 0; i < Effects.Length; i++)
             {
                 var effect = Effects[i];
-                if (effect.effectType == "damage" && !effect.IsCounter && Hits(effect, origin, target))
+                if (effect.effectType == "damage" && !effect.IsCounter && Hits(effect, origin, target, path))
                     return true;
             }
             return false;
         }
 
-        internal int RawDamage(Vector2Int origin, Vector2Int target, int bleed = 0)
+        internal int RawDamage(Vector2Int origin, Vector2Int target, int bleed = 0, IReadOnlyList<Vector2Int> path = null)
         {
             int damage = 0;
             if (!HasDamage) return damage;
             for (int i = 0; i < Effects.Length; i++)
             {
                 var effect = Effects[i];
-                if (effect.effectType == "damage" && !effect.IsCounter && Hits(effect, origin, target))
+                if (effect.effectType == "damage" && !effect.IsCounter && Hits(effect, origin, target, path))
                     damage += effect.value + (effect.statusId == "bleed" ? bleed * effect.statusMultiplier : 0);
             }
             return damage;
         }
-        internal int AppliedBleed(Vector2Int origin, Vector2Int target)
+        internal int AppliedBleed(Vector2Int origin, Vector2Int target, IReadOnlyList<Vector2Int> path = null)
         {
             int amount = 0;
             foreach (var effect in Effects)
                 if (effect.effectType == "applyStatus" && effect.statusId == "bleed" && !effect.IsCounter)
                     foreach (var hit in Effects)
-                        if (hit.id == effect.triggerEffectId && hit.effectType == "damage" && !hit.IsCounter && Hits(hit, origin, target))
+                        if (hit.id == effect.triggerEffectId && hit.effectType == "damage" && !hit.IsCounter && Hits(hit, origin, target, path))
                             amount += effect.value;
             return amount;
         }
 
-        internal bool Hits(CardEffectDefinition effect, Vector2Int origin, Vector2Int target)
+        internal bool Hits(CardEffectDefinition effect, Vector2Int origin, Vector2Int target, IReadOnlyList<Vector2Int> path = null)
         {
+            if (effect.UsesMovementPath)
+            {
+                if (path == null) throw new System.ArgumentException("경로 공격 평가에 이동 경로가 필요합니다.");
+                for (int i = 0; i < path.Count; i++) if (path[i] == target) return true;
+                return false;
+            }
             var offsets = effect.rangeOffsets;
             // Rotate the target once into the card's source coordinates, rather than
             // rotating every cell of an area attack on every candidate check.

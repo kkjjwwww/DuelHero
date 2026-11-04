@@ -122,7 +122,7 @@ namespace DuelHero.Battle
                             plannedGuard.Apply(effect.value, effect.durationSlots);
                     }
                     foreach (var effect in card.effects.Where(e => e.effectType == "damage"))
-                        foreach (var cell in AttackRangeCalculator.Calculate(position, effect.rangeOffsets))
+                        foreach (var cell in AttackRangeCalculator.Calculate(position, effect, path))
                             if (initial.Map.Contains(cell)) attacks.Add(cell);
                 }
                 // Show the peak planned shield during a slot, not the expired value at turn end.

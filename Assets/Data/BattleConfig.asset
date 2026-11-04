@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: BattleConfig
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Data.BattleConfig
   sourceSpreadsheetId: 1pspfXZtUhTmSc9ZTL1iTzQDeBgvfbb_wqwCNs83EFQE
-  importedAtUtc: 2026-10-23T04:55:09.0568209Z
+  importedAtUtc: 2026-11-04T01:36:11.6596327Z
   hasEnergyRecoveryPerTurn: 1
   energyRecoveryPerTurn: 10

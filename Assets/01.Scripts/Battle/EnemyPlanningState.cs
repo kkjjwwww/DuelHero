@@ -15,6 +15,7 @@ namespace DuelHero.Battle
         internal int TargetHealth { get; private set; }
         internal int TotalEffectiveDamage { get; private set; }
         private int targetBleed;
+        internal readonly List<Vector2Int> MovementPath = new();
         private GuardState actorGuard, targetGuard;
         internal int GuardAmount => actorGuard.Reduction;
         internal int PreviewGuard { get; private set; }
@@ -25,7 +26,7 @@ namespace DuelHero.Battle
         {
             if (action.EnergyCost < 0 || action.EnergyCost > Energy) throw new InvalidOperationException("적 AI 카드 비용이 부족합니다.");
             Energy -= action.EnergyCost;
-            Position = action.MoveFrom(Position, Map);
+            Position = action.MoveFrom(Position, Map, action.HasPathDamage ? MovementPath : null);
             for (int i = 0; i < action.Effects.Length; i++)
             {
                 var effect = action.Effects[i];
@@ -60,10 +61,10 @@ namespace DuelHero.Battle
             for (int i = 0; i < action.Effects.Length; i++)
                 if (action.Effects[i].effectType == "guard" && !action.Effects[i].IsCounter) guard += action.Effects[i].value;
             PreviewGuard = (int)Math.Min(int.MaxValue, guard);
-            int raw = action.RawDamage(Position, context.Target, targetBleed);
+            int raw = action.RawDamage(Position, context.Target, targetBleed, MovementPath);
             int damage = Math.Min(TargetHealth, Math.Max(0, raw - source.targetGuard.Reduction));
             TargetHealth -= damage; TotalEffectiveDamage += damage;
-            targetBleed += action.AppliedBleed(Position, context.Target);
+            targetBleed += action.AppliedBleed(Position, context.Target, MovementPath);
             TickTargetBleed();
             return raw;
         }
@@ -86,7 +87,7 @@ namespace DuelHero.Battle
             for (int i = 0; i < prepared.Effects.Length; i++)
             {
                 var effect = prepared.Effects[i];
-                if (effect.effectType != "damage" || effect.IsCounter || !prepared.Hits(effect, Position, context.Target)) continue;
+                if (effect.effectType != "damage" || effect.IsCounter || !prepared.Hits(effect, Position, context.Target, MovementPath)) continue;
                 int value = effect.value + (effect.statusId == "bleed" ? targetBleed * effect.statusMultiplier : 0);
                 raw += value;
                 int damage = targetGuard.ReduceDamage(value);
@@ -94,7 +95,7 @@ namespace DuelHero.Battle
                 int dealt = Math.Min(TargetHealth, damage);
                 effective += dealt; TargetHealth -= dealt;
             }
-            targetBleed += prepared.AppliedBleed(Position, context.Target);
+            targetBleed += prepared.AppliedBleed(Position, context.Target, MovementPath);
             int bleedRaw = TargetHealth > 0 ? targetBleed : 0;
             int bleedDamage = TickTargetBleed();
             raw += bleedRaw; effective += bleedDamage;

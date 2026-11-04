@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using DuelHero.Cards;
 using DuelHero.Units;
@@ -18,7 +19,7 @@ namespace DuelHero.Battle
             if (card == null) return true;
             if (WaitCard.IsWait(card) || StunCard.IsStun(card)) return card.energyCost == 0 && card.effects != null && card.effects.Length == 0;
             return card.energyCost >= 0 && card.effects != null && card.effects.Length > 0 && card.effects.All(effect =>
-                effect != null && effect.value >= 0 && effect.statusMultiplier >= 0 &&
+                effect != null && SupportsMovementMetadata(card, effect) && effect.value >= 0 && effect.statusMultiplier >= 0 &&
                 (string.IsNullOrEmpty(effect.triggerTiming) || effect.triggerTiming == "action" || effect.IsCounter) &&
                 (!effect.IsCounter || new[] { "damage", "guard", "energyRestore", "healthRestore" }.Contains(effect.effectType)) &&
                 (effect.statusMultiplier == 0 || (effect.effectType == "damage" && effect.statusId == "bleed")) && (effect.effectType switch
@@ -33,15 +34,21 @@ namespace DuelHero.Battle
                     _ => false
                 }));
         }
-        public void ExecutePreparation(string actorId, CardDefinition card, int round, bool counter = false)
+        public static bool SupportsMovementMetadata(CardDefinition card, CardEffectDefinition effect) =>
+            (string.IsNullOrEmpty(effect.movementStyle) || (effect.IsDash && !effect.IsCounter)) &&
+            (string.IsNullOrEmpty(effect.rangeBasis) || (effect.UsesMovementPath && effect.effectType == "damage" && !effect.IsCounter &&
+                card.effects.Any(e => e.effectType == "move" && !e.IsCounter && e.resolutionOrder < effect.resolutionOrder) &&
+                card.effects.Where(e => e.effectType == "move").All(e => e.resolutionOrder < effect.resolutionOrder)));
+        public void ExecutePreparation(string actorId, CardDefinition card, int round, bool counter = false, List<Vector2Int> movementPath = null)
         {
-            var steps = ExecutePreparationSteps(actorId, card, round, counter, null, null, false);
+            var steps = ExecutePreparationSteps(actorId, card, round, counter, null, null, false, null, movementPath);
             try { while (steps.MoveNext()) { } }
             finally { (steps as System.IDisposable)?.Dispose(); }
         }
         public IEnumerator ExecutePreparationAnimated(string actorId, CardDefinition card, int round,
-            UnitJumpPresentation jump, UnitVisualPlacement placement, bool counter = false) =>
-            ExecutePreparationSteps(actorId, card, round, counter, jump, placement, true);
+            UnitJumpPresentation jump, UnitVisualPlacement placement, bool counter = false,
+            UnitAttackPresentation attack = null, List<Vector2Int> movementPath = null) =>
+            ExecutePreparationSteps(actorId, card, round, counter, jump, placement, true, attack, movementPath);
 
         public void CancelPreparationPresentation(string actorId)
         {
@@ -50,22 +57,26 @@ namespace DuelHero.Battle
         }
 
         private IEnumerator ExecutePreparationSteps(string actorId, CardDefinition card, int round, bool counter,
-            UnitJumpPresentation jump, UnitVisualPlacement placement, bool animateSupport)
+            UnitJumpPresentation jump, UnitVisualPlacement placement, bool animateSupport, UnitAttackPresentation attack, List<Vector2Int> movementPath)
         {
             if (card == null) yield break;
             combatEffects.TryGetUnit(actorId, out var movement, out var stats);
             var sprites = animateSupport ? movement.GetComponent<UnitSpritePresenter>() : null;
+            movementPath?.Clear(); movementPath?.Add(movement.GridPosition);
             foreach (var effect in card.effects.Where(e => e.IsCounter == counter).OrderBy(e => e.resolutionOrder))
             {
                 switch (effect.effectType)
                 {
                     case "move":
                         TryDirection(effect.rangeOffsets, out var direction);
+                        bool dash = effect.IsDash && attack != null && attack.isActiveAndEnabled;
+                        Vector3 dashStart = dash ? attack.MotionWorldPosition : Vector3.zero;
                         for (int step = 0; step < effect.value; step++)
                         {
-                            bool animate = jump != null && jump.isActiveAndEnabled;
+                            bool animate = !effect.IsDash && jump != null && jump.isActiveAndEnabled;
                             Vector3 before = animate ? jump.MotionWorldPosition : Vector3.zero;
                             if (!movement.TryMove(direction, card.id, round)) break;
+                            movementPath?.Add(movement.GridPosition);
                             if (animate)
                             {
                                 // Include layout offsets when entering/leaving an occupied cell.
@@ -73,6 +84,11 @@ namespace DuelHero.Battle
                                 yield return jump.PlayJump(jump.MotionWorldPosition - before);
                                 if (!movement.isActiveAndEnabled) yield break;
                             }
+                        }
+                        if (dash)
+                        {
+                            placement?.Refresh();
+                            yield return attack.PlayDash(attack.MotionWorldPosition - dashStart);
                         }
                         break;
                     case "guard": combatEffects.ResolveGuard(actorId, card.id, effect, round); break;

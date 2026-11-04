@@ -246,7 +246,8 @@ namespace DuelHero.Cards
         }
         private void OpenCardList()
         {
-            if (!canInspect || StunCard.IsStun(card)) return;
+            bool typeOnly = Visibility == EnemyCardVisibility.TypeOnly && canInspectTypeOnly;
+            if ((!canInspect && !typeOnly) || StunCard.IsStun(card)) return;
             HideInspection();
             openCardList?.Invoke();
         }

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using DuelHero.Cards;
+using DuelHero.Battle;
 using UnityEditor;
 using UnityEngine;
 
@@ -136,6 +137,8 @@ public static class CardSheetImporter
             statusId = r.TryGetValue("statusId", out var status) ? status : string.Empty,
             triggerEffectId = r.TryGetValue("triggerEffectId", out var trigger) ? trigger : string.Empty,
             triggerTiming = r.TryGetValue("triggerTiming", out var timing) ? timing : string.Empty,
+            movementStyle = r.TryGetValue("movementStyle", out var style) ? style : string.Empty,
+            rangeBasis = r.TryGetValue("rangeBasis", out var basis) ? basis : string.Empty,
             statusMultiplier = r.TryGetValue("statusMultiplier", out var multiplier) && !string.IsNullOrWhiteSpace(multiplier) ? Number(r, "statusMultiplier") : 0,
             rangeOffsets = Offsets(r["rangeOffsets"]), targetType = Required(r, "targetType")
         }).ToArray();
@@ -179,6 +182,8 @@ public static class CardSheetImporter
             foreach (string keyword in card.keywordIds)
                 if (!keywordIds.Contains(keyword)) throw new FormatException($"{card.id}: missing keyword {keyword}");
             card.effects = effects.Where(e => e.cardId == card.id).OrderBy(e => e.resolutionOrder).ToArray();
+            if (!card.effects.All(e => CardEffectExecutor.SupportsMovementMetadata(card, e)))
+                throw new FormatException($"{card.id}: invalid movementStyle or rangeBasis");
             if (card.effects.Length == 0) throw new FormatException($"{card.id}: no effects");
             Unique(card.effects.Select(e => e.resolutionOrder.ToString()), card.id + " effect order");
             if (Regex.IsMatch(card.ResolvedDescription(), @"\{[^}]+\}")) throw new FormatException($"{card.id}: unresolved description placeholder");

@@ -37,7 +37,7 @@ namespace DuelHero.Battle
             // One benefit check for empty actions and movement. Returning toward a firing
             // position is not new progress if this round already visited that position.
             bool useful = cardDamage > 0 || state.Energy > before.Energy || guardGain > 0 || exposed < riskBefore ||
-                prepared.AppliedBleed(state.Position, context.Target) > 0;
+                prepared.AppliedBleed(state.Position, context.Target, state.MovementPath) > 0;
             if (moved && !revisited && !useful)
                 useful = context.ImprovesAttackPosition(before.Position, state.Position) ||
                     (canAttackNext && !context.HasAttackOpportunity(before.Position, before.Energy, selected, count));

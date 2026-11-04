@@ -18,8 +18,8 @@ using UnityEngine;
 public static class GoogleSheetSyncClient
 {
     public const string ReadOnlyScope = "https://www.googleapis.com/auth/spreadsheets.readonly";
-    public static readonly string[] TabNames = { "Card Data", "Card Effect Data", "Keyword Data" };
-    public static readonly string[] CsvNames = { "Cards.csv", "Effects.csv", "Keywords.csv" };
+    public static readonly string[] TabNames = { "Card Data", "Card Effect Data", "Keyword Data", "Buff, Debuff Data" };
+    public static readonly string[] CsvNames = { "Cards.csv", "Effects.csv", "Keywords.csv", "Statuses.csv" };
     private static readonly HttpClient Http = new HttpClient { Timeout = TimeSpan.FromSeconds(45) };
 
     [Serializable] private class ClientSettings { public string clientId, clientSecret; }

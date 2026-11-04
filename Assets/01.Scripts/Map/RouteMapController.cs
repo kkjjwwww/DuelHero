@@ -15,6 +15,10 @@ namespace DuelHero.Map
         [SerializeField] private UnitDatabase unitDatabase;
         [SerializeField] private string playerUnitId;
         [SerializeField] private CardDatabase cardDatabase;
+        [SerializeField] private RunConfig runConfig;
+        [SerializeField] private ShopConfig shopConfig;
+        [SerializeField] private UnityEngine.UI.Text goldLabel;
+        [SerializeField] private string shopScenePath = "Assets/00.Scenes/ShopScene.unity";
         [SerializeField] private string battleScenePath = "Assets/00.Scenes/BattleScene.unity";
 
         private RunSession session;
@@ -44,11 +48,13 @@ namespace DuelHero.Map
         private void HandleNodeClicked(string nodeId)
         {
             if (!isActiveAndEnabled || IsTransitioning || session == null ||
-                session.PendingBattleNodeId != null || session.PlayerHealth <= 0 || !Progress.CanSelect(nodeId)) return;
+                session.PendingBattleNodeId != null || session.PendingShopNodeId != null || session.PlayerHealth <= 0 || !Progress.CanSelect(nodeId)) return;
 
             var type = CurrentMap.GetNode(nodeId).Type;
             if (type == RouteNodeType.Battle || type == RouteNodeType.Boss)
                 EnterBattle(nodeId);
+            else if (type == RouteNodeType.Shop)
+                EnterShop(nodeId);
             else if (Progress.TrySelect(nodeId))
                 RefreshNodeStates();
         }
@@ -81,6 +87,24 @@ namespace DuelHero.Map
             }
         }
 
+        private void EnterShop(string nodeId)
+        {
+            if (!Application.CanStreamedLevelBeLoaded(shopScenePath))
+            { LastError = "상점 씬을 불러올 수 없습니다: " + shopScenePath; Debug.LogWarning(LastError, this); return; }
+            try
+            {
+                if (!session.TryBeginShop(nodeId, cardDatabase.cards, shopConfig)) return;
+                IsTransitioning = true; LastError = null; RefreshNodeStates();
+                if (SceneManager.LoadSceneAsync(shopScenePath, LoadSceneMode.Single) == null)
+                    throw new InvalidOperationException("상점 씬 로드를 시작하지 못했습니다.");
+            }
+            catch (Exception error)
+            {
+                session.TryCancelShopEntry(nodeId); IsTransitioning = false; LastError = error.Message;
+                RefreshNodeStates(); Debug.LogWarning(LastError, this);
+            }
+        }
+
         [ContextMenu("Generate fixed seed preview")]
         public void GeneratePreview()
         {
@@ -105,7 +129,7 @@ namespace DuelHero.Map
 
         private RunSession CreateRun(uint seed)
         {
-            if (unitDatabase == null || cardDatabase == null)
+            if (unitDatabase == null || cardDatabase == null || runConfig == null)
                 throw new InvalidOperationException("맵의 시작 유닛 DB와 카드 DB를 연결해주세요.");
             var player = Array.Find(unitDatabase.players, unit => unit != null && unit.id == playerUnitId);
             if (player == null)
@@ -113,8 +137,8 @@ namespace DuelHero.Map
             var cards = cardDatabase.StarterCards.Select(card => card.id).ToArray();
             // Editor previews must not replace a live runtime session.
             return Application.isPlaying
-                ? RunSessionStore.StartNew(seed, player.startingHealth, player.maxHealth, cards)
-                : new RunSession(seed, player.startingHealth, player.maxHealth, cards);
+                ? RunSessionStore.StartNew(seed, player.startingHealth, player.maxHealth, cards, runConfig.startingGold)
+                : new RunSession(seed, player.startingHealth, player.maxHealth, cards, runConfig.startingGold);
         }
 
         private void RenderRun()
@@ -126,7 +150,8 @@ namespace DuelHero.Map
 
         private void RefreshNodeStates()
         {
-            bool inputLocked = IsTransitioning || session.PendingBattleNodeId != null || session.PlayerHealth <= 0;
+            if (goldLabel != null) goldLabel.text = "골드  " + session.Gold;
+            bool inputLocked = IsTransitioning || session.PendingBattleNodeId != null || session.PendingShopNodeId != null || session.PlayerHealth <= 0;
             foreach (var node in CurrentMap.Nodes)
             {
                 var state = node.Id == Progress.CurrentNodeId ? RouteNodeState.Current

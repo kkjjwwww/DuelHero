@@ -63,7 +63,13 @@ public static class StunValidation
             var player = Queue.Reservations.Select(c => c.Definition).ToArray();
             Set(Turn, "preparedEnemyCards", enemy);
             var routine = (IEnumerator)typeof(BattleTurnController).GetMethod("ExecuteSlots", Private).Invoke(Turn, new object[] { player, enemy });
-            while (routine.MoveNext()) { }
+            RunToEnd(routine);
+        }
+        private static void RunToEnd(IEnumerator routine)
+        {
+            // Preparation now yields nested routines; execute them in Unity's order.
+            while (routine.MoveNext())
+                if (routine.Current is IEnumerator nested) RunToEnd(nested);
         }
         public void Dispose() { Turn.enabled = false; UnityEngine.Object.DestroyImmediate(Root); }
     }
@@ -194,6 +200,7 @@ public static class StunValidation
         }
         finally
         {
+            foreach (var camera in root.GetComponentsInChildren<Camera>(true)) camera.targetTexture = null;
             RenderTexture.active = previous; texture.Release();
             UnityEngine.Object.DestroyImmediate(pixels); UnityEngine.Object.DestroyImmediate(texture);
             UnityEditor.SceneManagement.EditorSceneManager.ClosePreviewScene(scene);

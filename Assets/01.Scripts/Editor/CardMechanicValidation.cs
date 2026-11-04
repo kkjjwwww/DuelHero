@@ -34,7 +34,7 @@ public static class CardMechanicValidation
     {
         checks=0;
         var db=AssetDatabase.LoadAssetAtPath<CardDatabase>(CardSheetImporter.DatabasePath);
-        Check(db.cards.Length==13 && db.cards.Count(c=>c.isObtainable)==4,"13 real cards, four obtainable rarities");
+        Check(db.cards.Length==14 && db.cards.Count(c=>c.isObtainable)==5,"14 real cards, five obtainable cards");
         foreach (var id in new[]{"bleed_attack_001","riposte_stance_001","tear_wound_001"})
         {
             var card=db.cards.Single(c=>c.id==id);

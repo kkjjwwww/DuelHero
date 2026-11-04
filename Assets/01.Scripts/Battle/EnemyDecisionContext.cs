@@ -22,6 +22,7 @@ namespace DuelHero.Battle
         private readonly Dictionary<Vector2Int, int> risks = new();
         private readonly Dictionary<Vector2Int, int> attackDistances = new();
         private readonly Queue<Vector2Int> pathQueue = new();
+        private readonly List<Vector2Int> attackPath = new();
         private static readonly Vector2Int[] Directions = { Vector2Int.right, Vector2Int.up, Vector2Int.left, Vector2Int.down };
 
         public EnemyDecisionContext(IReadOnlyList<CardInstance> cards, EnemyPlanningState state, Vector2Int target, int round,
@@ -45,16 +46,16 @@ namespace DuelHero.Battle
                     for (int d = 0; d < EnemyPlanningRules.DirectionCount(card); d++)
                     {
                         var action = GetPreparedAction(EnemyPlanningRules.Action(card, d));
-                        var origin = action.MoveFrom(target, state.Map);
+                        var origin = action.MoveFrom(target, state.Map, action.HasPathDamage ? attackPath : null);
                         for (int e = 0; e < action.Effects.Length; e++)
                         {
                             var effect = action.Effects[e];
                             if (effect.effectType != "damage" || effect.IsCounter) continue;
-                            for (int o = 0; o < effect.rangeOffsets.Length; o++)
+                            for (int o = 0; o < (effect.UsesMovementPath ? attackPath.Count : effect.rangeOffsets.Length); o++)
                             {
-                                var cell = action.AttackCell(origin, effect.rangeOffsets[o]);
+                                var cell = effect.UsesMovementPath ? attackPath[o] : action.AttackCell(origin, effect.rangeOffsets[o]);
                                 if (!state.Map.CanEnter(cell)) continue;
-                                int damage = action.RawDamage(origin, cell, actor.Bleed);
+                                int damage = action.RawDamage(origin, cell, actor.Bleed, attackPath);
                                 if (damage > RiskAt(cell)) risks[cell] = damage;
                             }
                         }
@@ -134,7 +135,7 @@ namespace DuelHero.Battle
                             for (int y = 0; y < State.Map.Height; y++) for (int x = 0; x < State.Map.Width; x++)
                             {
                                 var cell = new Vector2Int(x, y);
-                                if (State.Map.CanEnter(cell) && action.CanHit(action.MoveFrom(cell, State.Map), Target))
+                                if (State.Map.CanEnter(cell) && action.CanHit(action.MoveFrom(cell, State.Map, action.HasPathDamage ? attackPath : null), Target, attackPath))
                                     AddAttackOption(cell, card);
                             }
                         }

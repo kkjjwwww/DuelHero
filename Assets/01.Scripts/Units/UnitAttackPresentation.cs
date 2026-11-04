@@ -14,6 +14,8 @@ namespace DuelHero.Units
         [SerializeField, Min(0f)] private float strikeDuration = 0.18f;
         [SerializeField, Min(0f)] private float recoveryDuration = 0.12f;
         [SerializeField, Min(0f)] private float lungeDistance;
+        [SerializeField, Min(.01f)] private float dashDuration = .2f;
+        public Vector3 MotionWorldPosition => motionRoot != null ? motionRoot.position : transform.position;
 
         public bool IsPlaying { get; private set; }
         private Sequence motion;
@@ -55,6 +57,30 @@ namespace DuelHero.Units
             {
                 if (run == version) Cancel();
             }
+        }
+
+        public IEnumerator PlayDash(Vector3 displacement)
+        {
+            if (!isActiveAndEnabled || IsPlaying) yield break;
+            if (motionRoot == null || motionRoot.parent == null)
+                throw new System.InvalidOperationException("돌진 연출용 MotionRoot를 연결해주세요.");
+            int run = ++version;
+            IsPlaying = true;
+            startPosition = motionRoot.localPosition;
+            bool completed = false;
+            try
+            {
+                motionRoot.localPosition = startPosition + motionRoot.parent.InverseTransformVector(-displacement);
+                if (sprites != null) sprites.SetPose(UnitPose.AttackBefore);
+                motion = DOTween.Sequence();
+                motion.Append(motionRoot.DOLocalMove(startPosition, dashDuration).SetEase(Ease.Linear));
+                yield return motion.WaitForCompletion(true);
+                if (run != version || !isActiveAndEnabled) yield break;
+                motionRoot.localPosition = startPosition;
+                if (sprites != null) sprites.SetPose(UnitPose.AttackAfter);
+                completed = true; // Keep the pose until the shared damage batch is applied.
+            }
+            finally { if (!completed && run == version) Cancel(); }
         }
 
         public void Cancel()

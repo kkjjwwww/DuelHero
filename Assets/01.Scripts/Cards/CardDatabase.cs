@@ -12,6 +12,9 @@ namespace DuelHero.Cards
         public string id, cardId, effectType, targetType;
         public string statusId, triggerEffectId;
         public string triggerTiming;
+        public string movementStyle, rangeBasis;
+        public bool IsDash => effectType == "move" && movementStyle == "dash";
+        public bool UsesMovementPath => rangeBasis == "movementPath";
         public int statusMultiplier;
         public bool IsCounter => triggerTiming == "counter";
         public int resolutionOrder, value, durationSlots;

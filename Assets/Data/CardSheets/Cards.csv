@@ -5,18 +5,20 @@
 "move_right_001","오른쪽 이동","오른쪽으로 {effect1.value}칸 이동한다.","이동","0","","일반","FALSE","TRUE","TRUE","0"
 "guard_001","방어","{effect1.durationSlots}개 슬롯 동안 지속되는 보호막을 {effect1.value} 얻는다.","방어","0","","일반","FALSE","TRUE","TRUE","0"
 "breathing_001","숨고르기","에너지를 {effect1.value} 회복한다.","회복","0","","일반","FALSE","TRUE","TRUE","0"
-"slash_001","베기","범위 내 모든 적에게 피해 {effect1.value}를(을) 준다.
+"slash_001","베기","범위 내 모든 적에게 피해 {effect1.value} 를(을) 준다.
 [방향지정][{cooldownTurns}턴]","공격","10","direction_select","일반","FALSE","FALSE","TRUE",""
-"thrust_001","찌르기","범위 내 모든 적에게 피해 {effect1.value}를(을) 준다.
+"thrust_001","찌르기","범위 내 모든 적에게 피해 {effect1.value} 를(을) 준다.
 [방향지정][{cooldownTurns}턴]","공격","15","direction_select","일반","FALSE","FALSE","TRUE",""
-"sweep_001","횡베기","범위 내 모든 적에게 피해 {effect1.value}를(을) 준다.
+"sweep_001","횡베기","범위 내 모든 적에게 피해 {effect1.value} 를(을) 준다.
 [방향지정][{cooldownTurns}턴]","공격","20","direction_select","일반","FALSE","FALSE","TRUE",""
-"head_break_001","머리깨기","범위 내 모든 적에게 피해 {effect1.value}를 주고 [기절]을 {effect2.value} 부여한다.
+"head_break_001","머리깨기","범위 내 모든 적에게 피해 {effect1.value} 를 주고 [기절]을 {effect2.value} 부여한다.
 [방향지정][{cooldownTurns}턴]","공격","20","direction_select;stun","일반","TRUE","FALSE","FALSE","2"
-"bleed_attack_001","출혈 공격","범위 내 모든 적에게 피해 {effect1.value}를 주고 [출혈]을 {effect2.value} 부여한다.
+"bleed_attack_001","출혈 공격","범위 내 모든 적에게 피해 {effect1.value} 를 주고 [출혈]을 {effect2.value} 부여한다.
 [방향지정][{cooldownTurns}턴]","공격","15","direction_select;bleed","고급","TRUE","FALSE","FALSE","1"
-"riposte_stance_001","응수 태세","{effect1.durationSlots}개 슬롯 동안 지속되는 보호막을 {effect1.value} 얻는다.
-[반격] 범위 내 모든 적에게 피해 {effect2.value}를 준다.
+"riposte_stance_001","응수 태세","{effect1.durationSlots}개 슬롯 동안 보호막 {effect1.value}을 얻는다.
+[반격] 범위 내 적들에게 피해 {effect2.value} 를 준다.
 [방향지정][{cooldownTurns}턴]","방어","20","direction_select;counter","희귀","TRUE","FALSE","FALSE","2"
 "tear_wound_001","상처 찢기","범위 내 모든 적에게 피해 {effect1.value}를 주고, 대상의 [출혈] 수치 × {effect1.statusMultiplier}만큼 추가 피해를 준다.
 [방향지정][{cooldownTurns}턴]","공격","25","direction_select;bleed","전설","TRUE","FALSE","FALSE","2"
+"charge_slash_001","돌진 베기","전방으로 {effect1.value}칸 돌진하고, 이동 경로의 모든 적에게 피해 {effect2.value}를 준다.
+[방향지정][{cooldownTurns}턴]","공격","25","direction_select","일반","TRUE","FALSE","FALSE","2"

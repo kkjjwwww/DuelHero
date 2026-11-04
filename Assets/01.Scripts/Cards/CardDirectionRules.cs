@@ -33,6 +33,7 @@ namespace DuelHero.Cards
                     resolutionOrder = e.resolutionOrder, value = e.value, durationSlots = e.durationSlots,
                     statusId = e.statusId, triggerEffectId = e.triggerEffectId,
                     triggerTiming = e.triggerTiming, statusMultiplier = e.statusMultiplier,
+                    movementStyle = e.movementStyle, rangeBasis = e.rangeBasis,
 
                     rangeOffsets = e.rangeOffsets?.Select(offset => Rotate(offset, direction)).ToArray()
 

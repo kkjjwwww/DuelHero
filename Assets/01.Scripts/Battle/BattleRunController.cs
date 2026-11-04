@@ -17,6 +17,7 @@ namespace DuelHero.Battle
         [SerializeField] private PlayerDeck playerDeck;
         [SerializeField] private BattleRestartController standaloneRestart;
         [SerializeField] private CardRewardSettings rewardSettings;
+        [SerializeField] private DuelHero.Data.BattleRewardConfig goldRewardConfig;
         [SerializeField] private CardRewardUI rewardView;
         [SerializeField] private string mapScenePath = "Assets/00.Scenes/MapScene.unity";
 
@@ -27,6 +28,7 @@ namespace DuelHero.Battle
         private bool transitioning;
         private bool rewardPending;
         private int victoryHealth;
+        private int victoryGold;
         private CardDefinition[] rewardOptions = Array.Empty<CardDefinition>();
         public string LastError { get; private set; }
 
@@ -69,6 +71,9 @@ namespace DuelHero.Battle
                     var cards = playerDeck.Cards.Select(card => card.Definition.id).ToArray();
                     if (result == BattleOutcome.Victory)
                     {
+                        if (goldRewardConfig == null) throw new InvalidOperationException("전투 골드 보상 설정을 연결해주세요.");
+                        victoryGold = run.Map.GetNode(battleNodeId).Type == RouteNodeType.Battle
+                            ? goldRewardConfig.normalBattleGold : goldRewardConfig.bossBattleGold;
                         if (run.Map.GetNode(battleNodeId).Type == RouteNodeType.Battle)
                         {
                             if (rewardView == null || rewardSettings == null)
@@ -79,7 +84,7 @@ namespace DuelHero.Battle
                             rewardView.Show(rewardOptions, playerDeck.Database);
                             rewardPending = true;
                         }
-                        else if (!run.TryCompleteBattle(playerStats.Health, cards))
+                        else if (!run.TryCompleteBattle(playerStats.Health, cards, victoryGold))
                             throw new InvalidOperationException("전투 승리 결과를 런에 반영하지 못했습니다.");
                     }
                     else
@@ -146,7 +151,7 @@ namespace DuelHero.Battle
                 if (!ReferenceEquals(run, RunSessionStore.Current) || run.PendingBattleNodeId != battleNodeId)
                     throw new InvalidOperationException("보상을 지급할 런 또는 전투 노드가 변경되었습니다.");
                 if (cardId != null) added = playerDeck.AddCard(cardId);
-                if (!run.TryCompleteBattle(victoryHealth, playerDeck.Cards.Select(card => card.Definition.id)))
+                if (!run.TryCompleteBattle(victoryHealth, playerDeck.Cards.Select(card => card.Definition.id), victoryGold))
                     throw new InvalidOperationException("카드 보상과 승리 결과를 런에 반영하지 못했습니다.");
             }
             catch (Exception error)
@@ -171,6 +176,7 @@ namespace DuelHero.Battle
                 : run != null && outcome == BattleOutcome.Victory ? "계속" : "재시작";
             view.Show(outcome, label, (processed || rewardPending) && !transitioning &&
                 (run != null || standaloneRestart != null));
+            view.ShowGold(outcome == BattleOutcome.Victory && run != null ? victoryGold : (int?)null, processed && !rewardPending);
         }
     }
 }

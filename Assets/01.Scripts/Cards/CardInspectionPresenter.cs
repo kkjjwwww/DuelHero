@@ -18,6 +18,7 @@ namespace DuelHero.Cards
         private bool informationMasked;
         private bool enemyIllustration;
         private KeywordTooltip tooltip;
+        private CardRangePreview rangePreview;
         private Action onClick;
         private Action onHidden;
         private Action<PointerEventData> onScroll;
@@ -106,6 +107,8 @@ namespace DuelHero.Cards
             rect.localScale = Vector3.one * scale * .9f;
             if (duration <= 0f) rect.localScale = Vector3.one * scale;
             else rect.DOScale(scale, duration).SetEase(Ease.OutQuad).SetUpdate(true);
+            if (rangePreview == null) rangePreview = CardRangePreview.GetOrCreate(canvas);
+            rangePreview.Show(view);
         }
 
         private static float ClampToBounds(float value, float min, float max) =>
@@ -154,6 +157,7 @@ namespace DuelHero.Cards
                 view.gameObject.SetActive(false);
             }
             if (tooltip != null) tooltip.Hide();
+            if (rangePreview != null) rangePreview.Hide(view);
             hidden?.Invoke();
         }
         private void OnDisable() => Hide();

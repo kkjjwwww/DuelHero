@@ -97,7 +97,7 @@ namespace DuelHero.Editor
             Stretch(nameLabel.rectTransform);
 
             RectTransform descriptionArea = (RectTransform)NewUI("DescriptionArea", frontRoot.transform).transform;
-            SetRect(descriptionArea, new Vector2(0.105f, 0.18f), new Vector2(0.895f, 0.45f), Vector2.zero, new Vector2(0f, -2f));
+            SetRect(descriptionArea, new Vector2(0.105f, 0.085f), new Vector2(0.895f, 0.45f), Vector2.zero, new Vector2(0f, -2f));
             var description = NewUI("Description", descriptionArea).AddComponent<TextMeshProUGUI>();
             description.font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/Art/UI/Fonts/NotoSansKR SDF.asset")
                 ?? throw new InvalidOperationException("Card description TMP font asset is missing.");
@@ -114,16 +114,6 @@ namespace DuelHero.Editor
             SetRect(description.rectTransform, Vector2.zero, Vector2.one, new Vector2(4f, 2f), new Vector2(-4f, -2f));
             description.gameObject.AddComponent<KeywordHoverLink>();
 
-            RectTransform rangeArea = (RectTransform)NewUI("RangeArea", frontRoot.transform).transform;
-            SetRect(rangeArea, new Vector2(0.70f, 0.085f), new Vector2(0.895f, 0.18f), new Vector2(-2f, 4f), new Vector2(-6f, 2f));
-            Image rangeBackground = AddImage("RangeBackground", rangeArea, null);
-            rangeBackground.color = new Color(0.035f, 0.045f, 0.06f, 0.95f);
-            rangeBackground.raycastTarget = false;
-            SetRect(rangeBackground.rectTransform, Vector2.zero, Vector2.one, new Vector2(-3f, -3f), new Vector2(3f, 3f));
-            RectTransform rangeDrawing = (RectTransform)NewUI("RangeGraphic", rangeArea).transform;
-            SetRect(rangeDrawing, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            CardRangeGraphic rangeGraphic = rangeDrawing.gameObject.AddComponent<CardRangeGraphic>();
-            rangeGraphic.raycastTarget = false;
 
 
             Image energyBadge = AddImage("EnergyBadge", frontRoot.transform, energy);
@@ -192,9 +182,6 @@ namespace DuelHero.Editor
             Set(serialized, "legendaryFrame", LoadSprite("CardFrontFrameLegendary.png"));
             Set(serialized, "energyLabel", energyLabel);
             Set(serialized, "descriptionLabel", description);
-            Set(serialized, "descriptionArea", descriptionArea);
-            Set(serialized, "rangeArea", rangeArea);
-            Set(serialized, "rangeGraphic", rangeGraphic);
             Set(serialized, "typeBadge", typeBadge);
             Set(serialized, "cooldownLabel", cooldown);
             Set(serialized, "reservationOutline", reservationOutline);
@@ -207,7 +194,7 @@ namespace DuelHero.Editor
             Set(serialized, "specialBadge", special);
             Set(serialized, "moveBadge", move);
             SerializedProperty graphics = serialized.FindProperty("grayscaleGraphics");
-            Graphic[] grayscaleGraphics = { illustration, frameImage, rangeBackground, rangeGraphic, energyBadge, typeBadge };
+            Graphic[] grayscaleGraphics = { illustration, frameImage, energyBadge, typeBadge };
             graphics.arraySize = grayscaleGraphics.Length;
             for (int i = 0; i < grayscaleGraphics.Length; i++) graphics.GetArrayElementAtIndex(i).objectReferenceValue = grayscaleGraphics[i];
             serialized.ApplyModifiedPropertiesWithoutUndo();
