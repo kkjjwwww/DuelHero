@@ -23,6 +23,7 @@ namespace DuelHero.Shop
         private IReadOnlyList<ShopOffer> offers = Array.Empty<ShopOffer>();
         private bool transitioning, completed;
         private KeywordTooltip tooltip;
+        private CardRangePreview rangePreview;
         private readonly List<CardView> cardViews = new();
         private readonly List<Text> priceLabels = new();
         private readonly List<ButtonHoverScale> hoverEffects = new();
@@ -43,6 +44,7 @@ namespace DuelHero.Shop
         private void Start()
         {
             tooltip = KeywordTooltip.Create(GetComponentInParent<Canvas>().rootCanvas);
+            rangePreview = CardRangePreview.GetOrCreate(GetComponentInParent<Canvas>().rootCanvas);
             if (run == null || nodeId == null)
             { message.text = "진행 중인 상점 방문이 없습니다. 맵에서 상점에 진입해주세요."; Refresh(); return; }
             if (database == null || cardPrefab == null || cardHoverTemplate == null) { message.text = "상점 카드 데이터와 호버 설정을 연결해주세요."; Refresh(); return; }
@@ -73,8 +75,13 @@ namespace DuelHero.Shop
                 hoverEffects.Add(scale);
                 card.SetClickAction(() => Buy(index));
                 var hover = card.gameObject.GetComponent<CardHoverInfo>() ?? card.gameObject.AddComponent<CardHoverInfo>();
-                hover.ShowInfo = () => { if (!transitioning && !completed) scale.OnPointerEnter(null); };
-                hover.HideInfo = () => { scale.OnPointerExit(null); tooltip.Hide(); };
+                hover.ShowInfo = () =>
+                {
+                    if (transitioning || completed) return;
+                    scale.OnPointerEnter(null);
+                    rangePreview.Show(card);
+                };
+                hover.HideInfo = () => { scale.OnPointerExit(null); tooltip.Hide(); rangePreview.Hide(card); };
                 card.SetKeywordHoverActions((k, p) => tooltip.Show(k, p), () => tooltip.Hide(), p => tooltip.Move(p));
             }
             cardViews.Add(card);
@@ -110,6 +117,7 @@ namespace DuelHero.Shop
         private void SetHoverEnabled(bool value)
         {
             foreach (var hover in hoverEffects) if (hover != null) hover.enabled = value;
+            if (!value) foreach (var card in cardViews) rangePreview.Hide(card);
         }
         public void Exit()
         {

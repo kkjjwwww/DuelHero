@@ -2,7 +2,7 @@
 
 ## 데이터 갱신
 
-`RunConfig`, `BattleRewardConfig`, `ShopConfig` 탭을 기존 시트 동기화 창의 **전체** 또는 **골드·보상·상점 설정** 범위로 가져온다. 저장된 CSV는 `Assets/Data/EconomySheets`에 있고, 설정 에셋은 `Assets/Data`에 각각 생성된다. 필수 키 누락·중복, 음수, 0인 상품 수와 전체 희귀도 가중치는 임포트를 거부한다. 모든 설정을 파싱한 뒤 기존 임포터의 일괄 저장·복원 흐름을 사용한다.
+`Game Config` 탭의 `group`이 `RunConfig`, `BattleRewardConfig`, `ShopConfig`인 행을 기존 시트 동기화 창의 **전체** 또는 **골드·보상·상점 설정** 범위로 가져온다. 설정 탭의 열은 `group / key / value / description`이다. 저장된 CSV는 `Assets/Data/EconomySheets`에 있고, 설정 에셋은 `Assets/Data`에 각각 생성된다. 필수 키 누락·중복, 음수, 0인 상품 수와 전체 희귀도 가중치는 임포트를 거부한다. 모든 설정을 파싱한 뒤 기존 임포터의 일괄 저장·복원 흐름을 사용한다.
 
 2026-11-04 반영 값: 시작 골드 30, 일반전 승리 30, 보스 승리 100, 상품 4종, 일반·고급·희귀·전설 가격 30·50·80·120, 추첨 가중치 62·25·10·3.
 

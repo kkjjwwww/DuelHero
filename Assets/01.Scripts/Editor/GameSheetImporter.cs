@@ -26,11 +26,12 @@ public static class GameSheetImporter
             foreach (var file in await GoogleSheetSyncClient.DownloadCsvAsync(id, cancellation)) output.Add(file.Key, file.Value);
         if (scope == SheetSyncScope.All || scope == SheetSyncScope.Units)
             foreach (var file in await GoogleSheetSyncClient.DownloadCsvAsync(id, new[] { "Player Data", "Enemy Data" }, new[] { "Players.csv", "Enemies.csv" }, "id", cancellation)) output.Add(file.Key, file.Value);
-        if (scope == SheetSyncScope.All || scope == SheetSyncScope.BattleConfig)
-            foreach (var file in await GoogleSheetSyncClient.DownloadCsvAsync(id, new[] { "BattleConfig" }, new[] { "BattleConfig.csv" }, "key", cancellation)) output.Add(file.Key, file.Value);
-        if (scope == SheetSyncScope.All || scope == SheetSyncScope.Economy)
-            foreach (var file in await GoogleSheetSyncClient.DownloadCsvAsync(id, EconomyConfigSheetImporter.Names,
-                EconomyConfigSheetImporter.Names.Select(n => n + ".csv").ToArray(), "key", cancellation)) output.Add(file.Key, file.Value);
+        if (scope == SheetSyncScope.All || scope == SheetSyncScope.BattleConfig || scope == SheetSyncScope.Economy)
+        {
+            string[] groups = scope == SheetSyncScope.BattleConfig ? new[] { "BattleConfig" } :
+                scope == SheetSyncScope.Economy ? EconomyConfigSheetImporter.Names : new[] { "BattleConfig" }.Concat(EconomyConfigSheetImporter.Names).ToArray();
+            foreach (var file in await GoogleSheetSyncClient.DownloadConfigCsvAsync(id, groups, cancellation)) output.Add(file.Key, file.Value);
+        }
         return output;
     }
     public static string ImportFolder(string folder, string spreadsheetId, SheetSyncScope scope)

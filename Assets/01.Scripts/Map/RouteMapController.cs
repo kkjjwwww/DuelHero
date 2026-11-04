@@ -12,6 +12,9 @@ namespace DuelHero.Map
     {
         [SerializeField] private uint previewSeed = 42;
         [SerializeField] private RouteMapView view;
+        [SerializeField] private UnityEngine.UI.Button ownedCardsButton;
+        [SerializeField] private EnemyCardListUI ownedCardsView;
+        [SerializeField] private SpriteNumberUI ownedCardsCount;
         [SerializeField] private UnitDatabase unitDatabase;
         [SerializeField] private string playerUnitId;
         [SerializeField] private CardDatabase cardDatabase;
@@ -31,12 +34,15 @@ namespace DuelHero.Map
         {
             view.NodeClicked += HandleNodeClicked;
             view.RestartRequested += RestartRun;
+            if (ownedCardsButton != null) ownedCardsButton.onClick.AddListener(ToggleOwnedCards);
         }
 
         private void OnDisable()
         {
             view.NodeClicked -= HandleNodeClicked;
             view.RestartRequested -= RestartRun;
+            if (ownedCardsButton != null) ownedCardsButton.onClick.RemoveListener(ToggleOwnedCards);
+            if (ownedCardsView != null) ownedCardsView.Close();
         }
 
         private void Start()
@@ -45,9 +51,22 @@ namespace DuelHero.Map
             RenderRun();
         }
 
+        private void ToggleOwnedCards()
+        {
+            if (IsTransitioning || session == null || ownedCardsView == null) return;
+            if (ownedCardsView.IsOpen) { ownedCardsView.Close(); return; }
+            var cards = session.CardIds.Select(id =>
+            {
+                var definition = Array.Find(cardDatabase.cards, card => card != null && card.id == id);
+                if (definition == null) throw new InvalidOperationException("존재하지 않는 카드 ID: " + id);
+                return new CardInstance(definition);
+            }).ToArray();
+            ownedCardsView.OpenOwnedCards(cardDatabase, cards);
+        }
+
         private void HandleNodeClicked(string nodeId)
         {
-            if (!isActiveAndEnabled || IsTransitioning || session == null ||
+            if (!isActiveAndEnabled || IsTransitioning || session == null || (ownedCardsView != null && ownedCardsView.IsOpen) ||
                 session.PendingBattleNodeId != null || session.PendingShopNodeId != null || session.PlayerHealth <= 0 || !Progress.CanSelect(nodeId)) return;
 
             var type = CurrentMap.GetNode(nodeId).Type;
@@ -143,6 +162,8 @@ namespace DuelHero.Map
 
         private void RenderRun()
         {
+            if (ownedCardsView != null) ownedCardsView.Close();
+            if (ownedCardsCount != null) ownedCardsCount.SetValue(session.CardIds.Count);
             LastError = null;
             view.Render(CurrentMap);
             RefreshNodeStates();

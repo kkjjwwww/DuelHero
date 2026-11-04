@@ -22,6 +22,13 @@ namespace DuelHero.Cards
     }
 
     [Serializable]
+    public class CardKeywordParameter
+    {
+        public string keywordId;
+        public int value;
+    }
+
+    [Serializable]
     public class CardDefinition
     {
         public string id, name, description, actionType, rarity;
@@ -31,6 +38,10 @@ namespace DuelHero.Cards
         public string[] keywordIds;
         public bool isObtainable, isBasicAction, isStarterCard;
         public CardEffectDefinition[] effects;
+        public CardKeywordParameter[] keywordParameters = Array.Empty<CardKeywordParameter>();
+
+        public int KeywordParameter(string keywordId, int defaultValue = 0) =>
+            keywordParameters.FirstOrDefault(parameter => parameter.keywordId == keywordId)?.value ?? defaultValue;
 
         public string ResolvedDescription(Func<CardEffectDefinition, int, string> formatValue = null,
             Func<int, string> formatCooldown = null)
@@ -59,7 +70,7 @@ namespace DuelHero.Cards
     [Serializable]
     public class KeywordDefinition
     {
-        public string id, name, description, resolutionRule, triggerTiming, parameters;
+        public string id, name, description, parameters;
         public string textColor;
         public string TextColor => string.IsNullOrWhiteSpace(textColor) ? "#FFBA47" : textColor;
     }

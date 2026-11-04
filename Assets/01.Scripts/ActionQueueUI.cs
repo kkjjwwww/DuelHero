@@ -30,6 +30,7 @@ public class ActionQueueUI : MonoBehaviour
     private Font cardFont;
     private KeywordTooltip keywordTooltip;
     private CardInspectionPresenter inspection;
+    private CardRangePreview rangePreview;
     private bool CanInspect => actionExecutor != null ? actionExecutor.CanInspectSlots : reservationQueue != null && !reservationQueue.IsExecuting;
     private Tween nextTurnBlink;
     private CardReservationOutline nextTurnOutline;
@@ -191,6 +192,18 @@ public class ActionQueueUI : MonoBehaviour
                         StunCard.Definition, cardDatabase, cardFont, aboveSource: true);
                 };
             }
+            else
+            {
+                var hover = view.GetComponent<CardHoverInfo>();
+                var source = view;
+                hover.ShowInfo = () =>
+                {
+                    if (!CanInspect) return;
+                    if (rangePreview == null) rangePreview = CardRangePreview.GetOrCreate(GetComponentInParent<Canvas>().rootCanvas);
+                    rangePreview.Show(source);
+                };
+                hover.HideInfo = () => { if (rangePreview != null) rangePreview.Hide(source); };
+            }
         }
         if (!ReferenceEquals(boundCards[index], instance))
         {
@@ -227,9 +240,13 @@ public class ActionQueueUI : MonoBehaviour
     }
     private void HideSlotInspection()
     {
-        if (inspection == null || slotCards == null) return;
+        if (slotCards == null) return;
         foreach (var card in slotCards)
-            if (card != null) inspection.Hide((RectTransform)card.transform);
+            if (card != null)
+            {
+                if (inspection != null) inspection.Hide((RectTransform)card.transform);
+                if (rangePreview != null) rangePreview.Hide(card);
+            }
     }
     private void BeginSlotExecution(int index)
     {

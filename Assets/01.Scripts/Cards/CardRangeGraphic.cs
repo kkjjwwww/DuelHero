@@ -12,6 +12,7 @@ namespace DuelHero.Cards
     {
         [SerializeField] private Color rangeColor = new Color(0.82f, 0.12f, 0.1f, 1f);
         [SerializeField] private Color originColor = Color.white;
+        [SerializeField, Min(1f)] private float maxCellSize = 20f;
         [SerializeField, Range(0f, 0.3f)] private float cellGapRatio = 0.12f;
         [SerializeField, Range(0.2f, 0.9f)] private float originDiameterRatio = 0.56f;
         [SerializeField, Range(8, 48)] private int circleSegments = 24;
@@ -38,7 +39,7 @@ namespace DuelHero.Cards
             int columns = maxX - minX + 1;
             int rows = maxY - minY + 1;
             Rect drawRect = GetPixelAdjustedRect();
-            float cell = Mathf.Min(drawRect.width / columns, drawRect.height / rows);
+            float cell = Mathf.Min(maxCellSize, Mathf.Min(drawRect.width / columns, drawRect.height / rows));
             Vector2 boardSize = new Vector2(columns * cell, rows * cell);
             Vector2 boardMin = drawRect.center - boardSize * 0.5f;
             float inset = cell * cellGapRatio * 0.5f;

@@ -18,7 +18,11 @@
 
 원본 시트 ID: `1pspfXZtUhTmSc9ZTL1iTzQDeBgvfbb_wqwCNs83EFQE`
 
-`Card Data`, `Card Effect Data`, `Keyword Data`를 [values.batchGet](https://developers.google.com/workspace/sheets/api/reference/rest/v4/spreadsheets.values/batchGet)으로 읽는다. 탭과 기존 열 이름은 유지한다. ID 없는 빈 체크박스 행은 제외한다.
+`Card Data`, `Card Effect Data`, `Keyword Data`를 [values.batchGet](https://developers.google.com/workspace/sheets/api/reference/rest/v4/spreadsheets.values/batchGet)으로 읽는다. ID 없는 빈 체크박스 행은 제외한다.
+
+`Keyword Data`는 `id / name / description / parameters / textColor / category / stackRule / countUnit` 구조다. 기절·출혈의 상태 정의도 이 탭에서 가져온다. 일반 카드 키워드는 상태 분류와 중첩·단위 열을 비운다. 상태 ID와 키워드 ID는 동일하게 사용한다. 처리 규칙과 적용 시점은 설명 셀의 메모에 기록하며 실행 데이터로 가져오지 않는다. `parameters`는 필요한 값의 의미를 적는 기존 설명용 필드다.
+
+`Card Effect Data`의 `effectType=keywordParameter` 행은 카드별 키워드 수치다. `id / cardId / keywordId / value`를 작성하고 실행 순서·범위·대상 등의 나머지 항목은 비운다. `keywordId`는 `Keyword Data.id`를 참조하며 해당 카드의 `keywordIds`에도 지정되어 있어야 한다. 같은 카드·키워드는 한 행만 허용하고 수치는 0 이상의 정수다. 가져올 때 `CardDefinition.keywordParameters`로 분리하므로 실행 효과 배열·범위·`{effect1...}` 번호에 포함되지 않는다. 실행 방향을 바꾼 카드에도 그대로 보존된다. `KeywordParameter(id, defaultValue)`로 수치를 조회하며, 행이 없으면 기본값(기본 0)을 반환한다. 수치 저장 기능만으로 키워드의 실제 행동이 구현되지는 않는다.
 
 모든 데이터를 다운로드·검증한 뒤 아래 항목을 갱신한다.
 
@@ -56,11 +60,13 @@
 부분 갱신은 선택한 데이터만 변경한다.
 
 - Player Data / Enemy Data → Assets/Data/UnitSheets/Players.csv, Enemies.csv → UnitDatabase.asset
-- BattleConfig → Assets/Data/BattleConfigSheets/BattleConfig.csv → BattleConfig.asset
+- Game Config (`group=BattleConfig`) → Assets/Data/BattleConfigSheets/BattleConfig.csv → BattleConfig.asset
 - 카드 데이터 경로와 수동 CSV 메뉴는 기존과 동일하다.
 
 유닛 ID는 Player/Enemy 각 목록 안에서 중복을 허용하지 않는다. 체력/에너지는 음이 아닌 정수이며 최대 체력은 양수, 시작값은 최대값 이하여야 한다.
 BattleConfig의 energyRecoveryPerTurn은 빈 값이면 hasEnergyRecoveryPerTurn=false로 저장한다. 숫자 0과 미설정을 구분한다.
+
+설정 원본은 `Game Config` 한 탭이며 열은 `group / key / value / description`이다. group에는 `BattleConfig`, `RunConfig`, `BattleRewardConfig`, `ShopConfig`를 사용한다. 다운로드 시 그룹별 CSV로 분리하여 기존 임포터와 설정 에셋을 재사용한다. 전체 갱신에서도 설정 탭은 한 번만 조회하고, 부분 갱신은 선택한 그룹만 저장한다.
 유닛 및 전투 설정 에셋은 데이터 저장까지만 연결한다. 씬 캐릭터 초기화나 턴 회복에 자동 적용하지 않는다.
 
 ## 방향 좌표 규칙

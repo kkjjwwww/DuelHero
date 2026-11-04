@@ -12,7 +12,7 @@
 
 ## 데이터와 표시
 
-`Statuses.csv`는 Buff, Debuff Data를 가져온다. `statusId`는 상태 정의, `triggerEffectId`는 같은 카드 내 앞선 피해 효과를 참조한다. 기존 CSV는 새 필드가 없어도 읽을 수 있으며, 상태 효과가 있는 데이터는 해당 상태 정의가 반드시 필요하다.
+상태 정의는 `Keywords.csv`의 `category / stackRule / countUnit`에서 가져온다. `Keyword Data`의 기절·출혈 행에 키워드 설명과 상태 정의를 함께 작성하며, 상태 ID는 해당 키워드 ID와 같다. `statusId`는 상태 정의, `triggerEffectId`는 같은 카드 내 앞선 피해 효과를 참조한다. 상태 효과가 있는 데이터는 해당 상태 정의가 반드시 필요하다.
 
 기절 전용 프리팹은 `Assets/Resources/StunCard.prefab`이다. 기존 CardView를 기반으로 특수 아이콘, 숨긴 코스트 배지, 이름 ‘기절’, 설명 ‘아무 행동도 할 수 없다.’와 균열 UI 그래픽을 사용한다. 양측 슬롯에서 같은 프리팹을 로드하며 Inspector의 별도 프리팹 참조로 교체할 수도 있다. 씬 변경은 필요 없다.
 

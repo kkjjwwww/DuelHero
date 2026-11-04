@@ -27,6 +27,7 @@ namespace DuelHero.Cards
                 id = card.id, name = card.name, description = card.description, actionType = card.actionType,
                 rarity = card.rarity, energyCost = card.energyCost, keywordIds = card.keywordIds, cooldownTurns = card.cooldownTurns,
                 isObtainable = card.isObtainable, isBasicAction = card.isBasicAction, isStarterCard = card.isStarterCard,
+                keywordParameters = card.keywordParameters,
                 effects = card.effects.Select(e => new CardEffectDefinition
                 {
                     id = e.id, cardId = e.cardId, effectType = e.effectType, targetType = e.targetType,

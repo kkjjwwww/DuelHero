@@ -18,8 +18,8 @@ using UnityEngine;
 public static class GoogleSheetSyncClient
 {
     public const string ReadOnlyScope = "https://www.googleapis.com/auth/spreadsheets.readonly";
-    public static readonly string[] TabNames = { "Card Data", "Card Effect Data", "Keyword Data", "Buff, Debuff Data" };
-    public static readonly string[] CsvNames = { "Cards.csv", "Effects.csv", "Keywords.csv", "Statuses.csv" };
+    public static readonly string[] TabNames = { "Card Data", "Card Effect Data", "Keyword Data" };
+    public static readonly string[] CsvNames = { "Cards.csv", "Effects.csv", "Keywords.csv" };
     private static readonly HttpClient Http = new HttpClient { Timeout = TimeSpan.FromSeconds(45) };
 
     [Serializable] private class ClientSettings { public string clientId, clientSecret; }
@@ -106,6 +106,32 @@ public static class GoogleSheetSyncClient
 
     public static async Task<Dictionary<string, string>> DownloadCsvAsync(string spreadsheetId, CancellationToken cancellation)
         => await DownloadCsvAsync(spreadsheetId, TabNames, CsvNames, "id", cancellation);
+
+    public static async Task<Dictionary<string, string>> DownloadConfigCsvAsync(string spreadsheetId, string[] groups, CancellationToken cancellation)
+    {
+        var files = await DownloadCsvAsync(spreadsheetId, new[] { "Game Config" }, new[] { "Config.csv" }, "key", cancellation);
+        return SplitConfigCsv(files["Config.csv"], groups);
+    }
+
+    // Sheet layout is unified; existing typed importers and runtime assets stay separate.
+    public static Dictionary<string, string> SplitConfigCsv(string csv, string[] groups)
+    {
+        var rows = CardSheetImporter.ReadCsv(csv);
+        string[] columns = { "group", "key", "value", "description" };
+        if (rows.Count == 0 || !rows[0].SequenceEqual(columns)) throw new FormatException("Game Config: group/key/value/description 열이 필요합니다.");
+        string[] supported = new[] { "BattleConfig" }.Concat(EconomyConfigSheetImporter.Names).ToArray();
+        var output = groups.ToDictionary(group => group, group => new StringBuilder("\"key\",\"value\",\"description\"\n"));
+        foreach (var row in rows.Skip(1))
+        {
+            if (row.All(string.IsNullOrWhiteSpace)) continue;
+            if (row.Count < 2 || string.IsNullOrWhiteSpace(row[1])) continue;
+            string group = row[0].Trim();
+            if (!supported.Contains(group)) throw new FormatException("Game Config: 지원하지 않는 group " + group);
+            if (output.TryGetValue(group, out var target))
+                target.AppendLine(string.Join(",", Enumerable.Range(1, 3).Select(i => Quote(i < row.Count ? row[i] : ""))));
+        }
+        return output.ToDictionary(pair => pair.Key + ".csv", pair => pair.Value.ToString());
+    }
 
     public static async Task<Dictionary<string, string>> DownloadCsvAsync(string spreadsheetId, string[] tabs, string[] filenames, string keyColumn, CancellationToken cancellation)
     {

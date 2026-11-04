@@ -52,8 +52,21 @@ namespace DuelHero.Cards
         private bool layoutSettingsDirty;
         public bool IsOpen => panel != null && panel.activeSelf;
         public event System.Action OpenChanged;
-        private IReadOnlyList<CardInstance> Cards => playerSource != null ? playerSource.Cards : source.Cards;
-        private CardDatabase Database => playerSource != null ? playerSource.Database : source.Database;
+        private IReadOnlyList<CardInstance> ownedCards;
+        private CardDatabase ownedDatabase;
+        private bool IsPlayerList => ownedCards != null || playerSource != null;
+        private int CurrentRound => roundSource != null ? roundSource.CurrentRound : 1;
+        private IReadOnlyList<CardInstance> Cards => ownedCards ?? (playerSource != null ? playerSource.Cards : source.Cards);
+        private CardDatabase Database => ownedDatabase != null ? ownedDatabase : playerSource != null ? playerSource.Database : source.Database;
+
+        public void OpenOwnedCards(CardDatabase database, IReadOnlyList<CardInstance> cards)
+        {
+            if (database == null || cards == null) return;
+            Close();
+            ownedDatabase = database;
+            ownedCards = cards;
+            Open();
+        }
 
         private void OnEnable()
         {
@@ -76,7 +89,7 @@ namespace DuelHero.Cards
         public void Toggle() { if (IsOpen) Close(); else Open(); }
         public void Open()
         {
-            if (IsOpen || (source == null && playerSource == null) || roundSource == null || panel == null || content == null || cardPrefab == null) return;
+            if (IsOpen || (ownedCards == null && (source == null && playerSource == null || roundSource == null)) || panel == null || content == null || cardPrefab == null) return;
             if (playerSource != null) playerSource.Initialize();
             Initialize();
             Synchronize();
@@ -169,12 +182,12 @@ namespace DuelHero.Cards
                 var entry = pool.Count > 0 ? pool.Pop() : CreateEntry();
                 entry.Card = card;
                 entry.Cooldown = int.MinValue;
-                entry.View.Bind(card.Definition, Database.keywords, isEnemy: playerSource == null);
+                entry.View.Bind(card.Definition, Database.keywords, isEnemy: !IsPlayerList);
                 entry.View.SetFrontVisible(true);
                 entry.Container.gameObject.SetActive(true);
                 entries.Add(card, entry); changed = true;
             }
-            if (titleLabel != null) titleLabel.text = (playerSource != null ? "내 보유 카드 · " : "적 보유 카드 · ") + cards.Count + "장";
+            if (titleLabel != null) titleLabel.text = (IsPlayerList ? "내 보유 카드 · " : "적 보유 카드 · ") + cards.Count + "장";
             if (changed) ArrangeCategories();
             RefreshStates();
         }
@@ -196,8 +209,8 @@ namespace DuelHero.Cards
             {
                 if (IsOpen && entry.Card != null)
                     inspection.Show(entry.Container, cardPrefab, entry.Card.Definition, Database, font,
-                        entry.Card.RemainingCooldown(roundSource.CurrentRound), scale: hoverScale, duration: hoverDuration,
-                        scroll: eventData => { if (scroll != null) scroll.OnScroll(eventData); }, isEnemy: playerSource == null);
+                        entry.Card.RemainingCooldown(CurrentRound), scale: hoverScale, duration: hoverDuration,
+                        scroll: eventData => { if (scroll != null) scroll.OnScroll(eventData); }, isEnemy: !IsPlayerList);
             };
             // The presenter keeps the preview open while the pointer crosses into it.
             hover.HideInfo = null;
@@ -247,10 +260,9 @@ namespace DuelHero.Cards
         }
         private void RefreshStates()
         {
-            if (roundSource == null) return;
             foreach (var entry in entries.Values)
             {
-                int cooldown = entry.Card.RemainingCooldown(roundSource.CurrentRound);
+                int cooldown = entry.Card.RemainingCooldown(CurrentRound);
                 if (entry.Cooldown == cooldown) continue;
                 entry.Cooldown = cooldown;
                 entry.View.SetState(string.Empty, cooldown, true);

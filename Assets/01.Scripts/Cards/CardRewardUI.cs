@@ -21,6 +21,7 @@ namespace DuelHero.Cards
         private Color screenBackgroundColor;
         private readonly List<CardView> views = new();
         private KeywordTooltip tooltip;
+        private CardRangePreview rangePreview;
         private bool showing;
         private bool inputEnabled;
         private Vector2 panelSize, titlePosition, buttonPosition;
@@ -55,6 +56,7 @@ namespace DuelHero.Cards
             message.text = cards.Count == 0 ? "획득 가능한 카드가 없습니다." : "카드를 클릭하면 획득하고 맵으로 돌아갑니다.";
             Font font = message.font;
             tooltip = KeywordTooltip.Create(GetComponentInParent<Canvas>().rootCanvas);
+            rangePreview = CardRangePreview.GetOrCreate(GetComponentInParent<Canvas>().rootCanvas);
             for (int i = 0; i < cards.Count; i++)
             {
                 var definition = cards[i];
@@ -70,6 +72,9 @@ namespace DuelHero.Cards
                 card.SetFrontVisible(true);
                 card.SetState(string.Empty, 0, true);
                 card.SetClickAction(() => Select(definition.id));
+                var hover = card.GetComponent<CardHoverInfo>();
+                hover.ShowInfo = () => { if (inputEnabled) rangePreview.Show(card); };
+                hover.HideInfo = () => rangePreview.Hide(card);
                 card.SetKeywordHoverActions((keyword, position) => tooltip.Show(keyword, position),
                     () => tooltip.Hide(), position => tooltip.Move(position));
                 views.Add(card);
@@ -87,7 +92,11 @@ namespace DuelHero.Cards
         public void SetInteractable(bool value)
         {
             inputEnabled = value;
-            foreach (var card in views) card.SetState(string.Empty, 0, value);
+            foreach (var card in views)
+            {
+                card.SetState(string.Empty, 0, value);
+                if (!value) rangePreview.Hide(card);
+            }
             if (!value && tooltip != null) tooltip.Hide();
         }
 

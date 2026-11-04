@@ -48,7 +48,7 @@ public static class CardSheetImporter
         var incomingCsv = new Dictionary<string, byte[]>();
         try
         {
-            foreach (string file in new[] { "Cards.csv", "Effects.csv", "Keywords.csv", "Statuses.csv" }.Where(f => f != "Statuses.csv" || File.Exists(Path.Combine(folder, f))))
+            foreach (string file in GoogleSheetSyncClient.CsvNames)
             {
                 string destination = Path.Combine(SourceFolder, file);
                 previousCsv[destination] = File.Exists(destination) ? File.ReadAllBytes(destination) : null;
@@ -109,12 +109,10 @@ public static class CardSheetImporter
     {
         var cardRows = Table(Path.Combine(folder, "Cards.csv"), "id", "name", "description", "actionType", "energyCost", "keywordIds", "rarity", "isObtainable", "isBasicAction", "isStarterCard");
         var effectRows = Table(Path.Combine(folder, "Effects.csv"), "id", "cardId", "resolutionOrder", "effectType", "value", "durationSlots", "rangeOffsets", "targetType");
-        var keywordRows = Table(Path.Combine(folder, "Keywords.csv"), "id", "name", "description", "resolutionRule", "triggerTiming", "parameters");
-        var statuses = File.Exists(Path.Combine(folder, "Statuses.csv"))
-            ? Table(Path.Combine(folder, "Statuses.csv"), "id", "name", "category", "keywordId", "stackRule", "countUnit")
-                .Select(r => new StatusDefinition { id = Required(r, "id"), name = Required(r, "name"), category = Required(r, "category"),
-                    keywordId = Required(r, "keywordId"), stackRule = Required(r, "stackRule"), countUnit = Required(r, "countUnit") }).ToArray()
-            : Array.Empty<StatusDefinition>();
+        var keywordRows = Table(Path.Combine(folder, "Keywords.csv"), "id", "name", "description", "parameters", "category", "stackRule", "countUnit");
+        var statuses = keywordRows.Where(r => !string.IsNullOrWhiteSpace(r["category"]))
+            .Select(r => new StatusDefinition { id = Required(r, "id"), name = Required(r, "name"), category = Required(r, "category"),
+                keywordId = Required(r, "id"), stackRule = Required(r, "stackRule"), countUnit = Required(r, "countUnit") }).ToArray();
         var cards = cardRows.Select(r => new CardDefinition
         {
             id = Required(r, "id"), name = Required(r, "name"), description = Required(r, "description"),
@@ -127,10 +125,11 @@ public static class CardSheetImporter
         var keywords = keywordRows.Select(r => new KeywordDefinition
         {
             id = Required(r, "id"), name = Required(r, "name"), description = Required(r, "description"),
-            resolutionRule = Required(r, "resolutionRule"), triggerTiming = Required(r, "triggerTiming"), parameters = r["parameters"],
+            parameters = r["parameters"],
             textColor = r.TryGetValue("textColor", out var color) ? color : string.Empty
         }).ToArray();
-        var effects = effectRows.Select(r => new CardEffectDefinition
+        var parameterRows = effectRows.Where(r => r["effectType"] == "keywordParameter").ToArray();
+        var effects = effectRows.Where(r => r["effectType"] != "keywordParameter").Select(r => new CardEffectDefinition
         {
             id = Required(r, "id"), cardId = Required(r, "cardId"), effectType = Required(r, "effectType"),
             resolutionOrder = Number(r, "resolutionOrder"), value = Number(r, "value"), durationSlots = Number(r, "durationSlots"),
@@ -143,9 +142,17 @@ public static class CardSheetImporter
             rangeOffsets = Offsets(r["rangeOffsets"]), targetType = Required(r, "targetType")
         }).ToArray();
         if (cards.Length == 0) throw new FormatException("No card rows with an id.");
-        Unique(cards.Select(c => c.id), "card id"); Unique(effects.Select(e => e.id), "effect id"); Unique(keywords.Select(k => k.id), "keyword id");
+        Unique(cards.Select(c => c.id), "card id"); Unique(effectRows.Select(r => Required(r, "id")), "effect id"); Unique(keywords.Select(k => k.id), "keyword id");
         var cardIds = new HashSet<string>(cards.Select(c => c.id));
         var keywordIds = new HashSet<string>(keywords.Select(k => k.id));
+        foreach (var row in parameterRows)
+        {
+            if (!cardIds.Contains(Required(row, "cardId"))) throw new FormatException($"{row["id"]}: missing cardId {row["cardId"]}");
+            if (!row.TryGetValue("keywordId", out var keyword) || !keywordIds.Contains(keyword) ||
+                !cards.Single(c => c.id == row["cardId"]).keywordIds.Contains(keyword))
+                throw new FormatException($"{row["id"]}: keywordParameter requires a keywordId assigned to the card");
+            Number(row, "value");
+        }
         foreach (var keyword in keywords)
             if (!string.IsNullOrWhiteSpace(keyword.textColor) && !Regex.IsMatch(keyword.textColor, @"^#[0-9a-fA-F]{6}$"))
                 throw new FormatException($"{keyword.id}: textColor must be #RRGGBB");
@@ -182,6 +189,9 @@ public static class CardSheetImporter
             foreach (string keyword in card.keywordIds)
                 if (!keywordIds.Contains(keyword)) throw new FormatException($"{card.id}: missing keyword {keyword}");
             card.effects = effects.Where(e => e.cardId == card.id).OrderBy(e => e.resolutionOrder).ToArray();
+            card.keywordParameters = parameterRows.Where(r => r["cardId"] == card.id)
+                .Select(r => new CardKeywordParameter { keywordId = r["keywordId"], value = Number(r, "value") }).ToArray();
+            Unique(card.keywordParameters.Select(p => p.keywordId), card.id + " keyword parameter");
             if (!card.effects.All(e => CardEffectExecutor.SupportsMovementMetadata(card, e)))
                 throw new FormatException($"{card.id}: invalid movementStyle or rangeBasis");
             if (card.effects.Length == 0) throw new FormatException($"{card.id}: no effects");
