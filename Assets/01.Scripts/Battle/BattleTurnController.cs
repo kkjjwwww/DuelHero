@@ -200,9 +200,9 @@ namespace DuelHero.Battle
 
                 // Each actor returns to idle before the next actor starts. Damage remains simultaneous.
                 if (playerAttackPresentation != null && !HasDash(pc) && attacks.Any(a => a.ActorId == playerId))
-                    yield return playerAttackPresentation.PlayAttack();
+                    yield return effects.PlayAttackAnimated(playerAttackPresentation, playerId, pc, playerPath);
                 if (enemyAttackPresentation != null && !HasDash(ec) && attacks.Any(a => a.ActorId == enemyId))
-                    yield return enemyAttackPresentation.PlayAttack();
+                    yield return effects.PlayAttackAnimated(enemyAttackPresentation, enemyId, ec, enemyPath);
 
                 var damage = combatEffects.CalculateDamageBatch(attacks, round);
                 enemyExecutions[slot] = new ExecutedCardPreview(enemyPath,
@@ -221,12 +221,12 @@ namespace DuelHero.Battle
                     if (playerCounter)
                     {
                         Publish(BattleActionKind.CounterTriggered, playerId, pc.id);
-                        if (playerAttackPresentation != null) yield return playerAttackPresentation.PlayAttack();
+                        if (playerAttackPresentation != null) yield return effects.PlayAttackAnimated(playerAttackPresentation, playerId, pc, counter: true);
                     }
                     if (enemyCounter)
                     {
                         Publish(BattleActionKind.CounterTriggered, enemyId, ec.id);
-                        if (enemyAttackPresentation != null) yield return enemyAttackPresentation.PlayAttack();
+                        if (enemyAttackPresentation != null) yield return effects.PlayAttackAnimated(enemyAttackPresentation, enemyId, ec, counter: true);
                     }
                     var counterAttacks = new List<CombatEffectResolver.AttackRequest>();
                     if (playerCounter) { yield return effects.ExecutePreparationAnimated(playerId, pc, round, playerJumpPresentation, unitVisualPlacement, true); AddAttacks(counterAttacks, playerId, pc, true); }

@@ -10,19 +10,33 @@ namespace DuelHero.Units
         [SerializeField] private UnitSpritePresenter sprites;
         [SerializeField] private Transform motionRoot;
         [SerializeField] private SpriteRenderer facingRenderer;
-        [SerializeField, Min(0f)] private float windupDuration = 0.15f;
-        [SerializeField, Min(0f)] private float strikeDuration = 0.18f;
-        [SerializeField, Min(0f)] private float recoveryDuration = 0.12f;
+        [SerializeField, Min(0f)] private float windupDuration = 0.3f;
+        [SerializeField, Min(0f)] private float strikeDuration = 0.3f;
+        [SerializeField, Min(0f)] private float recoveryDuration = 0.2f;
         [SerializeField, Min(0f)] private float lungeDistance;
         [SerializeField, Min(.01f)] private float dashDuration = .2f;
         public Vector3 MotionWorldPosition => motionRoot != null ? motionRoot.position : transform.position;
+
+        private DuelHero.Battle.BattlePreviewRenderer attackRange;
+        public void ShowRange(GridMovement unit, System.Collections.Generic.IEnumerable<Vector2Int> cells)
+        {
+            if (!isActiveAndEnabled) return;
+            if (attackRange == null)
+            {
+                var go = new GameObject("ExecutingAttackRange");
+                go.transform.SetParent(transform, false);
+                attackRange = go.AddComponent<DuelHero.Battle.BattlePreviewRenderer>();
+            }
+            attackRange.ShowExecuted(new DuelHero.Battle.ExecutedCardPreview(new[] { unit.GridPosition }, cells), unit, null);
+        }
+        public void HideRange() => attackRange?.Clear();
 
         public bool IsPlaying { get; private set; }
         private Sequence motion;
         private Vector3 startPosition;
         private int version;
 
-        public IEnumerator PlayAttack()
+        public IEnumerator PlayAttack(string style = null)
         {
             if (!isActiveAndEnabled || IsPlaying) yield break;
             int run = ++version;
@@ -30,11 +44,11 @@ namespace DuelHero.Units
             if (motionRoot != null) startPosition = motionRoot.localPosition;
             try
             {
-                if (sprites != null) sprites.SetPose(UnitPose.AttackBefore);
+                if (sprites != null) sprites.SetAttackPose(style, false);
                 if (windupDuration > 0f) yield return new WaitForSeconds(windupDuration);
                 if (run != version || !isActiveAndEnabled) yield break;
 
-                if (sprites != null) sprites.SetPose(UnitPose.AttackAfter);
+                if (sprites != null) sprites.SetAttackPose(style, true);
                 if (strikeDuration > 0f)
                 {
                     if (motionRoot != null && lungeDistance > 0f)
@@ -85,6 +99,7 @@ namespace DuelHero.Units
 
         public void Cancel()
         {
+            HideRange();
             version++;
             motion?.Pause();
             motion?.Kill();

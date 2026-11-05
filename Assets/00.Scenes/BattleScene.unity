@@ -3060,6 +3060,12 @@ MonoBehaviour:
   idle: {fileID: 21300000, guid: b0f812f85d174d2e97bedf07483ad30c, type: 3}
   attackBefore: {fileID: 21300000, guid: 5e801bc8b6c84ef28918f885a3b8b7bd, type: 3}
   attackAfter: {fileID: 21300000, guid: 75184b1477e4468e9836616b5767c87a, type: 3}
+  thrustBefore: {fileID: 21300000, guid: ac71d1a3d1f243debded88bd96e2446e, type: 3}
+  thrustAfter: {fileID: 21300000, guid: 2dd881cd141744309ea14a87040b09e1, type: 3}
+  slashBefore: {fileID: 21300000, guid: 9e835443e13b4bada47346c5dc08cc00, type: 3}
+  slashAfter: {fileID: 21300000, guid: a73618f4697446e0be4e1edfee8d5810, type: 3}
+  punchBefore: {fileID: 21300000, guid: 9114c0a0de2940ab83d36c5479a90f44, type: 3}
+  punchAfter: {fileID: 21300000, guid: ee3175e26ce24905a03cf83ad7ccb257, type: 3}
   block: {fileID: 21300000, guid: a9bfd4bbc10544e9a3df2abe08d12519, type: 3}
   heal: {fileID: 21300000, guid: 363d877b64ce4bef88fccb225a4fb244, type: 3}
   jumpGround: {fileID: 21300000, guid: 04eacdc2a8ad47cab951a48262ee01c8, type: 3}
@@ -3080,9 +3086,9 @@ MonoBehaviour:
   sprites: {fileID: 185798877}
   motionRoot: {fileID: 14030444}
   facingRenderer: {fileID: 185798872}
-  windupDuration: 0.15
-  strikeDuration: 0.18
-  recoveryDuration: 0.12
+  windupDuration: 0.3
+  strikeDuration: 0.3
+  recoveryDuration: 0.2
   lungeDistance: 0.12
   dashDuration: 0.2
 --- !u!114 &185798879
@@ -26973,9 +26979,9 @@ MonoBehaviour:
   sprites: {fileID: 0}
   motionRoot: {fileID: 449193315}
   facingRenderer: {fileID: 2024972210}
-  windupDuration: 0.15
-  strikeDuration: 0.18
-  recoveryDuration: 0.12
+  windupDuration: 0.3
+  strikeDuration: 0.3
+  recoveryDuration: 0.2
   lungeDistance: 0.12
   dashDuration: 0.2
 --- !u!114 &2024972217

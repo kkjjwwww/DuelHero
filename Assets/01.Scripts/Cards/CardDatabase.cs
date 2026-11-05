@@ -32,6 +32,7 @@ namespace DuelHero.Cards
     public class CardDefinition
     {
         public string id, name, description, actionType, rarity;
+        public string attackStyle;
         public int energyCost;
         public int cooldownTurns = 1;
         public int EffectiveCooldownTurns => isBasicAction ? 0 : cooldownTurns;

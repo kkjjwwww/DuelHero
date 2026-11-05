@@ -13,13 +13,14 @@ MonoBehaviour:
   m_Name: CardDatabase
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Cards.CardDatabase
   sourceSpreadsheetId: 1pspfXZtUhTmSc9ZTL1iTzQDeBgvfbb_wqwCNs83EFQE
-  importedAtUtc: 2026-11-04T09:40:53.0565339Z
+  importedAtUtc: 2026-11-05T02:01:17.7098692Z
   cards:
   - id: move_up_001
     name: "\uC704 \uC774\uB3D9"
     description: "\uC704\uB85C {effect1.value}\uCE78 \uC774\uB3D9\uD55C\uB2E4."
     actionType: "\uC774\uB3D9"
     rarity: "\uC77C\uBC18"
+    attackStyle: 
     energyCost: 0
     cooldownTurns: 0
     keywordIds: []
@@ -48,6 +49,7 @@ MonoBehaviour:
     description: "\uC544\uB798\uB85C {effect1.value}\uCE78 \uC774\uB3D9\uD55C\uB2E4."
     actionType: "\uC774\uB3D9"
     rarity: "\uC77C\uBC18"
+    attackStyle: 
     energyCost: 0
     cooldownTurns: 0
     keywordIds: []
@@ -76,6 +78,7 @@ MonoBehaviour:
     description: "\uC67C\uCABD\uC73C\uB85C {effect1.value}\uCE78 \uC774\uB3D9\uD55C\uB2E4."
     actionType: "\uC774\uB3D9"
     rarity: "\uC77C\uBC18"
+    attackStyle: 
     energyCost: 0
     cooldownTurns: 0
     keywordIds: []
@@ -104,6 +107,7 @@ MonoBehaviour:
     description: "\uC624\uB978\uCABD\uC73C\uB85C {effect1.value}\uCE78 \uC774\uB3D9\uD55C\uB2E4."
     actionType: "\uC774\uB3D9"
     rarity: "\uC77C\uBC18"
+    attackStyle: 
     energyCost: 0
     cooldownTurns: 0
     keywordIds: []
@@ -133,6 +137,7 @@ MonoBehaviour:
       \uBCF4\uD638\uB9C9\uC744 {effect1.value} \uC5BB\uB294\uB2E4."
     actionType: "\uBC29\uC5B4"
     rarity: "\uC77C\uBC18"
+    attackStyle: 
     energyCost: 0
     cooldownTurns: 0
     keywordIds: []
@@ -161,6 +166,7 @@ MonoBehaviour:
     description: "\uC5D0\uB108\uC9C0\uB97C {effect1.value} \uD68C\uBCF5\uD55C\uB2E4."
     actionType: "\uD68C\uBCF5"
     rarity: "\uC77C\uBC18"
+    attackStyle: 
     energyCost: 0
     cooldownTurns: 0
     keywordIds: []
@@ -190,6 +196,7 @@ MonoBehaviour:
       {effect1.value} \uB97C(\uC744) \uC900\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
     actionType: "\uACF5\uACA9"
     rarity: "\uC77C\uBC18"
+    attackStyle: slash
     energyCost: 10
     cooldownTurns: 1
     keywordIds:
@@ -221,6 +228,7 @@ MonoBehaviour:
       {effect1.value} \uB97C(\uC744) \uC900\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
     actionType: "\uACF5\uACA9"
     rarity: "\uC77C\uBC18"
+    attackStyle: thrust
     energyCost: 15
     cooldownTurns: 1
     keywordIds:
@@ -253,6 +261,7 @@ MonoBehaviour:
       {effect1.value} \uB97C(\uC744) \uC900\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
     actionType: "\uACF5\uACA9"
     rarity: "\uC77C\uBC18"
+    attackStyle: 
     energyCost: 20
     cooldownTurns: 1
     keywordIds:
@@ -286,6 +295,7 @@ MonoBehaviour:
       {effect1.value} \uB97C \uC8FC\uACE0 [\uAE30\uC808]\uC744 {effect2.value} \uBD80\uC5EC\uD55C\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
     actionType: "\uACF5\uACA9"
     rarity: "\uC77C\uBC18"
+    attackStyle: punch
     energyCost: 20
     cooldownTurns: 2
     keywordIds:
@@ -332,6 +342,7 @@ MonoBehaviour:
       {effect1.value} \uB97C \uC8FC\uACE0 [\uCD9C\uD608]\uC744 {effect2.value} \uBD80\uC5EC\uD55C\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
     actionType: "\uACF5\uACA9"
     rarity: "\uACE0\uAE09"
+    attackStyle: 
     energyCost: 15
     cooldownTurns: 1
     keywordIds:
@@ -379,6 +390,7 @@ MonoBehaviour:
       \uC801\uB4E4\uC5D0\uAC8C \uD53C\uD574 {effect2.value} \uB97C \uC900\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
     actionType: "\uBC29\uC5B4"
     rarity: "\uD76C\uADC0"
+    attackStyle: 
     energyCost: 20
     cooldownTurns: 2
     keywordIds:
@@ -428,6 +440,7 @@ MonoBehaviour:
       \uC900\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
     actionType: "\uACF5\uACA9"
     rarity: "\uC804\uC124"
+    attackStyle: 
     energyCost: 25
     cooldownTurns: 2
     keywordIds:
@@ -461,6 +474,7 @@ MonoBehaviour:
       {effect2.value}\uB97C \uC900\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
     actionType: "\uACF5\uACA9"
     rarity: "\uC77C\uBC18"
+    attackStyle: slash
     energyCost: 25
     cooldownTurns: 2
     keywordIds:

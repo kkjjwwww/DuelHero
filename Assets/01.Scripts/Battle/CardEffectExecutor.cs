@@ -50,6 +50,29 @@ namespace DuelHero.Battle
             UnitAttackPresentation attack = null, List<Vector2Int> movementPath = null) =>
             ExecutePreparationSteps(actorId, card, round, counter, jump, placement, true, attack, movementPath);
 
+        public void ShowAttackRange(UnitAttackPresentation attack, string actorId, CardDefinition card,
+            IReadOnlyList<Vector2Int> movementPath = null, bool counter = false)
+        {
+            if (attack == null || card == null || !combatEffects.TryGetUnit(actorId, out var unit, out _)) return;
+            var cells = new HashSet<Vector2Int>();
+            foreach (var effect in card.effects.Where(e => e.effectType == "damage" && e.IsCounter == counter))
+                cells.UnionWith(AttackRangeCalculator.Calculate(unit.GridPosition, effect, movementPath));
+            cells.RemoveWhere(cell => !unit.Grid.Contains(cell));
+            attack.ShowRange(unit, cells);
+        }
+
+        public IEnumerator PlayAttackAnimated(UnitAttackPresentation attack, string actorId, CardDefinition card,
+            IReadOnlyList<Vector2Int> movementPath = null, bool counter = false)
+        {
+            if (attack == null) yield break;
+            try
+            {
+                ShowAttackRange(attack, actorId, card, movementPath, counter);
+                yield return attack.PlayAttack(card?.attackStyle);
+            }
+            finally { attack.HideRange(); }
+        }
+
         public void CancelPreparationPresentation(string actorId)
         {
             if (combatEffects != null && combatEffects.TryGetUnit(actorId, out var movement, out _))
@@ -88,7 +111,12 @@ namespace DuelHero.Battle
                         if (dash)
                         {
                             placement?.Refresh();
-                            yield return attack.PlayDash(attack.MotionWorldPosition - dashStart);
+                            try
+                            {
+                                ShowAttackRange(attack, actorId, card, movementPath, counter);
+                                yield return attack.PlayDash(attack.MotionWorldPosition - dashStart);
+                            }
+                            finally { attack.HideRange(); }
                         }
                         break;
                     case "guard": combatEffects.ResolveGuard(actorId, card.id, effect, round); break;

@@ -13,6 +13,7 @@ namespace DuelHero.Units
         [SerializeField] private Sprite idle;
         [SerializeField] private Sprite attackBefore;
         [SerializeField] private Sprite attackAfter;
+        [SerializeField] private Sprite thrustBefore, thrustAfter, slashBefore, slashAfter, punchBefore, punchAfter;
         [SerializeField] private Sprite block;
         [SerializeField] private Sprite heal;
         [SerializeField] private Sprite jumpGround;
@@ -52,6 +53,15 @@ namespace DuelHero.Units
             if (!supportPosePlaying) return;
             supportPosePlaying = false;
             ResetPose();
+        }
+
+        public bool SetAttackPose(string style, bool after)
+        {
+            Sprite selected = style switch { "thrust" => after ? thrustAfter : thrustBefore, "slash" => after ? slashAfter : slashBefore, "punch" => after ? punchAfter : punchBefore, _ => null };
+            if (selected == null || targetRenderer == null) return SetPose(after ? UnitPose.AttackAfter : UnitPose.AttackBefore);
+            targetRenderer.sprite = selected;
+            CurrentPose = after ? UnitPose.AttackAfter : UnitPose.AttackBefore;
+            return true;
         }
 
         public bool SetPose(UnitPose pose)

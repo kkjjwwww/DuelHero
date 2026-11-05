@@ -24,7 +24,7 @@ namespace DuelHero.Cards
             if (!IsCardinal(direction)) throw new ArgumentException("상하좌우 방향을 지정해주세요.");
             return new CardDefinition
             {
-                id = card.id, name = card.name, description = card.description, actionType = card.actionType,
+                id = card.id, name = card.name, description = card.description, actionType = card.actionType, attackStyle = card.attackStyle,
                 rarity = card.rarity, energyCost = card.energyCost, keywordIds = card.keywordIds, cooldownTurns = card.cooldownTurns,
                 isObtainable = card.isObtainable, isBasicAction = card.isBasicAction, isStarterCard = card.isStarterCard,
                 keywordParameters = card.keywordParameters,

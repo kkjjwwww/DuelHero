@@ -116,6 +116,7 @@ public static class CardSheetImporter
         var cards = cardRows.Select(r => new CardDefinition
         {
             id = Required(r, "id"), name = Required(r, "name"), description = Required(r, "description"),
+            attackStyle = r.TryGetValue("attackStyle", out var style) ? style : "",
             actionType = Required(r, "actionType"), rarity = Required(r, "rarity"), energyCost = Number(r, "energyCost"),
             cooldownTurns = r.TryGetValue("cooldownTurns", out var cooldown) && !string.IsNullOrWhiteSpace(cooldown)
                 ? Number(r, "cooldownTurns") : 1,
