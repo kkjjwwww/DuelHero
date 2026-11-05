@@ -5,7 +5,6 @@ using DuelHero.Map;
 using DuelHero.Run;
 using DuelHero.Units;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace DuelHero.Battle
 {
@@ -44,7 +43,11 @@ namespace DuelHero.Battle
         {
             source.BattleFinished += HandleFinished;
             view.ActionRequested += HandleAction;
-            if (rewardView != null) rewardView.CardSelected += HandleRewardSelected;
+            if (rewardView != null)
+            {
+                rewardView.CardSelected += HandleRewardSelected;
+                rewardView.ActionRequested += HandleAction;
+            }
             HandleFinished(source.Outcome);
             RefreshView();
         }
@@ -53,7 +56,11 @@ namespace DuelHero.Battle
         {
             source.BattleFinished -= HandleFinished;
             view.ActionRequested -= HandleAction;
-            if (rewardView != null) rewardView.CardSelected -= HandleRewardSelected;
+            if (rewardView != null)
+            {
+                rewardView.CardSelected -= HandleRewardSelected;
+                rewardView.ActionRequested -= HandleAction;
+            }
         }
 
         private void HandleFinished(BattleOutcome result)
@@ -81,7 +88,7 @@ namespace DuelHero.Battle
                             victoryHealth = playerStats.Health;
                             rewardOptions = CardRewardSelector.Generate(playerDeck.Database.cards, cards,
                                 rewardSettings, run.Map.Seed, battleNodeId);
-                            rewardView.Show(rewardOptions, playerDeck.Database);
+                            rewardView.Show(rewardOptions, playerDeck.Database, victoryGold);
                             rewardPending = true;
                         }
                         else if (!run.TryCompleteBattle(playerStats.Health, cards, victoryGold))
@@ -110,6 +117,7 @@ namespace DuelHero.Battle
             {
                 LastError = $"맵 씬을 불러올 수 없습니다: {mapScenePath}";
                 Debug.LogWarning(LastError, this);
+                RefreshView();
                 return;
             }
             transitioning = true;
@@ -121,13 +129,15 @@ namespace DuelHero.Battle
                     standaloneRestart.Restart();
                 else
                 {
-                    if (SceneManager.LoadSceneAsync(mapScenePath, LoadSceneMode.Single) == null)
-                        throw new InvalidOperationException("맵 씬 로드를 시작하지 못했습니다.");
-                    // Keep the defeated run until loading has actually been requested.
-                    if (outcome != BattleOutcome.Victory) RunSessionStore.Clear();
+                    MapSceneFade.Load(mapScenePath, RestoreReturn, () =>
+                    {
+                        if (outcome != BattleOutcome.Victory) RunSessionStore.Clear();
+                    });
                 }
             }
-            catch (Exception error)
+            catch (Exception error) { RestoreReturn(error); }
+
+            void RestoreReturn(Exception error)
             {
                 transitioning = false;
                 LastError = error.Message;
@@ -165,16 +175,19 @@ namespace DuelHero.Battle
             }
             rewardPending = false;
             processed = true;
-            rewardView.Hide();
-            RefreshView();
             HandleAction();
         }
 
         private void RefreshView()
         {
-            string label = rewardPending && rewardOptions.Length > 0 ? "건너뛰기"
-                : run != null && outcome == BattleOutcome.Victory ? "계속" : "재시작";
-            view.Show(outcome, label, (processed || rewardPending) && !transitioning &&
+            if (rewardView != null && rewardView.IsShowing)
+            {
+                view.Show(BattleOutcome.Running, string.Empty, false);
+                if (processed) rewardView.ShowReturn(victoryGold, transitioning, LastError);
+                return;
+            }
+            string label = run != null && outcome == BattleOutcome.Victory ? "계속" : "재시작";
+            view.Show(outcome, label, processed && !transitioning &&
                 (run != null || standaloneRestart != null));
             view.ShowGold(outcome == BattleOutcome.Victory && run != null ? victoryGold : (int?)null, processed && !rewardPending);
         }

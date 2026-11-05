@@ -54,6 +54,7 @@ namespace DuelHero.Units
             if (guard.EndSlot()) Changed?.Invoke();
         }
         public event Action Changed;
+        internal event Action ShieldOnlyHit;
         public bool Initialize(int health, int maxHealth, int energy, int maxEnergy)
         {
             if (IsInitialized) return false;
@@ -75,7 +76,9 @@ namespace DuelHero.Units
             guard.ReduceDamage(absorbed);
             int next = amount >= Health ? 0 : Health - amount;
             if (next == Health && beforeGuard == GuardReduction) return;
+            bool shieldOnlyHit = next == Health && GuardReduction < beforeGuard;
             Health = next; Changed?.Invoke();
+            if (shieldOnlyHit) ShieldOnlyHit?.Invoke();
         }
         public void Heal(int amount)
         {

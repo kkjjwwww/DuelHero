@@ -20,6 +20,10 @@ namespace DuelHero.EditorTools
         private int healthInput;
         private int energyInput;
         private int stunInput = 1;
+        private int statAmount = 10;
+        private int guardSlots = 1;
+        private string statResult;
+        private Vector2 scrollPosition;
 
         [MenuItem("Duel Hero/Debug/Card Hand and Stats")]
         private static void Open() => GetWindow<CardHandDebugWindow>("전투 디버그");
@@ -54,6 +58,8 @@ namespace DuelHero.EditorTools
             }
 
             bool editable = !queue.IsExecuting && (turn == null || !turn.IsInputLocked);
+            using var scroll = new EditorGUILayout.ScrollViewScope(scrollPosition);
+            scrollPosition = scroll.scrollPosition;
             EditorGUILayout.LabelField("전투 종료", EditorStyles.boldLabel);
             using (new EditorGUI.DisabledScope(turn == null || !turn.CanWinForDebug))
             {
@@ -156,7 +162,7 @@ namespace DuelHero.EditorTools
                 units.Select((unit, index) => (index == 0 ? "플레이어 · " : "적 · ") + unit.gameObject.name).ToArray());
             if (nextIndex != selectedIndex) SelectUnit(units[nextIndex]);
 
-            EditorGUILayout.LabelField("현재 HP / 에너지", selectedUnit.Health + " / " + selectedUnit.Energy);
+            EditorGUILayout.LabelField("현재 상태", FormatStats(selectedUnit));
             using (new EditorGUI.DisabledScope(!editable))
             {
                 healthInput = EditorGUILayout.IntField("HP (최대 " + selectedUnit.MaxHealth + ")", healthInput);
@@ -170,15 +176,66 @@ namespace DuelHero.EditorTools
                     else selectedUnit.RestoreEnergy(energy - selectedUnit.Energy);
                     healthInput = selectedUnit.Health;
                     energyInput = selectedUnit.Energy;
+                    statResult = null;
+                }
+
+                EditorGUILayout.Space();
+                statAmount = Mathf.Max(1, EditorGUILayout.IntField("변화량", statAmount));
+                guardSlots = Mathf.Max(1, EditorGUILayout.IntField("보호막 지속 슬롯", guardSlots));
+                var unit = selectedUnit;
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    if (GUILayout.Button("체력 피해"))
+                        ApplyStatChange("체력 피해", () => unit.TakeDamage(statAmount));
+                    if (GUILayout.Button("체력 회복"))
+                        ApplyStatChange("체력 회복", () => unit.Heal(statAmount));
+                }
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    if (GUILayout.Button("에너지 소모"))
+                    {
+                        if (statAmount > unit.Energy)
+                            statResult = $"에너지 소모 실패 · 요청 {statAmount}, 현재 {unit.Energy}";
+                        else
+                            ApplyStatChange("에너지 소모", () => unit.TrySpendEnergy(statAmount));
+                    }
+                    if (GUILayout.Button("에너지 회복"))
+                        ApplyStatChange("에너지 회복", () => unit.RestoreEnergy(statAmount));
+                }
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    if (GUILayout.Button("보호막 생성"))
+                        ApplyStatChange("보호막 생성", () => unit.ApplyGuard(statAmount, guardSlots));
+                    using (new EditorGUI.DisabledScope(unit.GuardReduction == 0))
+                    {
+                        if (GUILayout.Button("보호막 소모"))
+                            ApplyStatChange("보호막 소모", () => unit.TakeDamage(Mathf.Min(statAmount, unit.GuardReduction)));
+                    }
                 }
             }
+            if (!string.IsNullOrEmpty(statResult))
+                EditorGUILayout.HelpBox(statResult, MessageType.Info);
         }
+
+        private void ApplyStatChange(string label, Action apply)
+        {
+            var unit = selectedUnit;
+            string before = FormatStats(unit);
+            apply();
+            healthInput = unit.Health;
+            energyInput = unit.Energy;
+            statResult = $"{label}\n이전  {before}\n이후  {FormatStats(unit)}";
+        }
+
+        private static string FormatStats(UnitStats unit) =>
+            $"HP {unit.Health}/{unit.MaxHealth} · 에너지 {unit.Energy}/{unit.MaxEnergy} · 보호막 {unit.GuardReduction}";
 
         private void SelectUnit(UnitStats unit)
         {
             selectedUnit = unit;
             healthInput = unit.Health;
             energyInput = unit.Energy;
+            statResult = null;
         }
     }
 }

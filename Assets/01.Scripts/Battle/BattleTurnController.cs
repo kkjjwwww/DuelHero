@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using DuelHero.Cards;
+using DuelHero.Data;
 using DuelHero.Units;
 using UnityEngine;
 namespace DuelHero.Battle
@@ -16,6 +17,7 @@ namespace DuelHero.Battle
         [SerializeField] private MonoBehaviour enemyPlanSource;
         [SerializeField] private CardEffectExecutor effects;
         [SerializeField] private CombatEffectResolver combatEffects;
+        [SerializeField] private BattleConfig battleConfig;
         [SerializeField] private BattlePresentation presentation;
         [SerializeField] private UnitAttackPresentation playerAttackPresentation;
         [SerializeField] private UnitAttackPresentation enemyAttackPresentation;
@@ -325,6 +327,15 @@ namespace DuelHero.Battle
             if (!isActiveAndEnabled || !AwaitingNextTurn) return false;
             restoring = true;
             ResultsAvailable = false;
+            if (battleConfig != null && battleConfig.hasEnergyRecoveryPerTurn &&
+                battleConfig.energyRecoveryPerTurn > 0 && combatEffects != null)
+            {
+                int recovery = battleConfig.energyRecoveryPerTurn;
+                if (combatEffects.TryGetUnit(playerId, out _, out var playerStats))
+                    playerStats.RestoreEnergy(recovery);
+                if (combatEffects.TryGetUnit(enemyId, out _, out var enemyStats))
+                    enemyStats.RestoreEnergy(recovery);
+            }
             PhaseChanged?.Invoke();
             StartCoroutine(AdvanceTurn());
             return true;

@@ -36,7 +36,6 @@ internal static class CardRewardSetup
             var result = Find<BattleResultUI>(scene);
             var serialized = new SerializedObject(result);
             var title = (Text)serialized.FindProperty("resultLabel").objectReferenceValue;
-            var button = (Button)serialized.FindProperty("restartButton").objectReferenceValue;
             var panel = (RectTransform)title.transform.parent;
             var reward = result.GetComponent<CardRewardUI>();
             if (reward == null) reward = result.gameObject.AddComponent<CardRewardUI>();
@@ -58,10 +57,6 @@ internal static class CardRewardSetup
                 message.rectTransform.sizeDelta = new Vector2(800, 32);
                 message.rectTransform.anchoredPosition = new Vector2(0, 182);
             }
-            SetReference(reward, "resultPanel", panel);
-            SetReference(reward, "resultTitle", title.rectTransform);
-            SetReference(reward, "heading", panel.Find("Heading").gameObject);
-            SetReference(reward, "actionButton", button.transform);
             SetReference(reward, "content", content);
             SetReference(reward, "message", content.GetComponentInChildren<Text>(true));
             SetReference(reward, "cardPrefab", AssetDatabase.LoadAssetAtPath<CardView>("Assets/02.Prefabs/CardView.prefab"));

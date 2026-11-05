@@ -95,6 +95,9 @@ namespace DuelHero.Battle
                         var prepared = context.GetPreparedAction(action);
                         preview.CopyValuesFrom(state);
                         int rawDamage = preview.PreviewAction(context, prepared, state);
+                        if (prepared.HasMovement && preview.Position == state.Position &&
+                            Array.TrueForAll(prepared.Effects, effect => effect.effectType == "move"))
+                            continue;
                         float burden = attackBurden + (prepared.HasDamage ? evaluator.AttackCostPenalty(prepared.EnergyCost, state.Energy) * style.Preparation : 0);
                         plan[slot] = action;
                         bool revisited = false;

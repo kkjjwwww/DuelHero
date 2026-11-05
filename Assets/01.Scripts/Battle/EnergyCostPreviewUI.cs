@@ -13,6 +13,7 @@ namespace DuelHero.Battle
         [SerializeField] private Color costColor = new Color(.95f, .95f, .95f, .75f);
         [SerializeField] private Color recoveryColor = new Color(.65f, .65f, .65f, .9f);
         [SerializeField, Range(0f, 1f)] private float dimAlpha = .12f;
+        [SerializeField, Range(0f, 1f)] private float costDimAlpha = .65f;
         [SerializeField, Min(.1f)] private float pulseHalfPeriod = .4f;
         private SegmentView costView;
         private SegmentView recoveryView;
@@ -26,7 +27,7 @@ namespace DuelHero.Battle
             public SegmentView(Image image) { this.image = image; }
 
             public void Show(float min, float max, float maximum,
-                Color color, float dimAlpha, float pulseHalfPeriod)
+                Color color, float dimAlpha, float pulseHalfPeriod, bool fromRight = false)
             {
                 if (image == null) return;
                 if (max <= min || maximum <= 0) { Hide(); return; }
@@ -34,7 +35,7 @@ namespace DuelHero.Battle
                     shownMaximum == maximum) return;
                 pulse?.Kill(); pulse = null;
                 shownMin = min; shownMax = max; shownMaximum = maximum;
-                SetRange(image, min, max, maximum);
+                SetRange(image, min, max, maximum, fromRight);
                 image.color = color;
                 pulse = image.DOFade(dimAlpha, pulseHalfPeriod).SetLoops(-1, LoopType.Yoyo).SetUpdate(true);
             }
@@ -45,15 +46,15 @@ namespace DuelHero.Battle
                 shownMin = shownMax = shownMaximum = -1;
                 if (image != null) image.gameObject.SetActive(false);
             }
-            public static void SetRange(Image image, float min, float max, float maximum)
+            public static void SetRange(Image image, float min, float max, float maximum, bool fromRight = false)
             {
                 if (image == null) return;
                 image.gameObject.SetActive(max > min && maximum > 0);
                 if (!image.gameObject.activeSelf) return;
                 image.type = Image.Type.Simple;
                 var rect = image.rectTransform;
-                rect.anchorMin = new Vector2(min / maximum, 0f);
-                rect.anchorMax = new Vector2(max / maximum, 1f);
+                rect.anchorMin = new Vector2(fromRight ? 1f - max / maximum : min / maximum, 0f);
+                rect.anchorMax = new Vector2(fromRight ? 1f - min / maximum : max / maximum, 1f);
                 rect.offsetMin = Vector2.zero; rect.offsetMax = Vector2.zero;
                 image.raycastTarget = false;
             }
@@ -86,7 +87,7 @@ namespace DuelHero.Battle
             {
                 recoveryView?.Hide();
                 costView?.Show(result.SegmentMin, result.SegmentMax, result.MaxEnergy,
-                    costColor, dimAlpha, pulseHalfPeriod);
+                    costColor, costDimAlpha, pulseHalfPeriod);
             }
         }
     }

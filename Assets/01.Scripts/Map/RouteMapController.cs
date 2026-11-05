@@ -4,7 +4,6 @@ using DuelHero.Cards;
 using DuelHero.Data;
 using DuelHero.Run;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace DuelHero.Map
 {
@@ -93,10 +92,11 @@ namespace DuelHero.Map
             RefreshNodeStates();
             try
             {
-                if (SceneManager.LoadSceneAsync(battleScenePath, LoadSceneMode.Single) == null)
-                    throw new InvalidOperationException("전투 씬 로드 요청을 시작하지 못했습니다.");
+                MapSceneFade.Load(battleScenePath, RestoreBattleEntry);
             }
-            catch (Exception error)
+            catch (Exception error) { RestoreBattleEntry(error); }
+
+            void RestoreBattleEntry(Exception error)
             {
                 session.TryCancelBattle(nodeId);
                 IsTransitioning = false;
@@ -114,10 +114,11 @@ namespace DuelHero.Map
             {
                 if (!session.TryBeginShop(nodeId, cardDatabase.cards, shopConfig)) return;
                 IsTransitioning = true; LastError = null; RefreshNodeStates();
-                if (SceneManager.LoadSceneAsync(shopScenePath, LoadSceneMode.Single) == null)
-                    throw new InvalidOperationException("상점 씬 로드를 시작하지 못했습니다.");
+                MapSceneFade.Load(shopScenePath, RestoreShopEntry);
             }
-            catch (Exception error)
+            catch (Exception error) { RestoreShopEntry(error); }
+
+            void RestoreShopEntry(Exception error)
             {
                 session.TryCancelShopEntry(nodeId); IsTransitioning = false; LastError = error.Message;
                 RefreshNodeStates(); Debug.LogWarning(LastError, this);

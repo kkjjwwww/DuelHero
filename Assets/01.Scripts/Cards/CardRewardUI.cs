@@ -7,52 +7,32 @@ namespace DuelHero.Cards
 {
     public sealed class CardRewardUI : MonoBehaviour
     {
-        [SerializeField] private RectTransform resultPanel;
-        [SerializeField] private RectTransform resultTitle;
-        [SerializeField] private GameObject heading;
-        [SerializeField] private RectTransform actionButton;
         [SerializeField] private RectTransform content;
         [SerializeField] private Text message;
         [SerializeField] private CardView cardPrefab;
         [SerializeField, Range(0f, 1f), InspectorName("보상 배경 불투명도")]
         private float backgroundOpacity = .88f;
-        private Image panelBackground, screenBackground;
-        private bool panelBackgroundEnabled;
-        private Color screenBackgroundColor;
         private readonly List<CardView> views = new();
         private KeywordTooltip tooltip;
         private CardRangePreview rangePreview;
         private bool showing;
         private bool inputEnabled;
-        private Vector2 panelSize, titlePosition, buttonPosition;
-        private bool headingActive;
+        private Image screenBackground;
+        private Button actionButton;
+        private Text actionLabel, goldLabel;
+        public bool IsShowing => showing;
         public event Action<string> CardSelected;
+        public event Action ActionRequested;
 
-        public void Show(IReadOnlyList<CardDefinition> cards, CardDatabase database)
+        public void Show(IReadOnlyList<CardDefinition> cards, CardDatabase database, int gold)
         {
             if (showing) return;
             showing = true;
-            panelSize = resultPanel.sizeDelta;
-            titlePosition = resultTitle.anchoredPosition;
-            buttonPosition = actionButton.anchoredPosition;
-            headingActive = heading.activeSelf;
-            panelBackground = resultPanel.GetComponent<Image>();
-            if (panelBackground != null)
-            {
-                panelBackgroundEnabled = panelBackground.enabled;
-                panelBackground.enabled = false;
-            }
-            screenBackground = GetComponent<Image>();
-            if (screenBackground != null)
-            {
-                screenBackgroundColor = screenBackground.color;
-                ApplyBackgroundOpacity();
-            }
-            resultPanel.sizeDelta = new Vector2(920, 560);
-            resultTitle.anchoredPosition = new Vector2(0, 225);
-            actionButton.anchoredPosition = new Vector2(0, -225);
-            heading.SetActive(false);
+            var canvas = GetComponentInParent<Canvas>().rootCanvas;
+            BuildOverlay(canvas);
             content.gameObject.SetActive(true);
+            goldLabel.text = "획득 예정 골드  +" + gold;
+            actionLabel.text = cards.Count == 0 ? "계속" : "건너뛰기";
             message.text = cards.Count == 0 ? "획득 가능한 카드가 없습니다." : "카드를 클릭하면 획득하고 맵으로 돌아갑니다.";
             Font font = message.font;
             tooltip = KeywordTooltip.Create(GetComponentInParent<Canvas>().rootCanvas);
@@ -92,6 +72,7 @@ namespace DuelHero.Cards
         public void SetInteractable(bool value)
         {
             inputEnabled = value;
+            actionButton.interactable = value;
             foreach (var card in views)
             {
                 card.SetState(string.Empty, 0, value);
@@ -100,23 +81,64 @@ namespace DuelHero.Cards
             if (!value && tooltip != null) tooltip.Hide();
         }
 
-        public void Hide()
+        public void ShowReturn(int gold, bool transitioning, string error)
         {
-            if (!showing) return;
-            showing = false;
-            inputEnabled = false;
-            if (tooltip != null) { Destroy(tooltip.gameObject); tooltip = null; }
-            foreach (var card in views) { card.gameObject.SetActive(false); Destroy(card.gameObject); }
-            views.Clear();
-            content.gameObject.SetActive(false);
-            resultPanel.sizeDelta = panelSize;
-            resultTitle.anchoredPosition = titlePosition;
-            actionButton.anchoredPosition = buttonPosition;
-            heading.SetActive(headingActive);
-            if (panelBackground != null) panelBackground.enabled = panelBackgroundEnabled;
-            if (screenBackground != null) screenBackground.color = screenBackgroundColor;
+            SetInteractable(false);
+            foreach (var card in views) card.gameObject.SetActive(false);
+            goldLabel.text = "획득 골드  +" + gold;
+            message.text = transitioning ? "맵으로 이동 중…" : error;
+            actionLabel.text = "이동 재시도";
+            actionButton.gameObject.SetActive(!transitioning && !string.IsNullOrEmpty(error));
+            actionButton.interactable = !transitioning;
         }
 
+        private void BuildOverlay(Canvas canvas)
+        {
+            if (screenBackground != null) return;
+            var overlay = new GameObject("CardRewardOverlay", typeof(RectTransform), typeof(Image));
+            var rect = (RectTransform)overlay.transform;
+            rect.SetParent(canvas.transform, false);
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = rect.offsetMax = Vector2.zero;
+            screenBackground = overlay.GetComponent<Image>();
+            screenBackground.color = Color.black;
+            ApplyBackgroundOpacity();
+            content.SetParent(rect, false);
+
+            CreateLabel(rect, "승리", new Vector2(0, 225), 32);
+            goldLabel = CreateLabel(rect, "", new Vector2(0, -177), 23);
+            var action = new GameObject("RewardAction", typeof(RectTransform), typeof(Image), typeof(Button));
+            var actionRect = (RectTransform)action.transform;
+            actionRect.SetParent(rect, false);
+            actionRect.sizeDelta = new Vector2(220, 46);
+            actionRect.anchoredPosition = new Vector2(0, -225);
+            action.GetComponent<Image>().color = new Color(.25f, .25f, .25f);
+            actionButton = action.GetComponent<Button>();
+            actionButton.onClick.AddListener(() => ActionRequested?.Invoke());
+            actionLabel = CreateLabel(actionRect, "", Vector2.zero, 22);
+        }
+
+        private Text CreateLabel(RectTransform parent, string value, Vector2 position, int size)
+        {
+            var label = new GameObject("Label", typeof(RectTransform), typeof(Text)).GetComponent<Text>();
+            label.transform.SetParent(parent, false);
+            label.rectTransform.sizeDelta = new Vector2(650, 44);
+            label.rectTransform.anchoredPosition = position;
+            label.font = message.font;
+            label.fontSize = size;
+            label.alignment = TextAnchor.MiddleCenter;
+            label.color = message.color;
+            label.text = value;
+            label.raycastTarget = false;
+            return label;
+        }
+
+        private void OnDestroy()
+        {
+            if (screenBackground != null) Destroy(screenBackground.gameObject);
+            if (tooltip != null) Destroy(tooltip.gameObject);
+        }
         private void ApplyBackgroundOpacity()
         {
             var color = screenBackground.color;

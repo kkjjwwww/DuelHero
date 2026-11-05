@@ -345,6 +345,7 @@ internal static class EnemyPlanSimulationValidation
         ValidateTacticalScores();
         ValidateRoundStyles();
         ValidateMovementBenefits();
+        ValidateBlockedMovement();
         ValidateAttackEligibility();
         ValidateAttackFirstPriority();
         ProfileUtility();
@@ -499,6 +500,16 @@ internal static class EnemyPlanSimulationValidation
             Debug.Log("공격 후보 검증 통과: 48개 시드 반대 방향·범위 밖 공격 차단, 자체 이동 명중·장애물·복합 회복·대기.");
         }
         finally { UtilityPlanSelector.CaptureScores = recording; }
+    }
+
+    private static void ValidateBlockedMovement()
+    {
+        var move = Move("blocked", 1);
+        move.Definition.keywordIds = Array.Empty<string>();
+        var selector = new UtilityPlanSelector(new UtilityAiSettings());
+        var context = Context(new[] { move }, Map(), new Vector2Int(5, 2), new Vector2Int(2, 2), 100, 100);
+        Require(selector.Select(context).All(action => WaitCard.IsWait(action.Card.Definition)),
+            "맵 경계에 막힌 순수 이동이 추첨 후보에 남았습니다.");
     }
 
     private static void ValidateMovementBenefits()

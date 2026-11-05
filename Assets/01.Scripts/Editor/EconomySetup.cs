@@ -20,7 +20,7 @@ public static class EconomySetup
     {
         var so = new SerializedObject(target); so.FindProperty(field).objectReferenceValue = value; so.ApplyModifiedPropertiesWithoutUndo();
     }
-    private static Font Font => AssetDatabase.LoadAssetAtPath<Font>("Assets/Art/UI/Fonts/NotoSansKR.ttf");
+    private static Font Font => AssetDatabase.LoadAssetAtPath<Font>("Assets/Resources/Fonts/BusanDandiM.ttf");
     private static T Find<T>(Scene scene) where T : Component => scene.GetRootGameObjects().SelectMany(g => g.GetComponentsInChildren<T>(true)).Single();
     private static RectTransform Rect(string name, Transform parent, Vector2 size, Vector2 position)
     {

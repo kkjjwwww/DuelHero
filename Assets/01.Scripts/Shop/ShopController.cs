@@ -4,7 +4,7 @@ using System.Linq;
 using DuelHero.Cards;
 using DuelHero.Run;
 using UnityEngine;
-using UnityEngine.SceneManagement;
+using DuelHero.Map;
 using UnityEngine.UI;
 
 namespace DuelHero.Shop
@@ -131,9 +131,15 @@ namespace DuelHero.Shop
                     if (!completed) { if (!run.TryCompleteShop(nodeId)) throw new InvalidOperationException("상점 방문 완료 실패"); completed = true; }
                 }
                 transitioning = true; SetHoverEnabled(false); tooltip?.Hide(); Refresh();
-                if (SceneManager.LoadSceneAsync(mapScenePath, LoadSceneMode.Single) == null) throw new InvalidOperationException("맵 씬 로드 요청 실패");
+                MapSceneFade.Load(mapScenePath, RestoreExit);
             }
-            catch (Exception error) { transitioning = false; SetHoverEnabled(!completed); LastError = error.Message; message.text = LastError + " 나가기를 눌러 재시도하세요."; Refresh(); }
+            catch (Exception error) { RestoreExit(error); }
+
+            void RestoreExit(Exception error)
+            {
+                transitioning = false; SetHoverEnabled(!completed); LastError = error.Message;
+                message.text = LastError + " 나가기를 눌러 재시도하세요."; Refresh();
+            }
         }
     }
 }
