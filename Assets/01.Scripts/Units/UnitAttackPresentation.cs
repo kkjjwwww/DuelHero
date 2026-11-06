@@ -36,7 +36,7 @@ namespace DuelHero.Units
         private Vector3 startPosition;
         private int version;
 
-        public IEnumerator PlayAttack(string style = null)
+        public IEnumerator PlayAttack(string style = null, System.Action onStrike = null)
         {
             if (!isActiveAndEnabled || IsPlaying) yield break;
             int run = ++version;
@@ -49,6 +49,7 @@ namespace DuelHero.Units
                 if (run != version || !isActiveAndEnabled) yield break;
 
                 if (sprites != null) sprites.SetAttackPose(style, true);
+                onStrike?.Invoke();
                 if (strikeDuration > 0f)
                 {
                     if (motionRoot != null && lungeDistance > 0f)
@@ -73,7 +74,7 @@ namespace DuelHero.Units
             }
         }
 
-        public IEnumerator PlayDash(Vector3 displacement)
+        public IEnumerator PlayDash(Vector3 displacement, System.Action onStrike = null, System.Action onLaunch = null)
         {
             if (!isActiveAndEnabled || IsPlaying) yield break;
             if (motionRoot == null || motionRoot.parent == null)
@@ -85,6 +86,7 @@ namespace DuelHero.Units
             try
             {
                 motionRoot.localPosition = startPosition + motionRoot.parent.InverseTransformVector(-displacement);
+                onLaunch?.Invoke();
                 if (sprites != null) sprites.SetPose(UnitPose.AttackBefore);
                 motion = DOTween.Sequence();
                 motion.Append(motionRoot.DOLocalMove(startPosition, dashDuration).SetEase(Ease.Linear));
@@ -92,6 +94,7 @@ namespace DuelHero.Units
                 if (run != version || !isActiveAndEnabled) yield break;
                 motionRoot.localPosition = startPosition;
                 if (sprites != null) sprites.SetPose(UnitPose.AttackAfter);
+                onStrike?.Invoke();
                 completed = true; // Keep the pose until the shared damage batch is applied.
             }
             finally { if (!completed && run == version) Cancel(); }

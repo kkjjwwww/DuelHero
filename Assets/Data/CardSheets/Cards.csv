@@ -1,24 +1,38 @@
-"id","name","description","actionType","energyCost","keywordIds","rarity","isObtainable","isBasicAction","isStarterCard","cooldownTurns","attackStyle"
-"move_up_001","위 이동","위로 {effect1.value}칸 이동한다.","이동","0","","일반","FALSE","TRUE","TRUE","0",""
-"move_down_001","아래 이동","아래로 {effect1.value}칸 이동한다.","이동","0","","일반","FALSE","TRUE","TRUE","0",""
-"move_left_001","왼쪽 이동","왼쪽으로 {effect1.value}칸 이동한다.","이동","0","","일반","FALSE","TRUE","TRUE","0",""
-"move_right_001","오른쪽 이동","오른쪽으로 {effect1.value}칸 이동한다.","이동","0","","일반","FALSE","TRUE","TRUE","0",""
-"guard_001","방어","{effect1.durationSlots}개 슬롯 동안 지속되는 보호막을 {effect1.value} 얻는다.","방어","0","","일반","FALSE","TRUE","TRUE","0",""
-"breathing_001","숨고르기","에너지를 {effect1.value} 회복한다.","회복","0","","일반","FALSE","TRUE","TRUE","0",""
+"id","name","description","actionType","energyCost","keywordIds","rarity","isObtainable","isBasicAction","isStarterCard","cooldownTurns","attackStyle","attackVfx","hitVfx"
+"move_up_001","위 이동","위로 {effect1.value}칸 이동한다.","이동","0","","일반","FALSE","TRUE","TRUE","0","","",""
+"move_down_001","아래 이동","아래로 {effect1.value}칸 이동한다.","이동","0","","일반","FALSE","TRUE","TRUE","0","","",""
+"move_left_001","왼쪽 이동","왼쪽으로 {effect1.value}칸 이동한다.","이동","0","","일반","FALSE","TRUE","TRUE","0","","",""
+"move_right_001","오른쪽 이동","오른쪽으로 {effect1.value}칸 이동한다.","이동","0","","일반","FALSE","TRUE","TRUE","0","","",""
+"guard_001","방어","{effect1.durationSlots}개 슬롯 동안 지속되는 보호막을 {effect1.value} 얻는다.","방어","0","","일반","FALSE","TRUE","TRUE","0","","",""
+"breathing_001","숨고르기","에너지를 {effect1.value} 회복한다.","회복","0","","일반","FALSE","TRUE","TRUE","0","","",""
 "slash_001","베기","범위 내 모든 적에게 피해 {effect1.value} 를(을) 준다.
-[방향지정][{cooldownTurns}턴]","공격","10","direction_select","일반","FALSE","FALSE","TRUE","","slash"
+[방향지정][{cooldownTurns}턴]","공격","10","direction_select","일반","FALSE","FALSE","TRUE","","slash","",""
 "thrust_001","찌르기","범위 내 모든 적에게 피해 {effect1.value} 를(을) 준다.
-[방향지정][{cooldownTurns}턴]","공격","15","direction_select","일반","FALSE","FALSE","TRUE","","thrust"
+[방향지정][{cooldownTurns}턴]","공격","15","direction_select","일반","FALSE","FALSE","TRUE","","thrust","thrust",""
 "sweep_001","횡베기","범위 내 모든 적에게 피해 {effect1.value} 를(을) 준다.
-[방향지정][{cooldownTurns}턴]","공격","20","direction_select","일반","FALSE","FALSE","TRUE","",""
+[방향지정][{cooldownTurns}턴]","공격","20","direction_select","일반","FALSE","FALSE","TRUE","","","sweep",""
 "head_break_001","머리깨기","범위 내 모든 적에게 피해 {effect1.value} 를 주고 [기절]을 {effect2.value} 부여한다.
-[방향지정][{cooldownTurns}턴]","공격","20","direction_select;stun","일반","TRUE","FALSE","FALSE","2","punch"
+[방향지정][{cooldownTurns}턴]","공격","20","direction_select;stun","일반","TRUE","FALSE","FALSE","2","punch","","head_crush"
 "bleed_attack_001","출혈 공격","범위 내 모든 적에게 피해 {effect1.value} 를 주고 [출혈]을 {effect2.value} 부여한다.
-[방향지정][{cooldownTurns}턴]","공격","15","direction_select;bleed","고급","TRUE","FALSE","FALSE","1",""
+[방향지정][{cooldownTurns}턴]","공격","15","direction_select;bleed","고급","TRUE","FALSE","FALSE","1","","",""
 "riposte_stance_001","응수 태세","{effect1.durationSlots}개 슬롯 동안 보호막 {effect1.value}을 얻는다.
 [반격] 범위 내 적들에게 피해 {effect2.value} 를 준다.
-[방향지정][{cooldownTurns}턴]","방어","20","direction_select;counter","희귀","TRUE","FALSE","FALSE","2",""
+[방향지정][{cooldownTurns}턴]","방어","20","direction_select;counter","희귀","TRUE","FALSE","FALSE","2","","",""
 "tear_wound_001","상처 찢기","범위 내 모든 적에게 피해 {effect1.value}를 주고, 대상의 [출혈] 수치 × {effect1.statusMultiplier}만큼 추가 피해를 준다.
-[방향지정][{cooldownTurns}턴]","공격","25","direction_select;bleed","전설","TRUE","FALSE","FALSE","2",""
+[방향지정][{cooldownTurns}턴]","공격","25","direction_select;bleed","전설","TRUE","FALSE","FALSE","2","","",""
 "charge_slash_001","돌진 베기","전방으로 {effect1.value}칸 돌진하고, 이동 경로의 모든 적에게 피해 {effect2.value}를 준다.
-[방향지정][{cooldownTurns}턴]","공격","25","direction_select","일반","TRUE","FALSE","FALSE","2","slash"
+[방향지정][{cooldownTurns}턴]","공격","25","direction_select","일반","TRUE","FALSE","FALSE","2","slash","dash_slash",""
+"chain_mace_001","철퇴 강타","범위 내 모든 적에게 피해 {effect1.value} 를 주고 [기절]을 {effect2.value} 부여한다.
+[방향지정][{cooldownTurns}턴]","공격","20","direction_select;stun","희귀","FALSE","FALSE","FALSE","2","","",""
+"thorn_throw_001","가시 투척","범위 내 모든 적에게 피해 {effect1.value} 를 주고 [출혈]을 {effect2.value} 부여한다.
+[방향지정][{cooldownTurns}턴]","공격","20","direction_select;bleed","희귀","FALSE","FALSE","FALSE","1","","",""
+"rift_charge_001","균열 돌진","[준비] 전방으로 {effect1.value}칸 돌진하고, 이동 경로의 모든 적에게 피해 {effect2.value}를 준다.
+[방향지정][{cooldownTurns}턴]","공격","30","direction_select;preparation","전설","FALSE","FALSE","FALSE","2","","",""
+"whirlwind_001","휘두르기","자신이 있는 칸과 주변 8칸의 모든 적에게 피해 {effect1.value}을 준다.
+[{cooldownTurns}턴]","공격","25","","고급","TRUE","FALSE","FALSE","2","","",""
+"flash_step_001","축지법","지정한 방향으로 {effect1.value}칸 이동한다.
+[방향지정][{cooldownTurns}턴]","이동","10","direction_select","일반","TRUE","FALSE","FALSE","2","","",""
+"qi_breathing_001","운기조식","에너지를 {effect1.value} 회복한다.
+[소멸][{cooldownTurns}턴]","회복","0","exhaust","일반","TRUE","FALSE","FALSE","1","","",""
+"shield_deploy_001","방패전개","{effect1.durationSlots}개 슬롯 동안 보호막을 {effect1.value} 얻는다.
+[{cooldownTurns}턴]","방어","10","","일반","TRUE","FALSE","FALSE","1","","",""

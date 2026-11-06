@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ad44a5c318d4cdd9c9a09d401ba0b6f, type: 3}
+  m_Name: EnemyEncounterProfiles
+  m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Data.EnemyEncounterProfiles
+  warden:
+    unitId: enemy_chain_warden_001
+    fixedCards:
+    - charge_slash_001
+    - riposte_stance_001
+    - chain_mace_001
+    bonusCandidates:
+    - head_break_001
+    - shield_deploy_001
+    - whirlwind_001
+    idle: {fileID: 21300000, guid: 115fca8492684c289ae82071052a8489, type: 3}
+    attackBefore: {fileID: 21300000, guid: ba19bdfef8274042ada13268c3f26fed, type: 3}
+    attackAfter: {fileID: 21300000, guid: 96bf9ea6d611467c8b316e6bd4717e8f, type: 3}
+    jumpGround: {fileID: 21300000, guid: 36b420facd4d455d8c3cfd1108042d0a, type: 3}
+    jumpAir: {fileID: 21300000, guid: dd84dce75b2c4982bef85551604a9a46, type: 3}
+    block: {fileID: 21300000, guid: 042cd3bb368f4adca96b27166e53783f, type: 3}
+  hunter:
+    unitId: enemy_thorn_hunter_001
+    fixedCards:
+    - flash_step_001
+    - bleed_attack_001
+    - thorn_throw_001
+    bonusCandidates:
+    - charge_slash_001
+    - tear_wound_001
+    idle: {fileID: 21300000, guid: ef4fa4c61c634ab2af08dacbbee50096, type: 3}
+    attackBefore: {fileID: 21300000, guid: 6d232bcb3ff5464eb74b6114d88209bf, type: 3}
+    attackAfter: {fileID: 21300000, guid: a3e528c4656a4a2f9833f98c99f887e9, type: 3}
+    jumpGround: {fileID: 21300000, guid: c5cd8f8e4f3b4ac5b213fd459d37bb76, type: 3}
+    jumpAir: {fileID: 21300000, guid: ab7169edda9b48f6bb1ec925179945f3, type: 3}
+    block: {fileID: 21300000, guid: 0bea10cef4674cc69e46f79b427d7c06, type: 3}
+  boss:
+    unitId: enemy_rift_knight_001
+    fixedCards:
+    - qi_breathing_001
+    - whirlwind_001
+    - charge_slash_001
+    - rift_charge_001
+    bonusCandidates:
+    - shield_deploy_001
+    - riposte_stance_001
+    idle: {fileID: 21300000, guid: 15c3492c999a4b11881dd4c84c791d93, type: 3}
+    attackBefore: {fileID: 21300000, guid: 9b641a7d705245c6a0a66737af52eef3, type: 3}
+    attackAfter: {fileID: 21300000, guid: 78b7897e3e7a419198fd189712ed2d6c, type: 3}
+    jumpGround: {fileID: 21300000, guid: 95a7f69bf3ea499ebe660359baa6d47f, type: 3}
+    jumpAir: {fileID: 21300000, guid: 33e173c9f6214326ab263e402f4ba055, type: 3}
+    block: {fileID: 21300000, guid: 84c2902d08bd4569b354a27d188b0d83, type: 3}

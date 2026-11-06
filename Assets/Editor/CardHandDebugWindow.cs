@@ -24,6 +24,8 @@ namespace DuelHero.EditorTools
         private int guardSlots = 1;
         private string statResult;
         private Vector2 scrollPosition;
+        private int enemySlot, enemyCard, enemyDirection;
+        private string enemyReservationResult;
 
         [MenuItem("Duel Hero/Debug/Card Hand and Stats")]
         private static void Open() => GetWindow<CardHandDebugWindow>("전투 디버그");
@@ -67,11 +69,46 @@ namespace DuelHero.EditorTools
             }
             EditorGUILayout.Space(12);
             DrawStunDebug(queue, turn);
+            DrawEnemyReservation(turn);
             EditorGUILayout.Space(12);
             DrawCards(deck, queue, deckList, editable);
             EditorGUILayout.Space(12);
             DrawStats(queue.UnitStats, editable);
             if (!editable) EditorGUILayout.HelpBox("행동 실행 및 복원 중에는 조작할 수 없습니다.", MessageType.Info);
+        }
+
+        private void DrawEnemyReservation(BattleTurnController turn)
+        {
+            var provider = turn != null ? turn.EnemyPlanForDebug : null;
+            if (provider == null || turn.PreparedEnemyCards.Count == 0) return;
+
+            EditorGUILayout.Space(12);
+            EditorGUILayout.LabelField("적 행동 예약", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField(string.Join(" → ", turn.PreparedEnemyCards.Select(card => card.name)));
+            using var disabled = new EditorGUI.DisabledScope(!turn.CanEditForDebug);
+            var cards = provider.Cards;
+            var labels = new[] { "대기" }.Concat(cards.Select(card => card.Definition.name)).ToArray();
+            enemySlot = EditorGUILayout.Popup("슬롯", enemySlot, new[] { "1", "2", "3" });
+            enemyCard = EditorGUILayout.Popup("카드", Mathf.Clamp(enemyCard, 0, labels.Length - 1), labels);
+            var selected = enemyCard == 0 ? null : cards[enemyCard - 1];
+            var direction = Vector2Int.right;
+            if (selected != null && CardDirectionRules.CanSelect(selected.Definition))
+            {
+                enemyDirection = EditorGUILayout.Popup("방향", enemyDirection, new[] { "오른쪽", "위", "왼쪽", "아래" });
+                direction = new[] { Vector2Int.right, Vector2Int.up, Vector2Int.left, Vector2Int.down }[enemyDirection];
+            }
+            if (GUILayout.Button("선택한 슬롯에 예약"))
+            {
+                try
+                {
+                    turn.ReserveEnemyCardForDebug(enemySlot, selected, direction);
+                    enemyReservationResult = "예약했습니다.";
+                }
+                catch (ArgumentException error) { enemyReservationResult = error.Message; }
+                catch (InvalidOperationException error) { enemyReservationResult = error.Message; }
+            }
+            if (!string.IsNullOrEmpty(enemyReservationResult))
+                EditorGUILayout.HelpBox(enemyReservationResult, MessageType.Info);
         }
 
         private void DrawStunDebug(CardReservationQueue queue, BattleTurnController turn)

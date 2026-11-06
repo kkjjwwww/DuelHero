@@ -202,9 +202,14 @@ namespace DuelHero.Battle
 
                 // Each actor returns to idle before the next actor starts. Damage remains simultaneous.
                 if (playerAttackPresentation != null && !HasDash(pc) && attacks.Any(a => a.ActorId == playerId))
-                    yield return effects.PlayAttackAnimated(playerAttackPresentation, playerId, pc, playerPath);
+                    yield return effects.PlayAttackAnimated(playerAttackPresentation, playerId, pc, playerPath, placement: unitVisualPlacement);
                 if (enemyAttackPresentation != null && !HasDash(ec) && attacks.Any(a => a.ActorId == enemyId))
-                    yield return effects.PlayAttackAnimated(enemyAttackPresentation, enemyId, ec, enemyPath);
+                    yield return effects.PlayAttackAnimated(enemyAttackPresentation, enemyId, ec, enemyPath, placement: unitVisualPlacement);
+
+                if (HasDash(pc) && attacks.Any(a => a.ActorId == playerId))
+                    yield return effects.PlayDashImpact(playerAttackPresentation, playerId, pc, playerPath);
+                if (HasDash(ec) && attacks.Any(a => a.ActorId == enemyId))
+                    yield return effects.PlayDashImpact(enemyAttackPresentation, enemyId, ec, enemyPath);
 
                 var damage = combatEffects.CalculateDamageBatch(attacks, round);
                 enemyExecutions[slot] = new ExecutedCardPreview(enemyPath,
@@ -212,8 +217,8 @@ namespace DuelHero.Battle
                 combatEffects.ApplyDamageBatch(damage);
                 if (HasDash(pc)) playerAttackPresentation?.Cancel();
                 if (HasDash(ec)) enemyAttackPresentation?.Cancel();
-                effects.CancelPreparationPresentation(playerId);
-                effects.CancelPreparationPresentation(enemyId);
+                effects.CancelPreparationPresentation(playerId, unitVisualPlacement);
+                effects.CancelPreparationPresentation(enemyId, unitVisualPlacement);
                 // Only direct hits from the base actions arm counters. Determine both survivors
                 // before either counter animation or damage; the counter batch never re-arms them.
                 bool playerCounter = CanCounter(playerId, pc, playerStats, damage);
@@ -223,12 +228,12 @@ namespace DuelHero.Battle
                     if (playerCounter)
                     {
                         Publish(BattleActionKind.CounterTriggered, playerId, pc.id);
-                        if (playerAttackPresentation != null) yield return effects.PlayAttackAnimated(playerAttackPresentation, playerId, pc, counter: true);
+                        if (playerAttackPresentation != null) yield return effects.PlayAttackAnimated(playerAttackPresentation, playerId, pc, counter: true, placement: unitVisualPlacement);
                     }
                     if (enemyCounter)
                     {
                         Publish(BattleActionKind.CounterTriggered, enemyId, ec.id);
-                        if (enemyAttackPresentation != null) yield return effects.PlayAttackAnimated(enemyAttackPresentation, enemyId, ec, counter: true);
+                        if (enemyAttackPresentation != null) yield return effects.PlayAttackAnimated(enemyAttackPresentation, enemyId, ec, counter: true, placement: unitVisualPlacement);
                     }
                     var counterAttacks = new List<CombatEffectResolver.AttackRequest>();
                     if (playerCounter) { yield return effects.ExecutePreparationAnimated(playerId, pc, round, playerJumpPresentation, unitVisualPlacement, true); AddAttacks(counterAttacks, playerId, pc, true); }
@@ -240,8 +245,8 @@ namespace DuelHero.Battle
                             damage.AttackCells.TryGetValue(enemyId, out var baseCells) ? baseCells.Concat(counterCells).Distinct() : counterCells);
                     }
                     combatEffects.ApplyDamageBatch(counters);
-                    effects.CancelPreparationPresentation(playerId);
-                    effects.CancelPreparationPresentation(enemyId);
+                    effects.CancelPreparationPresentation(playerId, unitVisualPlacement);
+                    effects.CancelPreparationPresentation(enemyId, unitVisualPlacement);
                 }
                 playerQueue.BlockFutureSlots(slot + 1, playerStats.Stun);
                 for (int future = slot + 1; future < Math.Min(3, slot + 1 + enemyStats.Stun); future++)
@@ -252,6 +257,12 @@ namespace DuelHero.Battle
                 EnemySlotsChanged?.Invoke();
                 
                 combatEffects.EndSlot(round);
+                if (pc != null && !StunCard.IsStun(pc)) playerQueue.ExhaustExecutedCard(slot);
+                if (StunCard.IsStun(ec))
+                {
+                    (enemyPlan as EnemyActionPlanProvider)?.CancelSlot(slot);
+                    (enemyPlan as TemporaryEnemyPlan)?.CancelSlot(slot);
+                }
                 executedSlots++;
                 Outcome = EvaluateOutcome(playerStats.Health, enemyStats.Health);
                 // Keep the executed cards visible while the result is being shown.
@@ -282,6 +293,20 @@ namespace DuelHero.Battle
         }
 #if UNITY_EDITOR
         public bool CanEditForDebug => CanWinForDebug && !ResultsAvailable;
+#if UNITY_EDITOR
+        public EnemyActionPlanProvider EnemyPlanForDebug => enemyPlanSource as EnemyActionPlanProvider;
+
+        public void ReserveEnemyCardForDebug(int slot, CardInstance card, Vector2Int direction)
+        {
+            var provider = EnemyPlanForDebug;
+            if (!Application.isPlaying || !CanEditForDebug || provider == null || preparedEnemyCards == null)
+                throw new InvalidOperationException("적 행동을 예약할 수 없는 상태입니다.");
+            provider.SetPlanForDebug(playerQueue.CurrentRound, slot, card, direction);
+            preparedEnemyCards = provider.CreatePlan(playerQueue.CurrentRound).ToArray();
+            EnemyPlanPrepared?.Invoke(PreparedEnemyCards);
+            EnemySlotsChanged?.Invoke();
+        }
+#endif
         public bool TryApplyStunForDebug(UnitStats target, int amount)
         {
             if (!CanEditForDebug || target == null || amount <= 0) return false;
@@ -369,8 +394,8 @@ namespace DuelHero.Battle
         {
             if (effects != null)
             {
-                effects.CancelPreparationPresentation(playerId);
-                effects.CancelPreparationPresentation(enemyId);
+                effects.CancelPreparationPresentation(playerId, unitVisualPlacement);
+                effects.CancelPreparationPresentation(enemyId, unitVisualPlacement);
             }
             if (playerAttackPresentation != null) playerAttackPresentation.Cancel();
             if (enemyAttackPresentation != null) enemyAttackPresentation.Cancel();

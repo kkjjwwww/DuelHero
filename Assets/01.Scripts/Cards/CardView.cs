@@ -110,8 +110,18 @@ namespace DuelHero.Cards
             string body = card.ResolvedDescription(FormatEffectValue, turns => $"[{CooldownLinkId}]");
             HashSet<string> ids = new HashSet<string>(card.keywordIds ?? Array.Empty<string>());
             var linkedKeywords = new Dictionary<string, KeywordDefinition>();
+            int preparationTurns = card.KeywordParameter("preparation");
             foreach (var keyword in keywords ?? Enumerable.Empty<KeywordDefinition>())
-                if (ids.Contains(keyword.id)) linkedKeywords[keyword.name] = keyword;
+                if (ids.Contains(keyword.id))
+                    linkedKeywords[keyword.name] = keyword.id == "preparation" && preparationTurns > 0
+                        ? new KeywordDefinition
+                        {
+                            id = keyword.id,
+                            name = keyword.name + preparationTurns,
+                            description = $"전투 시작 후 {preparationTurns}턴이 지나야 사용 할 수 있다.",
+                            textColor = keyword.textColor
+                        }
+                        : keyword;
             if (card.EffectiveCooldownTurns > 0)
                 linkedKeywords[CooldownLinkId] = new KeywordDefinition
                 {

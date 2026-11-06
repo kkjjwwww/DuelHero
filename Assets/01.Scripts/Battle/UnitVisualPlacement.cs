@@ -21,6 +21,7 @@ namespace DuelHero.Battle
             public Vector2 layoutSize = new Vector2(0.5f, 1.2f);
             [NonSerialized] public Vector3 position, scale;
             [NonSerialized] public bool captured;
+            [NonSerialized] public int actionFacing;
         }
         [SerializeField] private BoardOccupancy board;
         [SerializeField] private UnitVisual[] units = Array.Empty<UnitVisual>();
@@ -34,6 +35,14 @@ namespace DuelHero.Battle
             RequestRefresh();
         }
         public void RequestRefresh() => refreshRequested = true;
+        public void SetActionFacing(GridMovement movement, int horizontal)
+        {
+            var entry = entries.Find(candidate => candidate.movement == movement);
+            if (entry == null || entry.actionFacing == horizontal) return;
+            entry.actionFacing = horizontal;
+            Refresh();
+        }
+
         private void OnValidate() => RequestRefresh();
         private void Subscribe(UnitVisual entry)
         {
@@ -137,6 +146,7 @@ namespace DuelHero.Battle
                     float dx = opponent.placementRoot.position.x - entry.placementRoot.position.x;
                     if (Mathf.Abs(dx) > 0.001f) facesRight = dx > 0;
                 }
+                if (entry.actionFacing != 0) facesRight = entry.actionFacing > 0;
                 entry.sprite.flipX = entry.artworkFacesRight != facesRight;
             }
         }

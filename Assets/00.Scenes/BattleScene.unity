@@ -2037,6 +2037,15 @@ MonoBehaviour:
   frontRoot: {fileID: 1422715916}
   illustration: {fileID: 1531822761}
   cardIllustrations:
+  - cardId: chain_mace_001
+    sprite: {fileID: 0}
+    enemySprite: {fileID: 21300000, guid: 81079c902fee40faafe3a7445bd26ef3, type: 3}
+  - cardId: thorn_throw_001
+    sprite: {fileID: 0}
+    enemySprite: {fileID: 21300000, guid: 6d52211518bd46cd9f50822d97745aea, type: 3}
+  - cardId: rift_charge_001
+    sprite: {fileID: 0}
+    enemySprite: {fileID: 21300000, guid: d55b7841e2b441379e7eb01ea7f9711e, type: 3}
   - cardId: slash_001
     sprite: {fileID: 21300000, guid: ba9505261847c5f428df3c94ba9fc1ed, type: 3}
     enemySprite: {fileID: 0}
@@ -3071,7 +3080,7 @@ MonoBehaviour:
   heal: {fileID: 21300000, guid: 363d877b64ce4bef88fccb225a4fb244, type: 3}
   jumpGround: {fileID: 21300000, guid: 04eacdc2a8ad47cab951a48262ee01c8, type: 3}
   jumpAir: {fileID: 21300000, guid: 49bacdf8539043eb826d3abd561a34b0, type: 3}
-  supportPoseDuration: 0.4
+  supportPoseDuration: 0.52
 --- !u!114 &185798878
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3087,11 +3096,11 @@ MonoBehaviour:
   sprites: {fileID: 185798877}
   motionRoot: {fileID: 14030444}
   facingRenderer: {fileID: 185798872}
-  windupDuration: 0.3
-  strikeDuration: 0.3
-  recoveryDuration: 0.2
+  windupDuration: 0.39
+  strikeDuration: 0.39
+  recoveryDuration: 0.26
   lungeDistance: 0.12
-  dashDuration: 0.2
+  dashDuration: 0.26
 --- !u!114 &185798879
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3106,9 +3115,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Units.UnitJumpPresentation
   sprites: {fileID: 185798877}
   motionRoot: {fileID: 14030444}
-  takeoffDuration: 0.1
-  flightDuration: 0.3
-  landingDuration: 0.1
+  takeoffDuration: 0.13
+  flightDuration: 0.39
+  landingDuration: 0.13
   jumpHeight: 0.3
 --- !u!1 &201592816
 GameObject:
@@ -4715,6 +4724,15 @@ MonoBehaviour:
   frontRoot: {fileID: 579893009}
   illustration: {fileID: 1750944533}
   cardIllustrations:
+  - cardId: chain_mace_001
+    sprite: {fileID: 0}
+    enemySprite: {fileID: 21300000, guid: 81079c902fee40faafe3a7445bd26ef3, type: 3}
+  - cardId: thorn_throw_001
+    sprite: {fileID: 0}
+    enemySprite: {fileID: 21300000, guid: 6d52211518bd46cd9f50822d97745aea, type: 3}
+  - cardId: rift_charge_001
+    sprite: {fileID: 0}
+    enemySprite: {fileID: 21300000, guid: d55b7841e2b441379e7eb01ea7f9711e, type: 3}
   - cardId: slash_001
     sprite: {fileID: 21300000, guid: ba9505261847c5f428df3c94ba9fc1ed, type: 3}
     enemySprite: {fileID: 0}
@@ -10272,7 +10290,7 @@ MonoBehaviour:
     m_BestFit: 1
     m_MinSize: 12
     m_MaxSize: 18
-    m_Alignment: 3
+    m_Alignment: 5
     m_AlignByGeometry: 0
     m_RichText: 1
     m_HorizontalOverflow: 0
@@ -11306,10 +11324,10 @@ MonoBehaviour:
   playerJumpPresentation: {fileID: 185798879}
   enemyJumpPresentation: {fileID: 2024972217}
   unitVisualPlacement: {fileID: 910000004}
-  slotDelay: 0.4
-  enemyCardRevealDuration: 0.4
-  postRevealDelay: 0.5
-  cardPresentationDuration: 0.12
+  slotDelay: 0.52
+  enemyCardRevealDuration: 0.52
+  postRevealDelay: 0.65
+  cardPresentationDuration: 0.156
 --- !u!114 &910000002
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11323,6 +11341,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Battle.CardEffectExecutor
   combatEffects: {fileID: 1243114849}
+  slashVfx: {fileID: 8981370663285924369, guid: dab25b09b364f2e4aac732dd36644dae, type: 3}
+  dashVfx: {fileID: 8553284684455624959, guid: d3554bc68e2cbcd42ba9b934e8c4ac87, type: 3}
+  headCrushVfx: {fileID: 2003010171322884681, guid: 737d63437ba9c44469979df223661f10, type: 3}
+  hitVfx: {fileID: 7843059973302138610, guid: 7b1aef43145388c4eb488f90e12372eb, type: 3}
+  blockVfx: {fileID: 3804534444885753565, guid: cc787e1a64cca2844b5aa7967abf9438, type: 3}
+  energyRestoreVfx: {fileID: 7553031193883871847, guid: 259726d5fb12ed04cb945ebe4d93e9d7, type: 3}
+  moveDustVfx: {fileID: 3208743012318073255, guid: 90f3366e93f31c349aefbe5e52908d6f, type: 3}
 --- !u!114 &910000003
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15007,6 +15032,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2ec536c14e4fbb9469c3213220bf8239, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Logging.BattleLogUI
+  enemyEncounter: {fileID: 2024972213}
   source: {fileID: 979334503}
   cards: {fileID: 11400000, guid: b38eb9bf764792848bf05096af2f0d8d, type: 2}
   units: {fileID: 11400000, guid: a6ec61c028de1f14cb795b2fa5eb77b5, type: 2}
@@ -15965,7 +15991,7 @@ MonoBehaviour:
   - {fileID: 1963543218}
   - {fileID: 545071681}
   progressButton: {fileID: 1096368657}
-  duration: 0.35
+  duration: 0.455
   hiddenCardRatio: 0.7
   slotDrop: 110
   slotScale: 1.5
@@ -22120,6 +22146,15 @@ MonoBehaviour:
   frontRoot: {fileID: 1261699345}
   illustration: {fileID: 478303771}
   cardIllustrations:
+  - cardId: chain_mace_001
+    sprite: {fileID: 0}
+    enemySprite: {fileID: 21300000, guid: 81079c902fee40faafe3a7445bd26ef3, type: 3}
+  - cardId: thorn_throw_001
+    sprite: {fileID: 0}
+    enemySprite: {fileID: 21300000, guid: 6d52211518bd46cd9f50822d97745aea, type: 3}
+  - cardId: rift_charge_001
+    sprite: {fileID: 0}
+    enemySprite: {fileID: 21300000, guid: d55b7841e2b441379e7eb01ea7f9711e, type: 3}
   - cardId: slash_001
     sprite: {fileID: 21300000, guid: ba9505261847c5f428df3c94ba9fc1ed, type: 3}
     enemySprite: {fileID: 0}
@@ -26800,6 +26835,7 @@ GameObject:
   - component: {fileID: 2024972215}
   - component: {fileID: 2024972216}
   - component: {fileID: 2024972217}
+  - component: {fileID: 2024972218}
   m_Layer: 0
   m_Name: Enemy
   m_TagString: Untagged
@@ -26857,7 +26893,7 @@ SpriteRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: 1761290631, guid: e106dc087d5ec114fa9ff98c350c9e53, type: 3}
-  m_Color: {r: 1, g: 0, b: 0, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -26910,6 +26946,8 @@ MonoBehaviour:
   dataKind: 1
   unitId: enemy_dummy_001
   stats: {fileID: 2024972212}
+  encounterProfiles: {fileID: 11400000, guid: 789597d0f9514cb5889c568b19e76a0b, type: 2}
+  encounterNameLabel: {fileID: 809674403}
 --- !u!114 &2024972214
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -26980,14 +27018,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 277da8f9183f4274981b542f2327b464, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Units.UnitAttackPresentation
-  sprites: {fileID: 0}
+  sprites: {fileID: 2024972218}
   motionRoot: {fileID: 449193315}
   facingRenderer: {fileID: 2024972210}
-  windupDuration: 0.3
-  strikeDuration: 0.3
-  recoveryDuration: 0.2
+  windupDuration: 0.39
+  strikeDuration: 0.39
+  recoveryDuration: 0.26
   lungeDistance: 0.12
-  dashDuration: 0.2
+  dashDuration: 0.26
 --- !u!114 &2024972217
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -27000,11 +27038,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b659e991b8884a4689f8cc2e9349335, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Units.UnitJumpPresentation
-  sprites: {fileID: 0}
+  sprites: {fileID: 2024972218}
   motionRoot: {fileID: 449193315}
-  takeoffDuration: 0.1
-  flightDuration: 0.3
-  landingDuration: 0.1
+  takeoffDuration: 0.13
+  flightDuration: 0.39
+  landingDuration: 0.13
   jumpHeight: 0.3
 --- !u!1 &2025441890
 GameObject:
@@ -29857,3 +29895,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1987550637}
   m_CullTransparentMesh: 1
+--- !u!114 &2024972218
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2024972209}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2d1025b023815d418463f1a6833cf82, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Units.UnitSpritePresenter
+  targetRenderer: {fileID: 2024972210}
+  encounterSource: {fileID: 2024972213}
+  idle: {fileID: 1761290631, guid: e106dc087d5ec114fa9ff98c350c9e53, type: 3}

@@ -33,14 +33,14 @@ namespace DuelHero.Battle
             Actor = actor; TargetUnit = targetUnit;
             DecisionSeed = decisionSeed;
             Style = EnemyDecisionRandom.Style(decisionSeed);
-            // Snapshot only definition/cooldown/energy, never private reservation state.
+            // Evaluate public availability and energy without reading private reservations.
             if (targetCards != null)
             {
                 var unique = new HashSet<CardDefinition>();
                 for (int i = 0; i < targetCards.Count; i++)
                 {
                     var card = targetCards[i];
-                    if (card.RemainingCooldown(round) != 0 || card.Definition.energyCost < 0 ||
+                    if (card.IsExhausted || card.RemainingAvailabilityDelay(round) != 0 || card.Definition.energyCost < 0 ||
                         card.Definition.energyCost > targetUnit.Energy || !EnemyPlanningRules.Has(card, "damage") ||
                         !unique.Add(card.Definition)) continue;
                     for (int d = 0; d < EnemyPlanningRules.DirectionCount(card); d++)

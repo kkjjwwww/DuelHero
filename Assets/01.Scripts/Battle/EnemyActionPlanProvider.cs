@@ -38,12 +38,32 @@ namespace DuelHero.Battle
         {
             if (cards != null) return;
             if (database == null) throw new InvalidOperationException("적 카드 데이터베이스를 연결해주세요.");
-            cards = cardIds.Select(id => new CardInstance(database.cards.FirstOrDefault(c => c.id == id)
+            var profile = stats != null ? stats.GetComponent<UnitInitializer>()?.Encounter : null;
+            var ids = cardIds.AsEnumerable();
+            if (profile != null)
+            {
+                var run = RunSessionStore.Current;
+                uint seed = run?.PendingBattleNodeId != null ? run.Map.Seed : (standaloneSeed ??= RouteMapGenerator.CreateSeed());
+                var random = new EnemyDecisionRandom(EnemyDecisionRandom.CreateSeed(seed,
+                    run?.PendingBattleNodeId, profile.unitId, 0));
+                ids = ids.Where(id => database.cards.Any(c => c.id == id && c.isBasicAction))
+                    .Concat(profile.fixedCards)
+                    .Append(profile.bonusCandidates[random.Next(profile.bonusCandidates.Length)]);
+            }
+            cards = ids.Select(id => new CardInstance(database.cards.FirstOrDefault(c => c.id == id)
                 ?? throw new InvalidOperationException("적 AI 카드 ID 오류: " + id))).ToArray();
         }
         public System.Collections.Generic.IReadOnlyList<CardDefinition> CreatePlan(int round)
         {
             if (activePlan != null && activeRound == round) return activeExecution;
+            var context = CreateContext(round);
+            selector ??= new UtilityPlanSelector(utilitySettings ??= new UtilityAiSettings());
+            SetPlan(context, selector.Select(context));
+            return activeExecution;
+        }
+
+        private EnemyDecisionContext CreateContext(int round)
+        {
             if (database == null || stats == null || !stats.IsInitialized || movement == null || target == null || effects == null)
                 throw new InvalidOperationException("적 AI의 유닛·카드·효과 실행기를 연결해주세요.");
             InitializeCards();
@@ -72,19 +92,36 @@ namespace DuelHero.Battle
             bool runBattle = run?.PendingBattleNodeId != null;
             uint seed = runBattle ? run.Map.Seed : (standaloneSeed ??= RouteMapGenerator.CreateSeed());
             LastDecisionSeed = EnemyDecisionRandom.CreateSeed(seed, runBattle ? run.PendingBattleNodeId : null, actorId, round);
-            var context = new EnemyDecisionContext(supported,
+            return new EnemyDecisionContext(supported,
                 new EnemyPlanningState(movement.GridPosition, stats.Energy, stats.MaxEnergy, movement.Grid.Map),
                 target.GridPosition, round,
                 new EnemyUnitSnapshot(stats.Health, stats.MaxHealth, stats.Energy, stats.MaxEnergy, stats.CaptureGuard(), stats.Stun, stats.Bleed),
                 new EnemyUnitSnapshot(targetStats.Health, targetStats.MaxHealth, targetStats.Energy, targetStats.MaxEnergy, targetStats.CaptureGuard(), targetStats.Stun, targetStats.Bleed),
                 LastDecisionSeed, targetDeck.Cards);
-            selector ??= new UtilityPlanSelector(utilitySettings ??= new UtilityAiSettings());
-            activePlan = selector.Select(context);
-            LastSimulation = EnemyPlanningState.SimulatePlan(context, activePlan);
-            activeExecution = Array.AsReadOnly(activePlan.Select(action => context.GetPreparedAction(action).ExecutionCard).ToArray());
-            activeRound = round;
-            return activeExecution;
         }
+
+        private void SetPlan(EnemyDecisionContext context, EnemyPlannedAction[] plan)
+        {
+            var simulation = EnemyPlanningState.SimulatePlan(context, plan);
+            var execution = Array.AsReadOnly(plan.Select(action => context.GetPreparedAction(action).ExecutionCard).ToArray());
+            activePlan = plan;
+            activeExecution = execution;
+            LastSimulation = simulation;
+            activeRound = context.Round;
+        }
+
+#if UNITY_EDITOR
+        internal void SetPlanForDebug(int round, int slot, CardInstance card, Vector2Int direction)
+        {
+            if (activePlan == null || activeRound != round || slot < 0 || slot >= activePlan.Length ||
+                slot < stats.Stun || StunCard.IsStun(activePlan[slot].Card.Definition))
+                throw new InvalidOperationException("현재 슬롯을 변경할 수 없습니다.");
+            var plan = (EnemyPlannedAction[])activePlan.Clone();
+            plan[slot] = new EnemyPlannedAction(card ?? new CardInstance(WaitCard.Definition), direction);
+            SetPlan(CreateContext(round), plan);
+            selector = null;
+        }
+#endif
         public void CancelSlot(int slot)
         {
             if (activePlan == null || slot < 0 || slot >= activePlan.Length) return;

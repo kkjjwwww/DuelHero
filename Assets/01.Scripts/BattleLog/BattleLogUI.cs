@@ -10,6 +10,7 @@ namespace DuelHero.Logging
         [SerializeField] private BattleLog source;
         [SerializeField] private CardDatabase cards;
         [SerializeField] private DuelHero.Data.UnitDatabase units;
+        [SerializeField] private DuelHero.Units.UnitInitializer enemyEncounter;
         [SerializeField] private ScrollRect scroll;
         [SerializeField] private RectTransform content;
         [SerializeField] private Font font;
@@ -42,14 +43,18 @@ namespace DuelHero.Logging
             if (follow) scroll.verticalNormalizedPosition = 0;
             else content.anchoredPosition = oldPosition;
         }
+        private string UnitName(string id) =>
+            (enemyEncounter != null && enemyEncounter.SceneUnitId == id ? enemyEncounter.EncounterName : null)
+            ?? units?.players.Concat(units.enemies).FirstOrDefault(unit => unit.id == id)?.name ?? id;
+
         private string Format(BattleLogEntry entry)
         {
             string prefix = "턴 " + entry.Round + " · ";
-            string actor = units == null ? entry.ActorId : units.players.Concat(units.enemies).FirstOrDefault(u => u.id == entry.ActorId)?.name ?? entry.ActorId;
+            string actor = UnitName(entry.ActorId);
             string card = cards == null ? entry.CardId : cards.cards.FirstOrDefault(c => c.id == entry.CardId)?.name ?? entry.CardId;
             if (entry.CardId == WaitCard.Id) card = WaitCard.Definition.name;
             string action = string.IsNullOrEmpty(card) ? "이동" : card;
-            string target = units == null ? entry.TargetId : units.players.Concat(units.enemies).FirstOrDefault(u => u.id == entry.TargetId)?.name ?? entry.TargetId;
+            string target = UnitName(entry.TargetId);
             return prefix + (entry.Kind switch
             {
                 BattleLogKind.TurnStarted => "시작",

@@ -108,8 +108,12 @@ namespace DuelHero.Units
             Validate(amount);
             int next = Energy + Math.Min(amount, MaxEnergy - Energy);
             if (next == Energy) return;
-            Energy = next; Changed?.Invoke();
+            int restored = next - Energy;
+            Energy = next;
+            Changed?.Invoke();
+            EnergyRestored?.Invoke(this, restored);
         }
+        public event Action<UnitStats, int> EnergyRestored;
         private void Validate(int amount)
         {
             if (!IsInitialized) throw new InvalidOperationException("유닛이 아직 초기화되지 않았습니다.");

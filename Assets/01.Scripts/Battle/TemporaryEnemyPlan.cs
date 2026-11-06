@@ -42,6 +42,10 @@ namespace DuelHero.Battle
             }
             return result;
         }
+        internal void CancelSlot(int slot)
+        {
+            if (activePlan != null) activePlan[slot] = null;
+        }
         public void CompletePlan(int round, int executedSlots)
         {
             if (activePlan == null) return;

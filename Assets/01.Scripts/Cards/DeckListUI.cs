@@ -62,6 +62,7 @@ namespace DuelHero.Cards
             panelVisibility = GetComponent<CanvasGroup>();
             RefreshVisibility();
             if (turnController != null) turnController.PhaseChanged += RefreshStates;
+            if (reservationQueue != null) reservationQueue.CardExhausted += FadeExhaustedCard;
             if (playerDeck != null)
             {
                 playerDeck.CardsChanged += SynchronizeDeck;
@@ -76,6 +77,8 @@ namespace DuelHero.Cards
         private void OnDisable()
         {
             CancelCategoryTransition();
+            CancelExhaustFades();
+            if (reservationQueue != null) reservationQueue.CardExhausted -= FadeExhaustedCard;
             ClearHover();
             if (turnController != null) turnController.PhaseChanged -= RefreshStates;
             if (panelVisibility != null) panelVisibility.blocksRaycasts = panelVisibility.interactable = false;
@@ -146,6 +149,7 @@ namespace DuelHero.Cards
                 bool animate = animateCategoryChange;
                 animateCategoryChange = false;
                 CancelCategoryTransition();
+                CancelExhaustFades();
                 playerDeck.Initialize();
                 deck.Clear(); deck.Add(playerDeck.WaitAction); deck.AddRange(playerDeck.Cards);
                 ownedCards.Clear();
@@ -172,7 +176,7 @@ namespace DuelHero.Cards
                     }
                 visibleCards.Clear(); visibleViews.Clear();
 
-                foreach (var instance in deck.Where(c => SelectedCategory != null &&
+                foreach (var instance in deck.Where(c => !c.IsExhausted && SelectedCategory != null &&
                     (WaitCard.IsWait(c.Definition) || c.Definition.actionType == SelectedCategory))
                     .OrderByDescending(c => WaitCard.IsWait(c.Definition))
                     .ThenByDescending(c => c.Definition.isBasicAction))
@@ -220,10 +224,10 @@ namespace DuelHero.Cards
             }
             foreach (var entry in visibleCards)
             {
-                int cooldown = reservationQueue == null ? 0 : entry.Instance.RemainingCooldown(reservationQueue.CurrentRound);
-                bool interactable = reservationQueue != null && !reservationQueue.IsExecuting &&
-                    reservationQueue.Reservations.Count < 3 && entry.Instance.ReservedSlot < 0 && cooldown == 0;
-                entry.View.SetState(string.Empty, cooldown, interactable);
+                int delay = reservationQueue == null ? 0 : entry.Instance.RemainingAvailabilityDelay(reservationQueue.CurrentRound);
+                bool interactable = !entry.Instance.IsExhausted && reservationQueue != null && !reservationQueue.IsExecuting &&
+                    reservationQueue.Reservations.Count < 3 && entry.Instance.ReservedSlot < 0 && delay == 0;
+                entry.View.SetState(string.Empty, delay, interactable);
                 entry.View.SetReservationSlot(entry.Instance.ReservedSlot);
             }
         }
@@ -277,6 +281,31 @@ namespace DuelHero.Cards
             foreach (var entry in visibleCards)
                 if (entry.View == view) { hoveredCard = entry; break; }
             if (Application.isPlaying && hoveredCard?.Instance != null) battlePreview?.FocusCard(hoveredCard.Instance);
+        }
+
+        private void FadeExhaustedCard(CardInstance card)
+        {
+            if (!cachedCards.TryGetValue(card, out var entry) || !visibleCards.Contains(entry)) return;
+            var view = entry.View;
+            TransitionGroup(view).DOFade(0f, .25f).SetUpdate(true).OnComplete(() =>
+            {
+                visibleCards.Remove(entry);
+                visibleViews.Remove(view);
+                view.gameObject.SetActive(false);
+                fanLayout.SetCards(visibleViews);
+                RefreshVisibility();
+            });
+        }
+
+        private void CancelExhaustFades()
+        {
+            foreach (var entry in visibleCards)
+            {
+                if (!entry.Instance.IsExhausted) continue;
+                var group = TransitionGroup(entry.View);
+                group.DOKill();
+                group.alpha = 1f;
+            }
         }
 
         private static CanvasGroup TransitionGroup(CardView view)

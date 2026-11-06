@@ -18,6 +18,26 @@ namespace DuelHero.Battle
         }
         [SerializeField] private UnitBinding[] units = Array.Empty<UnitBinding>();
         public event Action<BattleActionResult> ActionResolved;
+        public event Action<GridMovement> EnergyRestored;
+
+        private void OnEnable()
+        {
+            foreach (var unit in units)
+                if (unit?.stats != null) unit.stats.EnergyRestored += OnEnergyRestored;
+        }
+
+        private void OnDisable()
+        {
+            foreach (var unit in units)
+                if (unit?.stats != null) unit.stats.EnergyRestored -= OnEnergyRestored;
+        }
+
+        private void OnEnergyRestored(UnitStats stats, int restored)
+        {
+            if (restored <= 0) return;
+            var unit = units.FirstOrDefault(binding => binding?.stats == stats);
+            if (unit?.movement != null) EnergyRestored?.Invoke(unit.movement);
+        }
         public bool TryGetUnit(string actorId, out GridMovement movement, out UnitStats stats)
         {
             var unit = units.FirstOrDefault(u => u != null && u.id == actorId);
@@ -47,6 +67,7 @@ namespace DuelHero.Battle
         {
             internal UnitStats Target;
             internal int Amount, Reduced, Round;
+            internal string HitVfx;
             internal string ActorId, CardId, TargetId;
             internal Vector2Int From, To;
             internal int Stun, Bleed;
@@ -123,7 +144,7 @@ namespace DuelHero.Battle
                     int raw = checked(effect.value + (effect.statusId == "bleed" ? target.stats.Bleed * effect.statusMultiplier : 0));
                     int amount = DamageAfterGuard(raw, shield);
                     remainingGuard[target.stats] = shield - (raw - amount);
-                    batch.Hits.Add(new PendingDamage { Target = target.stats, Amount = amount, Reduced = raw - amount,
+                    batch.Hits.Add(new PendingDamage { Target = target.stats, Amount = amount, Reduced = raw - amount, HitVfx = attack.Card?.hitVfx,
                         ActorId = attack.ActorId, CardId = attack.CardId, TargetId = target.id, Round = round,
                         From = actor.movement.GridPosition, To = target.movement.GridPosition,
                         Stun = attack.Card?.effects.Where(e => e.effectType == "applyStatus" && e.statusId == "stun" &&
@@ -147,7 +168,7 @@ namespace DuelHero.Battle
                 if (hit.Stun > 0) hit.Target.ApplyStun(hit.Stun);
                 if (hit.Bleed > 0) hit.Target.ApplyBleed(hit.Bleed);
                 results.Add(new BattleActionResult(BattleActionKind.Damage, hit.ActorId, hit.Round, hit.CardId,
-                    from: hit.From, to: hit.To, value: before - hit.Target.Health, targetId: hit.TargetId, reducedDamage: hit.Reduced));
+                    from: hit.From, to: hit.To, value: before - hit.Target.Health, targetId: hit.TargetId, reducedDamage: hit.Reduced, hitVfx: hit.HitVfx));
             }
             foreach (var result in results.Concat(batch.Misses)) ActionResolved?.Invoke(result);
         }

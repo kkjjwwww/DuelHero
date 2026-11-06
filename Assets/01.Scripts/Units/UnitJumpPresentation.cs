@@ -22,7 +22,7 @@ namespace DuelHero.Units
 
         // Logical movement is already committed. Rewind its world displacement visually,
         // then animate MotionRoot back to rest at the landing cell.
-        public IEnumerator PlayJump(Vector3 movementDelta)
+        public IEnumerator PlayJump(Vector3 movementDelta, System.Action onTakeoff = null)
         {
             if (!isActiveAndEnabled || IsPlaying) yield break;
             if (motionRoot == null || motionRoot.parent == null)
@@ -43,6 +43,7 @@ namespace DuelHero.Units
                 if (takeoffDuration > 0f) yield return new WaitForSeconds(takeoffDuration);
                 if (run != version || !isActiveAndEnabled) yield break;
 
+                onTakeoff?.Invoke();
                 if (sprites != null) sprites.SetPose(UnitPose.JumpAir);
                 float progress = 0f;
                 motion = DOTween.To(() => progress, value =>

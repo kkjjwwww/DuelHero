@@ -14,6 +14,7 @@ namespace DuelHero.Cards
         public string triggerTiming;
         public string movementStyle, rangeBasis;
         public bool IsDash => effectType == "move" && movementStyle == "dash";
+        public bool IsLongJump => effectType == "move" && movementStyle == "longJump";
         public bool UsesMovementPath => rangeBasis == "movementPath";
         public int statusMultiplier;
         public bool IsCounter => triggerTiming == "counter";
@@ -33,6 +34,8 @@ namespace DuelHero.Cards
     {
         public string id, name, description, actionType, rarity;
         public string attackStyle;
+        public string attackVfx, hitVfx;
+        [NonSerialized] public Vector2Int executionDirection;
         public int energyCost;
         public int cooldownTurns = 1;
         public int EffectiveCooldownTurns => isBasicAction ? 0 : cooldownTurns;
@@ -102,7 +105,16 @@ namespace DuelHero.Cards
         public int AvailableFromRound { get; private set; } = 1;
         public CardInstance(CardDefinition definition) => Definition = definition;
         public int RemainingCooldown(int round) => Definition.isBasicAction ? 0 : Mathf.Max(0, AvailableFromRound - round);
-        public bool CanReserve(int round) => ReservedSlot < 0 && RemainingCooldown(round) == 0;
+        public int RemainingPreparation(int round) => Mathf.Max(0, Definition.KeywordParameter("preparation") - (round - 1));
+        public int RemainingAvailabilityDelay(int round) => Mathf.Max(RemainingPreparation(round), RemainingCooldown(round));
+        public bool IsExhausted { get; private set; }
+        public bool CanReserve(int round) => !IsExhausted && ReservedSlot < 0 && RemainingAvailabilityDelay(round) == 0;
+        internal bool ExhaustAfterUse()
+        {
+            if (IsExhausted || Definition.keywordIds == null || Array.IndexOf(Definition.keywordIds, "exhaust") < 0) return false;
+            IsExhausted = true;
+            return true;
+        }
         public bool TryReserve(int slot, int round)
         {
             if (slot < 0 || slot > 2 || !CanReserve(round)) return false;
@@ -118,8 +130,9 @@ namespace DuelHero.Cards
             return true;
         }
         public void ClearReservation() { ReservedSlot = -1; SelectedDirection = Vector2Int.right; }
-        public void MarkUsed(int round)
+        public void MarkUsed(int round, bool exhaust = true)
         {
+            if (exhaust) ExhaustAfterUse();
             if (!Definition.isBasicAction) AvailableFromRound = round + Definition.EffectiveCooldownTurns + 1;
             ClearReservation();
         }

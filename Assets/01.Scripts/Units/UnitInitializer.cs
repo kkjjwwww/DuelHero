@@ -11,17 +11,26 @@ namespace DuelHero.Units
         [SerializeField] private UnitDataKind dataKind;
         [SerializeField] private string unitId;
         [SerializeField] private UnitStats stats;
+        [SerializeField] private EnemyEncounterProfiles encounterProfiles;
+        [SerializeField] private UnityEngine.UI.Text encounterNameLabel;
+        private EnemyEncounterProfile encounter;
+        public EnemyEncounterProfile Encounter => encounterProfiles == null ? null :
+            encounter ??= encounterProfiles.Resolve(RunSessionStore.Current);
+        public string SceneUnitId => unitId;
+        public string EncounterName => Encounter == null || database == null ? null :
+            Array.Find(database.enemies, unit => unit.id == Encounter.unitId)?.name;
         public string LastError { get; private set; }
         private void Awake()
         {
             if (!TryInitialize()) Debug.LogError(LastError, this);
+            if (encounterNameLabel != null && EncounterName is string name) encounterNameLabel.text = name;
         }
         public bool TryInitialize()
         {
             if (stats == null || database == null) { LastError = "UnitInitializer의 DB 또는 상태 참조가 없습니다."; return false; }
             if (stats.IsInitialized) return true;
             var definitions = dataKind == UnitDataKind.Player ? database.players : database.enemies;
-            var definition = Array.Find(definitions, unit => unit.id == unitId);
+            var definition = Array.Find(definitions, unit => unit.id == (Encounter?.unitId ?? unitId));
             if (definition == null) { LastError = "유닛 ID를 찾을 수 없습니다: " + unitId; return false; }
             var run = Application.isPlaying && dataKind == UnitDataKind.Player ? RunSessionStore.Current : null;
             bool fromRun = run?.PendingBattleNodeId != null;

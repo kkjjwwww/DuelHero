@@ -50,6 +50,11 @@ public static class GameSheetImporter
             if (scope == SheetSyncScope.All || scope == SheetSyncScope.Units)
             {
                 assets.Add(new Pending { Path = UnitSheetImporter.DatabasePath, Parsed = UnitSheetImporter.ParseFolder(folder) });
+                var cards = assets.Select(asset => asset.Parsed).OfType<DuelHero.Cards.CardDatabase>().FirstOrDefault()
+                    ?? AssetDatabase.LoadAssetAtPath<DuelHero.Cards.CardDatabase>(CardSheetImporter.DatabasePath);
+                var profiles = UnitSheetImporter.ParseEncounterProfiles(folder, cards);
+                if (profiles != null)
+                    assets.Add(new Pending { Path = UnitSheetImporter.EncounterProfilesPath, Parsed = profiles });
                 foreach (string name in new[] { "Players.csv", "Enemies.csv" }) files.Add(Path.Combine(UnitSheetImporter.SourceFolder, name), Path.Combine(folder, name));
             }
             if (scope == SheetSyncScope.All || scope == SheetSyncScope.BattleConfig)
@@ -73,9 +78,13 @@ public static class GameSheetImporter
                 asset.Before = asset.Target == null ? null : JsonUtility.ToJson(asset.Target);
                 asset.Parsed.name = asset.Target == null ? Path.GetFileNameWithoutExtension(asset.Path) : asset.Target.name;
                 var serialized = new SerializedObject(asset.Parsed);
-                serialized.FindProperty("sourceSpreadsheetId").stringValue = spreadsheetId;
-                serialized.FindProperty("importedAtUtc").stringValue = DateTime.UtcNow.ToString("o");
-                serialized.ApplyModifiedPropertiesWithoutUndo();
+                var sourceId = serialized.FindProperty("sourceSpreadsheetId");
+                if (sourceId != null)
+                {
+                    sourceId.stringValue = spreadsheetId;
+                    serialized.FindProperty("importedAtUtc").stringValue = DateTime.UtcNow.ToString("o");
+                    serialized.ApplyModifiedPropertiesWithoutUndo();
+                }
             }
             try
             {

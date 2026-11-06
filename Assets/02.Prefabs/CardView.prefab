@@ -1163,6 +1163,15 @@ MonoBehaviour:
   frontRoot: {fileID: 6621547976207261755}
   illustration: {fileID: 7171595111309188714}
   cardIllustrations:
+  - cardId: chain_mace_001
+    sprite: {fileID: 0}
+    enemySprite: {fileID: 21300000, guid: 81079c902fee40faafe3a7445bd26ef3, type: 3}
+  - cardId: thorn_throw_001
+    sprite: {fileID: 0}
+    enemySprite: {fileID: 21300000, guid: 6d52211518bd46cd9f50822d97745aea, type: 3}
+  - cardId: rift_charge_001
+    sprite: {fileID: 0}
+    enemySprite: {fileID: 21300000, guid: d55b7841e2b441379e7eb01ea7f9711e, type: 3}
   - cardId: slash_001
     sprite: {fileID: 21300000, guid: ba9505261847c5f428df3c94ba9fc1ed, type: 3}
     enemySprite: {fileID: 0}

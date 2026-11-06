@@ -209,7 +209,7 @@ namespace DuelHero.Cards
             {
                 if (IsOpen && entry.Card != null)
                     inspection.Show(entry.Container, cardPrefab, entry.Card.Definition, Database, font,
-                        entry.Card.RemainingCooldown(CurrentRound), scale: hoverScale, duration: hoverDuration,
+                        entry.Card.RemainingAvailabilityDelay(CurrentRound), scale: hoverScale, duration: hoverDuration,
                         scroll: eventData => { if (scroll != null) scroll.OnScroll(eventData); }, isEnemy: !IsPlayerList);
             };
             // The presenter keeps the preview open while the pointer crosses into it.
@@ -262,7 +262,7 @@ namespace DuelHero.Cards
         {
             foreach (var entry in entries.Values)
             {
-                int cooldown = entry.Card.RemainingCooldown(CurrentRound);
+                int cooldown = entry.Card.RemainingAvailabilityDelay(CurrentRound);
                 if (entry.Cooldown == cooldown) continue;
                 entry.Cooldown = cooldown;
                 entry.View.SetState(string.Empty, cooldown, true);

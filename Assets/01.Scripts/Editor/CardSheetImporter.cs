@@ -113,15 +113,23 @@ public static class CardSheetImporter
         var statuses = keywordRows.Where(r => !string.IsNullOrWhiteSpace(r["category"]))
             .Select(r => new StatusDefinition { id = Required(r, "id"), name = Required(r, "name"), category = Required(r, "category"),
                 keywordId = Required(r, "id"), stackRule = Required(r, "stackRule"), countUnit = Required(r, "countUnit") }).ToArray();
-        var cards = cardRows.Select(r => new CardDefinition
+        var existingCards = AssetDatabase.LoadAssetAtPath<CardDatabase>(DatabasePath)?.cards;
+        var cards = cardRows.Select(r =>
         {
-            id = Required(r, "id"), name = Required(r, "name"), description = Required(r, "description"),
-            attackStyle = r.TryGetValue("attackStyle", out var style) ? style : "",
-            actionType = Required(r, "actionType"), rarity = Required(r, "rarity"), energyCost = Number(r, "energyCost"),
-            cooldownTurns = r.TryGetValue("cooldownTurns", out var cooldown) && !string.IsNullOrWhiteSpace(cooldown)
-                ? Number(r, "cooldownTurns") : 1,
-            keywordIds = r["keywordIds"].Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToArray(),
-            isObtainable = Boolean(r, "isObtainable"), isBasicAction = Boolean(r, "isBasicAction"), isStarterCard = Boolean(r, "isStarterCard")
+            string id = Required(r, "id");
+            var existing = existingCards?.FirstOrDefault(card => card?.id == id);
+            return new CardDefinition
+            {
+                id = id, name = Required(r, "name"), description = Required(r, "description"),
+                attackStyle = r.TryGetValue("attackStyle", out var style) ? style.Trim() : existing?.attackStyle ?? "",
+                attackVfx = r.TryGetValue("attackVfx", out var attackVfx) ? attackVfx.Trim() : existing?.attackVfx ?? "",
+                hitVfx = r.TryGetValue("hitVfx", out var hitVfx) ? hitVfx.Trim() : existing?.hitVfx ?? "",
+                actionType = Required(r, "actionType"), rarity = Required(r, "rarity"), energyCost = Number(r, "energyCost"),
+                cooldownTurns = r.TryGetValue("cooldownTurns", out var cooldown) && !string.IsNullOrWhiteSpace(cooldown)
+                    ? Number(r, "cooldownTurns") : 1,
+                keywordIds = r["keywordIds"].Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToArray(),
+                isObtainable = Boolean(r, "isObtainable"), isBasicAction = Boolean(r, "isBasicAction"), isStarterCard = Boolean(r, "isStarterCard")
+            };
         }).ToArray();
         var keywords = keywordRows.Select(r => new KeywordDefinition
         {

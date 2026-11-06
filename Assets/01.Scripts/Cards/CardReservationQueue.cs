@@ -100,11 +100,17 @@ namespace DuelHero.Cards
             Notify(); return true;
         }
         public void SetActiveSlot(int slot) { ActiveSlot = slot; Notify(); }
+        public event Action<CardInstance> CardExhausted;
+        internal void ExhaustExecutedCard(int slot)
+        {
+            var card = reservations[slot];
+            if (card.ExhaustAfterUse()) CardExhausted?.Invoke(card);
+        }
         public void CompleteExecution(int executedSlots = 3)
         {
             if (!IsExecuting) return;
             for (int i = 0; i < reservations.Count; i++)
-                if (i < executedSlots && !StunCard.IsStun(reservations[i].Definition)) reservations[i].MarkUsed(CurrentRound); else reservations[i].ClearReservation();
+                if (i < executedSlots && !StunCard.IsStun(reservations[i].Definition)) reservations[i].MarkUsed(CurrentRound, exhaust: false); else reservations[i].ClearReservation();
             reservations.Clear(); CurrentRound++; IsExecuting = false; ActiveSlot = -1;
             SynchronizeStunSlots(); Notify();
         }

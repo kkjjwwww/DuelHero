@@ -10,6 +10,7 @@ namespace DuelHero.Units
     public sealed class UnitSpritePresenter : MonoBehaviour
     {
         [SerializeField] private SpriteRenderer targetRenderer;
+        [SerializeField] private UnitInitializer encounterSource;
         [SerializeField] private Sprite idle;
         [SerializeField] private Sprite attackBefore;
         [SerializeField] private Sprite attackAfter;
@@ -66,7 +67,17 @@ namespace DuelHero.Units
 
         public bool SetPose(UnitPose pose)
         {
-            Sprite sprite = pose switch
+            var profile = encounterSource != null ? encounterSource.Encounter : null;
+            Sprite sprite = profile != null ? (pose switch
+            {
+                UnitPose.Idle or UnitPose.Heal => profile.idle,
+                UnitPose.AttackBefore => profile.attackBefore,
+                UnitPose.AttackAfter => profile.attackAfter,
+                UnitPose.Block => profile.block,
+                UnitPose.JumpGround => profile.jumpGround,
+                UnitPose.JumpAir => profile.jumpAir,
+                _ => throw new ArgumentOutOfRangeException(nameof(pose))
+            }) ?? idle : pose switch
             {
                 UnitPose.Idle => idle,
                 UnitPose.AttackBefore => attackBefore,

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 28ce57f3e4c2ca14393b4f9e4f9fbba3
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 308195
+  packageName: Smoke And Dust FX
+  packageVersion: 1.0.0
+  assetPath: Assets/EqulocityFX/Smoke And Dust FX/VFX/Materials_URP/M_Smoke_C_07.mat
+  uploadId: 724661
