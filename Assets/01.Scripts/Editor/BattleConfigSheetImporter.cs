@@ -11,15 +11,35 @@ public static class BattleConfigSheetImporter
     {
         var rows = SheetCsvTable.Read(Path.Combine(folder, "BattleConfig.csv"), "key", "key", "value", "description");
         bool configured = false; int recovery = 0; bool found = false;
+        int healthIncrease = 0;
+        int energyIncrease = 0;
         foreach (var row in rows)
         {
-            if (row["key"] != "energyRecoveryPerTurn") throw new FormatException("지원하지 않는 BattleConfig 키: " + row["key"]);
-            found = true;
-            configured = row["value"].Length > 0;
-            if (configured) recovery = SheetCsvTable.NonNegative(row["value"], "energyRecoveryPerTurn");
+            string key = row["key"];
+            string value = row["value"];
+            switch (key)
+            {
+                case "energyRecoveryPerTurn":
+                    found = true;
+                    configured = value.Length > 0;
+                    if (configured) recovery = SheetCsvTable.NonNegative(value, key);
+                    break;
+                case "enemyHealthIncreasePercentPerStage":
+                    healthIncrease = SheetCsvTable.NonNegative(value, key);
+                    break;
+                case "enemyEnergyIncreasePercentPerStage":
+                    energyIncrease = SheetCsvTable.NonNegative(value, key);
+                    break;
+                default:
+                    throw new FormatException("지원하지 않는 BattleConfig 키: " + key);
+            }
         }
         if (!found) throw new FormatException("BattleConfig: energyRecoveryPerTurn 행이 없습니다.");
         var config = ScriptableObject.CreateInstance<BattleConfig>();
-        config.hasEnergyRecoveryPerTurn = configured; config.energyRecoveryPerTurn = recovery; return config;
+        config.hasEnergyRecoveryPerTurn = configured;
+        config.energyRecoveryPerTurn = recovery;
+        config.enemyHealthIncreasePercentPerStage = healthIncrease;
+        config.enemyEnergyIncreasePercentPerStage = energyIncrease;
+        return config;
     }
 }

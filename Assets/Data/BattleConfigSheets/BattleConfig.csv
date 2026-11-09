@@ -1,2 +1,4 @@
 "key","value","description"
 "energyRecoveryPerTurn","10","턴별 기본 에너지 회복량"
+"enemyHealthIncreasePercentPerStage","10","일반 적의 시작·최대 체력 배율에 맵 단계당 더하는 %p. 1단계는 100%. 보스는 기본값 적용."
+"enemyEnergyIncreasePercentPerStage","5","일반 적의 시작·최대 에너지 배율에 맵 단계당 더하는 %p. 1단계는 100%. 보스는 기본값 적용."

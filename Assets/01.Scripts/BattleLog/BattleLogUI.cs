@@ -17,6 +17,13 @@ namespace DuelHero.Logging
         private readonly List<Text> rows = new();
         private void OnEnable() { if (source != null) source.Changed += Refresh; Refresh(); }
         private void OnDisable() { if (source != null) source.Changed -= Refresh; }
+        internal void TogglePanel()
+        {
+            bool open = !gameObject.activeSelf;
+            gameObject.SetActive(open);
+            if (open && scroll != null) scroll.verticalNormalizedPosition = 0f;
+        }
+
         public void Refresh()
         {
             if (source == null || content == null || scroll == null) return;

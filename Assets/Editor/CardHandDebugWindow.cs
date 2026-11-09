@@ -12,6 +12,7 @@ namespace DuelHero.EditorTools
     public sealed class CardHandDebugWindow : EditorWindow
     {
         private static readonly string[] Categories = { "공격", "이동", "방어", "회복", "특수" };
+        private static readonly string[] Debuffs = { "기절", "출혈" };
         private readonly List<CardInstance> addedCards = new();
         private int categoryIndex;
         private int cardIndex;
@@ -19,7 +20,8 @@ namespace DuelHero.EditorTools
         private UnitStats selectedUnit;
         private int healthInput;
         private int energyInput;
-        private int stunInput = 1;
+        private int debuffIndex;
+        private int debuffAmount = 1;
         private int statAmount = 10;
         private int guardSlots = 1;
         private string statResult;
@@ -68,7 +70,7 @@ namespace DuelHero.EditorTools
                 if (GUILayout.Button("즉시 승리") && turn.TryWinForDebug()) return;
             }
             EditorGUILayout.Space(12);
-            DrawStunDebug(queue, turn);
+            DrawDebuffDebug(queue, turn);
             DrawEnemyReservation(turn);
             EditorGUILayout.Space(12);
             DrawCards(deck, queue, deckList, editable);
@@ -111,23 +113,31 @@ namespace DuelHero.EditorTools
                 EditorGUILayout.HelpBox(enemyReservationResult, MessageType.Info);
         }
 
-        private void DrawStunDebug(CardReservationQueue queue, BattleTurnController turn)
+        private void DrawDebuffDebug(CardReservationQueue queue, BattleTurnController turn)
         {
-            EditorGUILayout.LabelField("기절 테스트", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("디버프 부여", EditorStyles.boldLabel);
             using (new EditorGUI.DisabledScope(turn == null || !turn.CanEditForDebug))
             {
-                stunInput = Mathf.Clamp(EditorGUILayout.IntField("부여할 기절 수치", stunInput), 1, 99);
+                debuffIndex = EditorGUILayout.Popup("디버프", debuffIndex, Debuffs);
+                debuffAmount = Mathf.Clamp(EditorGUILayout.IntField("부여할 수치", debuffAmount), 1, 99);
                 var player = queue.UnitStats;
                 using (new EditorGUI.DisabledScope(player == null || !player.IsInitialized))
-                    if (GUILayout.Button("플레이어에게 기절 부여 · 현재 " + (player != null ? player.Stun : 0)))
-                        turn.TryApplyStunForDebug(player, stunInput);
+                    DrawDebuffButton(turn, player, "플레이어");
                 foreach (var unit in FindObjectsByType<UnitStats>(FindObjectsSortMode.None))
                 {
                     if (unit == player || !unit.IsInitialized) continue;
-                    if (GUILayout.Button(unit.gameObject.name + "에게 기절 부여 · 현재 " + unit.Stun))
-                        turn.TryApplyStunForDebug(unit, stunInput);
+                    DrawDebuffButton(turn, unit, unit.gameObject.name);
                 }
             }
+        }
+
+        private void DrawDebuffButton(BattleTurnController turn, UnitStats unit, string targetName)
+        {
+            bool isBleed = debuffIndex == 1;
+            int current = (isBleed ? unit?.Bleed : unit?.Stun) ?? 0;
+            if (!GUILayout.Button($"{targetName}에게 {Debuffs[debuffIndex]} 부여 · 현재 {current}")) return;
+            if (isBleed) turn.TryApplyBleedForDebug(unit, debuffAmount);
+            else turn.TryApplyStunForDebug(unit, debuffAmount);
         }
 
         private void DrawCards(PlayerDeck deck, CardReservationQueue queue, DeckListUI deckList, bool editable)
@@ -223,7 +233,7 @@ namespace DuelHero.EditorTools
                 using (new EditorGUILayout.HorizontalScope())
                 {
                     if (GUILayout.Button("체력 피해"))
-                        ApplyStatChange("체력 피해", () => unit.TakeDamage(statAmount));
+                        ApplyDebugDamage(unit);
                     if (GUILayout.Button("체력 회복"))
                         ApplyStatChange("체력 회복", () => unit.Heal(statAmount));
                 }
@@ -252,6 +262,15 @@ namespace DuelHero.EditorTools
             }
             if (!string.IsNullOrEmpty(statResult))
                 EditorGUILayout.HelpBox(statResult, MessageType.Info);
+        }
+
+        private void ApplyDebugDamage(UnitStats unit)
+        {
+            int before = unit.Health;
+            ApplyStatChange("체력 피해", () => unit.TakeDamage(statAmount));
+            int damage = before - unit.Health;
+            if (damage > 0)
+                FindFirstObjectByType<BattleDamageNumberUI>()?.ShowDamageForDebug(unit.transform, damage);
         }
 
         private void ApplyStatChange(string label, Action apply)

@@ -94,6 +94,7 @@ namespace DuelHero.Cards
             Initialize();
             Synchronize();
             panel.SetActive(true);
+            if (panel.transform.parent == transform) transform.SetAsLastSibling();
             panel.transform.SetAsLastSibling();
             Canvas.ForceUpdateCanvases();
             foreach (var category in categories.Values)

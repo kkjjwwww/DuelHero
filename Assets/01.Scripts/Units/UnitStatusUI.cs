@@ -1,7 +1,9 @@
 using DG.Tweening;
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 using DuelHero.Battle;
+using DuelHero.Cards;
 namespace DuelHero.Units
 {
     public sealed class UnitStatusUI : MonoBehaviour
@@ -17,6 +19,11 @@ namespace DuelHero.Units
         [SerializeField] private Image guardPreviewSegment;
         [SerializeField] private BattlePreviewPresenter preview;
         [SerializeField] private bool fillFromRight;
+        [SerializeField] private RectTransform debuffAnchor;
+        [SerializeField] private CardDatabase cardDatabase;
+        [SerializeField] private Sprite stunSprite;
+        [SerializeField] private Sprite bleedSprite;
+        private UnitDebuffIcon stunIcon, bleedIcon;
         private EnergyCostPreviewUI.SegmentView guardPreviewView;
         private CardPreviewResult guardPreview;
         private IUnitStatus status;
@@ -36,6 +43,13 @@ namespace DuelHero.Units
         private void OnEnable()
         {
             status = source;
+            if (debuffAnchor != null)
+            {
+                if (stunIcon == null && stunSprite != null)
+                    stunIcon = UnitDebuffIcon.Create(debuffAnchor, stunSprite, FindKeyword("stun"), fillFromRight);
+                if (bleedIcon == null && bleedSprite != null)
+                    bleedIcon = UnitDebuffIcon.Create(debuffAnchor, bleedSprite, FindKeyword("bleed"), fillFromRight);
+            }
             healthHover = StatusBarHover.Bind(healthFill, healthLabel);
             energyHover = StatusBarHover.Bind(energyFill, energyLabel);
             if (energyFill != null)
@@ -69,6 +83,8 @@ namespace DuelHero.Units
             energyShown = false;
             if (healthHover != null) healthHover.enabled = false;
             if (energyHover != null) energyHover.enabled = false;
+            stunIcon?.SetCount(0, 0);
+            bleedIcon?.SetCount(0, 0);
             EnergyCostPreviewUI.SegmentView.SetRange(damageTrailFill, 0, 0, 0);
             guardPreview = null;
             status = null;
@@ -85,8 +101,9 @@ namespace DuelHero.Units
             if (healthLabel != null) healthLabel.text = ready ? $"체력 {status.Health} / {status.MaxHealth}" +
                 (shield > 0 || gain > 0 ? $" · 보호막 {(long)shield + gain}" : "") : "체력 --";
             if (energyLabel != null) energyLabel.text = ready ? $"에너지 {status.Energy} / {status.MaxEnergy}" : "에너지 --";
-            if (ready && source != null && source.Bleed > 0 && healthLabel != null)
-                healthLabel.text += $" · 출혈 {source.Bleed}";
+            int stun = ready ? source.Stun : 0;
+            stunIcon?.SetCount(stun, 0);
+            bleedIcon?.SetCount(ready ? source.Bleed : 0, stunIcon != null && stun > 0 ? 1 : 0);
             UpdateEnergy(ready);
             if (gain > 0)
                 guardPreviewView?.Show(shieldEnd, shieldEnd + gain, maximum,
@@ -125,6 +142,9 @@ namespace DuelHero.Units
             }
             RenderHealth();
         }
+
+        private KeywordDefinition FindKeyword(string id) => cardDatabase?.keywords == null
+            ? null : Array.Find(cardDatabase.keywords, keyword => keyword != null && keyword.id == id);
 
         private void UpdateEnergy(bool ready)
         {

@@ -26,6 +26,8 @@ namespace DuelHero.Battle
         private float cameraBlend;
         private Sequence motion;
 
+        internal void PlayRiftImpactShake() => cameraController?.PlayRiftImpactShake();
+
         private void Awake()
         {
             handPosition = handPanel.anchoredPosition;
@@ -46,8 +48,12 @@ namespace DuelHero.Battle
             var handTarget = handPosition;
             if (active)
             {
-                var fan = handPanel.GetComponentInChildren<CardFanLayout>();
-                if (fan != null) handTarget.y -= fan.GetHideDistance(hiddenCardRatio);
+                var fan = handPanel.GetComponentInChildren<CardFanLayout>(true);
+                if (fan != null)
+                {
+                    fan.SetPresentationPanel(handPanel, handPosition);
+                    handTarget.y -= fan.GetHideDistance(hiddenCardRatio);
+                }
             }
             motion = DOTween.Sequence().SetUpdate(true);
             motion.Join(handPanel.DOAnchorPos(handTarget, duration));

@@ -214,6 +214,9 @@ namespace DuelHero.Battle
                 var damage = combatEffects.CalculateDamageBatch(attacks, round);
                 enemyExecutions[slot] = new ExecutedCardPreview(enemyPath,
                     damage.AttackCells.TryGetValue(enemyId, out var cells) ? cells : Array.Empty<Vector2Int>());
+                bool playerRiftBurst = effects.ResolveRiftImpact(playerId, pc, damage);
+                bool enemyRiftBurst = effects.ResolveRiftImpact(enemyId, ec, damage);
+                if (playerRiftBurst || enemyRiftBurst) presentation?.PlayRiftImpactShake();
                 combatEffects.ApplyDamageBatch(damage);
                 if (HasDash(pc)) playerAttackPresentation?.Cancel();
                 if (HasDash(ec)) enemyAttackPresentation?.Cancel();
@@ -309,10 +312,7 @@ namespace DuelHero.Battle
 #endif
         public bool TryApplyStunForDebug(UnitStats target, int amount)
         {
-            if (!CanEditForDebug || target == null || amount <= 0) return false;
-            combatEffects.TryGetUnit(playerId, out _, out var player);
-            combatEffects.TryGetUnit(enemyId, out _, out var enemy);
-            if (target != player && target != enemy) return false;
+            if (!CanApplyDebuffForDebug(target, amount, out var enemy)) return false;
             target.ApplyStun(amount);
             if (target == enemy && preparedEnemyCards != null)
             {
@@ -326,6 +326,23 @@ namespace DuelHero.Battle
             PhaseChanged?.Invoke();
             return true;
         }
+
+        public bool TryApplyBleedForDebug(UnitStats target, int amount)
+        {
+            if (!CanApplyDebuffForDebug(target, amount, out _)) return false;
+            target.ApplyBleed(amount);
+            return true;
+        }
+
+        private bool CanApplyDebuffForDebug(UnitStats target, int amount, out UnitStats enemy)
+        {
+            enemy = null;
+            if (!CanEditForDebug || target == null || amount <= 0) return false;
+            combatEffects.TryGetUnit(playerId, out _, out var player);
+            combatEffects.TryGetUnit(enemyId, out _, out enemy);
+            return target == player || target == enemy;
+        }
+
         public bool CanWinForDebug => Application.isPlaying && isActiveAndEnabled &&
             playerQueue != null && !IsInputLocked && !restoring && Outcome == BattleOutcome.Running &&
             combatEffects != null && combatEffects.TryGetUnit(playerId, out _, out var player) &&

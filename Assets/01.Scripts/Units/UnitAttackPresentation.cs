@@ -74,7 +74,8 @@ namespace DuelHero.Units
             }
         }
 
-        public IEnumerator PlayDash(Vector3 displacement, System.Action onStrike = null, System.Action onLaunch = null)
+        public IEnumerator PlayDash(Vector3 displacement, System.Action onStrike = null, System.Action onLaunch = null,
+            System.Action<float> onTravel = null)
         {
             if (!isActiveAndEnabled || IsPlaying) yield break;
             if (motionRoot == null || motionRoot.parent == null)
@@ -90,9 +91,11 @@ namespace DuelHero.Units
                 if (sprites != null) sprites.SetPose(UnitPose.AttackBefore);
                 motion = DOTween.Sequence();
                 motion.Append(motionRoot.DOLocalMove(startPosition, dashDuration).SetEase(Ease.Linear));
+                if (onTravel != null) motion.OnUpdate(() => onTravel(motion.ElapsedPercentage()));
                 yield return motion.WaitForCompletion(true);
                 if (run != version || !isActiveAndEnabled) yield break;
                 motionRoot.localPosition = startPosition;
+                onTravel?.Invoke(1f);
                 if (sprites != null) sprites.SetPose(UnitPose.AttackAfter);
                 onStrike?.Invoke();
                 completed = true; // Keep the pose until the shared damage batch is applied.

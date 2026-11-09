@@ -1,5 +1,5 @@
 "id","name","startingHealth","maxHealth","startingEnergy","maxEnergy","fixedCommonCardIds","uniqueCardId","bonusCandidateCardIds"
-"enemy_dummy_001","적 더미","100","100","100","100"
-"enemy_chain_warden_001","사슬 파수꾼","80","80","100","100","charge_slash_001;riposte_stance_001","chain_mace_001","head_break_001;shield_deploy_001;whirlwind_001"
-"enemy_thorn_hunter_001","가시 사냥꾼","70","70","100","100","flash_step_001;bleed_attack_001","thorn_throw_001","charge_slash_001;tear_wound_001"
+"enemy_dummy_001","적 더미","100","100","100","100","","",""
+"enemy_chain_warden_001","사슬 파수꾼","70","70","100","100","charge_slash_001;riposte_stance_001","chain_mace_001","head_break_001;shield_deploy_001;whirlwind_001"
+"enemy_thorn_hunter_001","가시 사냥꾼","60","60","100","100","flash_step_001;bleed_attack_001","thorn_throw_001","charge_slash_001;tear_wound_001"
 "enemy_rift_knight_001","균열 기사","140","140","100","100","qi_breathing_001;whirlwind_001;charge_slash_001","rift_charge_001","shield_deploy_001;riposte_stance_001"

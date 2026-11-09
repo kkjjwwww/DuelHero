@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: UnitDatabase
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Data.UnitDatabase
   sourceSpreadsheetId: 1pspfXZtUhTmSc9ZTL1iTzQDeBgvfbb_wqwCNs83EFQE
-  importedAtUtc: 2026-11-06T14:45:39.2647741Z
+  importedAtUtc: 2026-11-09T01:55:42.2632462Z
   players:
   - id: player_dummy_001
     name: "\uD50C\uB808\uC774\uC5B4"
@@ -30,14 +30,14 @@ MonoBehaviour:
     maxEnergy: 100
   - id: enemy_chain_warden_001
     name: "\uC0AC\uC2AC \uD30C\uC218\uAFBC"
-    startingHealth: 80
-    maxHealth: 80
+    startingHealth: 70
+    maxHealth: 70
     startingEnergy: 100
     maxEnergy: 100
   - id: enemy_thorn_hunter_001
     name: "\uAC00\uC2DC \uC0AC\uB0E5\uAFBC"
-    startingHealth: 70
-    maxHealth: 70
+    startingHealth: 60
+    maxHealth: 60
     startingEnergy: 100
     maxEnergy: 100
   - id: enemy_rift_knight_001

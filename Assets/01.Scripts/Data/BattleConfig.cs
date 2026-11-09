@@ -6,5 +6,7 @@ namespace DuelHero.Data
         public string sourceSpreadsheetId, importedAtUtc;
         public bool hasEnergyRecoveryPerTurn;
         public int energyRecoveryPerTurn;
+        public int enemyHealthIncreasePercentPerStage;
+        public int enemyEnergyIncreasePercentPerStage;
     }
 }

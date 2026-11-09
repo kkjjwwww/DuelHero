@@ -8,7 +8,7 @@ namespace DuelHero.Cards
     {
         [SerializeField] private BattleTurnController source;
         [SerializeField] private EnemyActionSlotView[] slots;
-        private EnemyCardListUI cardList;
+        [SerializeField] private EnemyCardListUI cardList;
         private BattlePreviewPresenter preview;
 
         private void OnEnable()
@@ -21,7 +21,7 @@ namespace DuelHero.Cards
             source.SlotRevealing += RevealAnimated;
             source.SlotCompleted += CompleteSlot;
             source.PhaseChanged += RefreshInspection;
-            cardList = FindFirstObjectByType<EnemyCardListUI>();
+            if (cardList == null) cardList = FindFirstObjectByType<EnemyCardListUI>();
             preview = FindFirstObjectByType<BattlePreviewPresenter>();
             // Recover the current display when this UI is re-enabled.
             ShowPlan(source.PreparedEnemyCards);

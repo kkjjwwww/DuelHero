@@ -67,6 +67,7 @@ namespace DuelHero.Battle
         {
             internal UnitStats Target;
             internal int Amount, Reduced, Round;
+            internal int DamageWithoutBleed;
             internal string HitVfx;
             internal string ActorId, CardId, TargetId;
             internal Vector2Int From, To;
@@ -145,6 +146,7 @@ namespace DuelHero.Battle
                     int amount = DamageAfterGuard(raw, shield);
                     remainingGuard[target.stats] = shield - (raw - amount);
                     batch.Hits.Add(new PendingDamage { Target = target.stats, Amount = amount, Reduced = raw - amount, HitVfx = attack.Card?.hitVfx,
+                        DamageWithoutBleed = DamageAfterGuard(effect.value, shield),
                         ActorId = attack.ActorId, CardId = attack.CardId, TargetId = target.id, Round = round,
                         From = actor.movement.GridPosition, To = target.movement.GridPosition,
                         Stun = attack.Card?.effects.Where(e => e.effectType == "applyStatus" && e.statusId == "stun" &&
@@ -168,7 +170,9 @@ namespace DuelHero.Battle
                 if (hit.Stun > 0) hit.Target.ApplyStun(hit.Stun);
                 if (hit.Bleed > 0) hit.Target.ApplyBleed(hit.Bleed);
                 results.Add(new BattleActionResult(BattleActionKind.Damage, hit.ActorId, hit.Round, hit.CardId,
-                    from: hit.From, to: hit.To, value: before - hit.Target.Health, targetId: hit.TargetId, reducedDamage: hit.Reduced, hitVfx: hit.HitVfx));
+                    from: hit.From, to: hit.To, value: before - hit.Target.Health, targetId: hit.TargetId,
+                    reducedDamage: hit.Reduced, hitVfx: hit.HitVfx,
+                    bleedBonusDamage: Mathf.Max(0, before - hit.Target.Health - hit.DamageWithoutBleed)));
             }
             foreach (var result in results.Concat(batch.Misses)) ActionResolved?.Invoke(result);
         }

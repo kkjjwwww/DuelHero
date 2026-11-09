@@ -24,11 +24,19 @@ namespace DuelHero.Cards
         private bool hoverEnabled;
         private CardView focused;
         private Vector2 lastSize;
+        private RectTransform presentationPanel;
+        private Vector2 restingPanelPosition;
         public CardView Focused => focused;
         public float GetHideDistance(float hiddenRatio) => cards.Count == 0 ? 0f :
             ((RectTransform)cards[cards.Count / 2].transform).rect.height *
             Mathf.Max(0f, hiddenRatio - 0.45f * hiddenDescriptionRatio);
         public event System.Action<CardView> FocusChanged;
+
+        public void SetPresentationPanel(RectTransform panel, Vector2 restingPosition)
+        {
+            presentationPanel = panel;
+            restingPanelPosition = restingPosition;
+        }
 
         public void SetCards(IEnumerable<CardView> views)
         {
@@ -108,7 +116,14 @@ namespace DuelHero.Cards
             float spacing = cards.Count < 2 ? 0f : Mathf.Min(width * spacingRatio, (usable - width - 24f) / (cards.Count - 1));
             spacing = Mathf.Max(0f, spacing);
             float angle = Mathf.Min(maximumAngle, (cards.Count - 1) * 5f) * Mathf.Clamp01(spacing / (width * spacingRatio));
-            Rect screen = CanvasBounds();
+            float screenBottom = CanvasBounds().yMin;
+            if (presentationPanel != null)
+            {
+                Vector2 panelOffset = presentationPanel.anchoredPosition - restingPanelPosition;
+                Vector3 worldOffset = presentationPanel.parent.TransformVector(panelOffset);
+                // Keep card positions relative to the resting hand while its parent animates.
+                screenBottom += transform.InverseTransformVector(worldOffset).y;
+            }
             for (int i = 0; i < cards.Count; i++)
             {
                 var card = cards[i];
@@ -118,7 +133,7 @@ namespace DuelHero.Cards
                 // Keep the centre high and let both ends fall below the screen edge.
                 float hiddenHeight = height * 0.45f * hiddenDescriptionRatio;
                 positions[card] = new Vector2((i - (cards.Count - 1) * 0.5f) * spacing,
-                    screen.yMin + height * 0.5f - hiddenHeight - edgeDrop * t * t);
+                    screenBottom + height * 0.5f - hiddenHeight - edgeDrop * t * t);
             }
             foreach (var card in cards)
             {

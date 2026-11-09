@@ -15,6 +15,10 @@ namespace DuelHero.Battle
         [SerializeField] private GameObject slashVfx, dashVfx, headCrushVfx, hitVfx, blockVfx;
         [SerializeField] private GameObject energyRestoreVfx;
         [SerializeField] private GameObject moveDustVfx;
+        [SerializeField] private GameObject tearWoundVfx, whirlwindVfx, thornThrowVfx, thornImpactVfx;
+        [SerializeField] private GameObject riftTileVfx, riftBurstVfx;
+        private readonly Dictionary<string, List<GameObject>> riftTiles = new();
+        private Tween whirlwindSorting;
 
         private void PlayMoveDust(GridMovement unit, Vector3 visualStart, Vector2Int direction)
         {
@@ -47,6 +51,8 @@ namespace DuelHero.Battle
                 combatEffects.EnergyRestored -= PlayEnergyRestoreVfx;
             }
             foreach (var shake in hitShakes.Values.ToArray()) shake.Kill();
+            foreach (var actorId in riftTiles.Keys.ToArray()) ClearRiftTiles(actorId);
+            whirlwindSorting?.Kill();
         }
 
         private void PlayEnergyRestoreVfx(GridMovement unit)
@@ -89,6 +95,17 @@ namespace DuelHero.Battle
             if (result.Value <= 0) return;
 
             if (renderer != null) ShakeHitSprite(renderer.transform);
+            if (result.HitVfx == "tear_wound" && tearWoundVfx != null)
+            {
+                var effect = PlayTechniqueVfx(tearWoundVfx, position, tearWoundVfx.transform.rotation);
+                if (result.BleedBonusDamage > 0) effect.transform.Find("BleedBonus")?.gameObject.SetActive(true);
+                return;
+            }
+            if (result.HitVfx == "thorn_impact" && thornImpactVfx != null)
+            {
+                PlayTechniqueVfx(thornImpactVfx, position, thornImpactVfx.transform.rotation);
+                return;
+            }
             SpawnVfx(result.HitVfx == "head_crush" && headCrushVfx != null ? headCrushVfx : hitVfx, position);
         }
 
@@ -112,7 +129,7 @@ namespace DuelHero.Battle
         }
 
         private void PlayWeaponVfx(UnitAttackPresentation attack, GridMovement unit, CardDefinition card,
-            IReadOnlyList<Vector2Int> dashPath = null)
+            IReadOnlyList<Vector2Int> dashPath = null, bool counter = false)
         {
             if (attack == null || unit == null || card == null) return;
             bool thrust = card.attackVfx == "thrust";
@@ -123,7 +140,7 @@ namespace DuelHero.Battle
                 "dash_slash" => dashVfx,
                 _ => null
             };
-            if (!thrust && prefab == null) return;
+            if (!thrust && prefab == null && card.attackVfx != "whirlwind" && card.attackVfx != "thorn_throw") return;
 
             var sprite = unit.GetComponentInChildren<SpriteRenderer>();
             var direction = card.executionDirection;
@@ -132,6 +149,18 @@ namespace DuelHero.Battle
             var origin = unit.Grid.CellToWorld(unit.GridPosition);
             var step = unit.Grid.CellToWorld(unit.GridPosition + direction) - origin;
             var anchor = sprite != null ? sprite.bounds.center : attack.MotionWorldPosition;
+            if (card.attackVfx == "whirlwind")
+            {
+                PlayWhirlwind(unit, attack.MotionWorldPosition, sprite);
+                return;
+            }
+            if (card.attackVfx == "thorn_throw")
+            {
+                var heightFromFeet = Vector3.Project(anchor - attack.MotionWorldPosition, unit.Grid.transform.up);
+                var throwOrigin = anchor - heightFromFeet * .2f;
+                PlayThornThrow(unit, card, direction, step, throwOrigin, counter);
+                return;
+            }
             var weaponHeight = Vector3.Project(anchor - origin, unit.Grid.transform.up);
             var position = attack.MotionWorldPosition + weaponHeight + step * .85f;
             if (thrust)
@@ -182,6 +211,96 @@ namespace DuelHero.Battle
                     renderer.alignment = ParticleSystemRenderSpace.Local;
                 particle.Play(false);
             }
+        }
+
+        private static Quaternion FaceTravel(Vector3 travel, Vector3 up) =>
+            Quaternion.LookRotation(Vector3.Cross(travel, up), up);
+
+        private GameObject PlayTechniqueVfx(GameObject prefab, Vector3 position, Quaternion rotation)
+        {
+            var instance = Instantiate(prefab, position, rotation);
+            Destroy(instance, .45f);
+            return instance;
+        }
+
+        private void PlayWhirlwind(GridMovement unit, Vector3 visualFeet, SpriteRenderer caster)
+        {
+            if (whirlwindVfx == null) return;
+            var ground = unit.Grid.CellToWorld(unit.GridPosition);
+            var feet = ground + Vector3.ProjectOnPlane(visualFeet - ground, unit.Grid.transform.up);
+            var instance = PlayTechniqueVfx(whirlwindVfx, feet, whirlwindVfx.transform.rotation);
+            if (caster == null) return;
+
+            whirlwindSorting?.Kill();
+            int originalLayer = caster.sortingLayerID;
+            int originalOrder = caster.sortingOrder;
+            var foremost = FindObjectsByType<GridMovement>(FindObjectsSortMode.None)
+                .Select(unitOnBoard => unitOnBoard.GetComponentInChildren<SpriteRenderer>())
+                .Where(sprite => sprite != null)
+                .OrderByDescending(sprite => SortingLayer.GetLayerValueFromID(sprite.sortingLayerID))
+                .ThenByDescending(sprite => sprite.sortingOrder)
+                .FirstOrDefault() ?? caster;
+            int layer = foremost.sortingLayerID;
+            int order = foremost.sortingOrder + 1;
+            foreach (var renderer in instance.GetComponentsInChildren<Renderer>(true))
+            {
+                renderer.sortingLayerID = layer;
+                renderer.sortingOrder = order;
+            }
+            caster.sortingLayerID = layer;
+            caster.sortingOrder = order + 1;
+            whirlwindSorting = DOVirtual.DelayedCall(.45f, () => { }, ignoreTimeScale: false).OnKill(() =>
+            {
+                if (caster == null) return;
+                caster.sortingLayerID = originalLayer;
+                caster.sortingOrder = originalOrder;
+            });
+        }
+
+        private void PlayThornThrow(GridMovement unit, CardDefinition card, Vector2Int direction, Vector3 step,
+            Vector3 origin, bool counter)
+        {
+            if (thornThrowVfx == null) return;
+            int cells = card.effects.Where(effect => effect.effectType == "damage" && effect.IsCounter == counter)
+                .SelectMany(effect => effect.rangeOffsets)
+                .Where(offset => unit.Grid.Contains(unit.GridPosition + offset))
+                .Select(offset => offset.x * direction.x + offset.y * direction.y).DefaultIfEmpty(0).Max();
+            if (cells <= 0) return;
+            var instance = PlayTechniqueVfx(thornThrowVfx, origin,
+                FaceTravel(step, unit.Grid.transform.up) * thornThrowVfx.transform.rotation);
+            foreach (var particles in instance.GetComponentsInChildren<ParticleSystem>())
+            {
+                particles.Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear);
+                var velocity = particles.velocityOverLifetime;
+                if (velocity.enabled) velocity.x = cells * step.magnitude / .2f;
+                particles.Play(false);
+            }
+        }
+
+        private void ClearRiftTiles(string actorId)
+        {
+            if (!riftTiles.TryGetValue(actorId, out var tiles)) return;
+            foreach (var tile in tiles)
+            {
+                if (tile == null) continue;
+                tile.SetActive(false);
+                Destroy(tile);
+            }
+            riftTiles.Remove(actorId);
+        }
+
+        public bool ResolveRiftImpact(string actorId, CardDefinition card, CombatEffectResolver.DamageBatch batch)
+        {
+            if (card?.attackVfx != "rift_charge") return false;
+            ClearRiftTiles(actorId);
+            if (riftBurstVfx == null || !batch.AttackCells.TryGetValue(actorId, out var cells) ||
+                cells.Count == 0 || !combatEffects.TryGetUnit(actorId, out var unit, out _)) return false;
+            var origin = unit.Grid.CellToWorld(unit.GridPosition);
+            var step = unit.Grid.CellToWorld(unit.GridPosition + card.executionDirection) - origin;
+            if (step.sqrMagnitude < .0001f) return false;
+            var rotation = FaceTravel(step, unit.Grid.transform.up) * riftBurstVfx.transform.rotation;
+            foreach (var cell in cells) PlayTechniqueVfx(riftBurstVfx, unit.Grid.CellToWorld(cell), rotation);
+            return true;
         }
 
         private void PlayThrustLine(Vector3 tip, Vector3 step, SpriteRenderer sprite, bool behind)
@@ -296,7 +415,7 @@ namespace DuelHero.Battle
             {
                 ShowAttackRange(attack, actorId, card, movementPath, counter);
                 SetCardFacing(placement, unit, card);
-                yield return attack.PlayAttack(card?.attackStyle, () => PlayWeaponVfx(attack, unit, card));
+                yield return attack.PlayAttack(card?.attackStyle, () => PlayWeaponVfx(attack, unit, card, counter: counter));
             }
             finally
             {
@@ -328,6 +447,7 @@ namespace DuelHero.Battle
 
         public void CancelPreparationPresentation(string actorId, UnitVisualPlacement placement = null)
         {
+            ClearRiftTiles(actorId);
             if (combatEffects != null && combatEffects.TryGetUnit(actorId, out var movement, out _))
             {
                 movement.GetComponent<UnitSpritePresenter>()?.CancelSupportPose();
@@ -384,11 +504,29 @@ namespace DuelHero.Battle
                         {
                             holdFacing = true;
                             placement?.Refresh();
+                            System.Action<float> markRift = null;
+                            if (riftTileVfx != null && card.attackVfx == "rift_charge" && movementPath?.Count > 0)
+                            {
+                                ClearRiftTiles(actorId);
+                                var tiles = new List<GameObject>();
+                                riftTiles.Add(actorId, tiles);
+                                var ground = movement.Grid.CellToWorld(movement.GridPosition);
+                                var travel = movement.Grid.CellToWorld(movement.GridPosition + direction) - ground;
+                                var rotation = FaceTravel(travel, movement.Grid.transform.up) * riftTileVfx.transform.rotation;
+                                markRift = progress =>
+                                {
+                                    int arrived = Mathf.FloorToInt(progress * (movementPath.Count - 1)) + 1;
+                                    while (tiles.Count < arrived)
+                                        tiles.Add(Instantiate(riftTileVfx, movement.Grid.CellToWorld(movementPath[tiles.Count]), rotation));
+                                };
+                            }
                             yield return attack.PlayDash(attack.MotionWorldPosition - dashStart,
                                 onLaunch: () =>
                                 {
                                     if (moved) PlayMoveDust(movement, dashStart, direction);
-                                });
+                                    markRift?.Invoke(0f);
+                                }, onTravel: markRift);
+                            if (!attack.IsPlaying) ClearRiftTiles(actorId);
                         }
                         break;
                     case "guard":

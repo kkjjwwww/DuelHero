@@ -160,8 +160,8 @@ namespace DuelHero.Editor
             Set(serialized, "visualRoot", visual.transform);
             Set(serialized, "frontRoot", frontRoot);
             Set(serialized, "illustration", illustration);
-            var illustrationIds = new[] { "slash_001", "guard_001", "breathing_001", "move_up_001", "move_down_001", "move_left_001", "move_right_001", WaitCard.Id, "thrust_001", "sweep_001", "head_break_001", "bleed_attack_001", "riposte_stance_001", "tear_wound_001" };
-            var illustrationFiles = new[] { "Slash", "Guard", "Breathing", "Move", "Move", "Move", "Move", "Wait", "Thrust", "Sweep", "HeadBreak", "BleedAttack", "RiposteStance", "TearWound" };
+            var illustrationIds = new[] { "slash_001", "guard_001", "breathing_001", "move_up_001", "move_down_001", "move_left_001", "move_right_001", WaitCard.Id, "thrust_001", "sweep_001", "head_break_001", "bleed_attack_001", "riposte_stance_001", "tear_wound_001", "charge_slash_001", "whirlwind_001", "flash_step_001", "qi_breathing_001", "shield_deploy_001" };
+            var illustrationFiles = new[] { "Slash", "Guard", "Breathing", "Move", "Move", "Move", "Move", "Wait", "Thrust", "Sweep", "HeadBreak", "BleedAttack", "RiposteStance", "TearWound", "ChargeSlash", "Whirlwind", "FlashStep", "QiBreathing", "ShieldDeploy" };
             var illustrations = serialized.FindProperty("cardIllustrations");
             illustrations.arraySize = illustrationIds.Length;
             for (int i = 0; i < illustrationIds.Length; i++)
@@ -209,7 +209,7 @@ namespace DuelHero.Editor
         private static void ConfigureTextures()
         {
             string[] files = { "CardFrontFrame.png", "CardFrontFrameRare.png", "CardFrontFrameUnique.png", "CardFrontFrameLegendary.png", "CardBack.png", "EnergyBadge.png", "TypeBadgeAttack.png", "TypeBadgeDefense.png", "TypeBadgeRecovery.png", "TypeBadgeSpecial.png", "TypeBadgeMove.png" };
-            files = files.Concat(new[] { "Slash", "Guard", "Breathing", "Move", "Wait", "EnemyGuard", "EnemyBreathing", "EnemyMove", "EnemyWait" }
+            files = files.Concat(new[] { "Slash", "Guard", "Breathing", "Move", "Wait", "EnemyGuard", "EnemyBreathing", "EnemyMove", "EnemyWait", "ChargeSlash", "Whirlwind", "FlashStep", "QiBreathing", "ShieldDeploy" }
                 .Select(name => "Illustrations/CardIllustration" + name + ".png")).ToArray();
             foreach (string file in files)
             {

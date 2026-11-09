@@ -1164,13 +1164,13 @@ MonoBehaviour:
   illustration: {fileID: 7171595111309188714}
   cardIllustrations:
   - cardId: chain_mace_001
-    sprite: {fileID: 0}
+    sprite: {fileID: 21300000, guid: 81079c902fee40faafe3a7445bd26ef3, type: 3}
     enemySprite: {fileID: 21300000, guid: 81079c902fee40faafe3a7445bd26ef3, type: 3}
   - cardId: thorn_throw_001
-    sprite: {fileID: 0}
+    sprite: {fileID: 21300000, guid: 6d52211518bd46cd9f50822d97745aea, type: 3}
     enemySprite: {fileID: 21300000, guid: 6d52211518bd46cd9f50822d97745aea, type: 3}
   - cardId: rift_charge_001
-    sprite: {fileID: 0}
+    sprite: {fileID: 21300000, guid: d55b7841e2b441379e7eb01ea7f9711e, type: 3}
     enemySprite: {fileID: 21300000, guid: d55b7841e2b441379e7eb01ea7f9711e, type: 3}
   - cardId: slash_001
     sprite: {fileID: 21300000, guid: ba9505261847c5f428df3c94ba9fc1ed, type: 3}
@@ -1214,6 +1214,21 @@ MonoBehaviour:
   - cardId: tear_wound_001
     sprite: {fileID: 21300000, guid: ce84de67ee6cefa4a928b13342940795, type: 3}
     enemySprite: {fileID: 21300000, guid: ce84de67ee6cefa4a928b13342940795, type: 3}
+  - cardId: charge_slash_001
+    sprite: {fileID: 21300000, guid: d22ccc45ab3583649aa4addf19d46cd0, type: 3}
+    enemySprite: {fileID: 21300000, guid: d22ccc45ab3583649aa4addf19d46cd0, type: 3}
+  - cardId: whirlwind_001
+    sprite: {fileID: 21300000, guid: f094dc2ae197433f8c942b4816627acb, type: 3}
+    enemySprite: {fileID: 21300000, guid: f094dc2ae197433f8c942b4816627acb, type: 3}
+  - cardId: flash_step_001
+    sprite: {fileID: 21300000, guid: f7096a236711488583a6984c24466288, type: 3}
+    enemySprite: {fileID: 21300000, guid: f7096a236711488583a6984c24466288, type: 3}
+  - cardId: qi_breathing_001
+    sprite: {fileID: 21300000, guid: 47a11e663247482ca9bfa73b7e895bfd, type: 3}
+    enemySprite: {fileID: 21300000, guid: 47a11e663247482ca9bfa73b7e895bfd, type: 3}
+  - cardId: shield_deploy_001
+    sprite: {fileID: 21300000, guid: 5f2d410e198446d59d249696cbc6947a, type: 3}
+    enemySprite: {fileID: 21300000, guid: 5f2d410e198446d59d249696cbc6947a, type: 3}
   illustrationMaskLabel: {fileID: 2585468343720503962}
   nameLabel: {fileID: 4830123014176368167}
   energyLabel: {fileID: 7672088178475286491}

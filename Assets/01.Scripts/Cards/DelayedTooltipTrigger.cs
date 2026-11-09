@@ -16,6 +16,12 @@ namespace DuelHero.Cards
         private float enteredAt;
         private Vector2 pointerPosition;
 
+        internal void Configure(string message, float hoverDelay)
+        {
+            text = message;
+            delay = hoverDelay;
+        }
+
         private void Awake() => selectable = GetComponent<Selectable>();
         public void OnPointerEnter(PointerEventData eventData)
         {

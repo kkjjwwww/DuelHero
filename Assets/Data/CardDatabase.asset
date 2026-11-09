@@ -466,7 +466,7 @@ MonoBehaviour:
     rarity: "\uC804\uC124"
     attackStyle: 
     attackVfx: 
-    hitVfx: 
+    hitVfx: tear_wound
     energyCost: 25
     cooldownTurns: 2
     keywordIds:
@@ -599,8 +599,8 @@ MonoBehaviour:
     actionType: "\uACF5\uACA9"
     rarity: "\uD76C\uADC0"
     attackStyle: 
-    attackVfx: 
-    hitVfx: 
+    attackVfx: thorn_throw
+    hitVfx: thorn_impact
     energyCost: 20
     cooldownTurns: 1
     keywordIds:
@@ -649,7 +649,7 @@ MonoBehaviour:
     actionType: "\uACF5\uACA9"
     rarity: "\uC804\uC124"
     attackStyle: 
-    attackVfx: 
+    attackVfx: rift_charge
     hitVfx: 
     energyCost: 30
     cooldownTurns: 2
@@ -702,7 +702,7 @@ MonoBehaviour:
     actionType: "\uACF5\uACA9"
     rarity: "\uACE0\uAE09"
     attackStyle: 
-    attackVfx: 
+    attackVfx: whirlwind
     hitVfx: 
     energyCost: 25
     cooldownTurns: 2

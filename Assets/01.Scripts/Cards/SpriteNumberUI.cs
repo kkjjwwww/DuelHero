@@ -12,6 +12,8 @@ namespace DuelHero.Cards
         private readonly List<Image> images = new();
         private int displayedValue = -1;
 
+        internal void SetDigitSprites(Sprite[] sprites) => digits = sprites;
+
         public void SetValue(int value)
         {
             value = Mathf.Max(0, value);
