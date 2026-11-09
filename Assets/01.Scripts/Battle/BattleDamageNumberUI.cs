@@ -11,6 +11,7 @@ namespace DuelHero.Battle
     {
         [SerializeField] private CombatEffectResolver resolver;
         [SerializeField] private Camera battleCamera;
+        [SerializeField] private RectTransform hudRoot;
         [SerializeField] private Sprite[] digits;
         private const float Duration = .55f;
         private const float FadeDuration = .18f;
@@ -63,7 +64,7 @@ namespace DuelHero.Battle
 
             var root = new GameObject("Damage Number", typeof(RectTransform), typeof(CanvasGroup), typeof(SpriteNumberUI));
             var rect = (RectTransform)root.transform;
-            var parent = (RectTransform)transform;
+            var parent = hudRoot != null ? hudRoot : (RectTransform)transform;
             rect.SetParent(parent, false);
             rect.SetAsFirstSibling();
             rect.anchorMin = rect.anchorMax = new Vector2(.5f, .5f);

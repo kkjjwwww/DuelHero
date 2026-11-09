@@ -94,9 +94,16 @@ public static class EconomyValidation
         try
         {
             foreach (var name in EconomyConfigSheetImporter.Names) File.Copy(Path.Combine(EconomyConfigSheetImporter.SourceFolder, name + ".csv"), Path.Combine(folder, name + ".csv"));
+            var changed = GoogleSheetSyncClient.SplitConfigCsv(
+                "group,key,value,description\nRunConfig,startingGold,30,start\nRunConfig,restHealAmount,47,rest\n",
+                new[] { "RunConfig" });
+            File.WriteAllText(Path.Combine(folder, "RunConfig.csv"), changed["RunConfig.csv"]);
+            var parsedRun = (RunConfig)EconomyConfigSheetImporter.Parse(folder, "RunConfig");
+            try { Check(parsedRun.restHealAmount == 47, "rest heal follows sheet value"); }
+            finally { UnityEngine.Object.DestroyImmediate(parsedRun); }
             foreach (var bad in new[] { "key,value,description\nstartingGold,-1,bad\n", "key,value,description\nunknown,30,bad\n", "key,value,description\nstartingGold,30,bad\nstartingGold,40,bad\n" })
             {
-                File.WriteAllText(Path.Combine(folder, "RunConfig.csv"), bad); bool rejected = false;
+                File.WriteAllText(Path.Combine(folder, "RunConfig.csv"), bad + "restHealAmount,30,rest\n"); bool rejected = false;
                 try { GameSheetImporter.ImportFolder(folder, CardSheetImporter.DefaultSpreadsheetId, SheetSyncScope.Economy); }
                 catch (FormatException) { rejected = true; }
                 Check(rejected && before == File.ReadAllText(EconomyConfigSheetImporter.AssetPath("RunConfig")), "invalid config retains old asset");

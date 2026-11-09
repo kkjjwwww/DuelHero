@@ -5,5 +5,6 @@ namespace DuelHero.Data
     {
         public string sourceSpreadsheetId, importedAtUtc;
         [Min(0)] public int startingGold;
+        [Min(0)] public int restHealAmount = 30;
     }
 }

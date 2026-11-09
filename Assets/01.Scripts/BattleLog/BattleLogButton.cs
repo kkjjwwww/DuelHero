@@ -9,6 +9,7 @@ namespace DuelHero.Logging
     public sealed class BattleLogButton : MonoBehaviour
     {
         [SerializeField] private BattleLogUI panel;
+        [SerializeField] private RectTransform hudRoot;
         [SerializeField] private Sprite handsSprite;
         [SerializeField] private Sprite arrowSprite;
         private Tween rotation;
@@ -22,7 +23,7 @@ namespace DuelHero.Logging
 
             buttonObject = new GameObject("Battle Log Button", typeof(RectTransform), typeof(Image), typeof(Button));
             var buttonRect = (RectTransform)buttonObject.transform;
-            buttonRect.SetParent(transform, false);
+            buttonRect.SetParent(hudRoot != null ? hudRoot : transform, false);
             buttonRect.anchorMin = buttonRect.anchorMax = new Vector2(.02f, 1f);
             buttonRect.pivot = new Vector2(0f, 1f);
             buttonRect.sizeDelta = new Vector2(32f, 32f);

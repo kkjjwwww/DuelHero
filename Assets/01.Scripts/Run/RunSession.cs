@@ -19,6 +19,9 @@ namespace DuelHero.Run
         public RouteMapProgress Progress { get; }
         public string PendingBattleNodeId { get; private set; }
         public string PendingShopNodeId { get; private set; }
+        public string PendingRestNodeId { get; private set; }
+        public bool HasPendingNode => PendingBattleNodeId != null || PendingShopNodeId != null || PendingRestNodeId != null;
+        public const int RestCardRemovalGold = 30;
         public int Gold { get; private set; }
         private ShopOffer[] shopOffers = Array.Empty<ShopOffer>();
         public IReadOnlyList<ShopOffer> ShopOffers => Array.AsReadOnly(shopOffers);
@@ -43,7 +46,7 @@ namespace DuelHero.Run
 
         public bool TryBeginBattle(string nodeId)
         {
-            if (PlayerHealth <= 0 || PendingBattleNodeId != null || PendingShopNodeId != null || !Progress.CanSelect(nodeId)) return false;
+            if (PlayerHealth <= 0 || HasPendingNode || !Progress.CanSelect(nodeId)) return false;
             var type = Map.GetNode(nodeId).Type;
             if (type != RouteNodeType.Battle && type != RouteNodeType.Boss) return false;
 
@@ -77,7 +80,7 @@ namespace DuelHero.Run
 
         public bool TryBeginShop(string nodeId, IEnumerable<CardDefinition> definitions, ShopConfig config)
         {
-            if (PlayerHealth <= 0 || PendingBattleNodeId != null || PendingShopNodeId != null || !Progress.CanSelect(nodeId) ||
+            if (PlayerHealth <= 0 || HasPendingNode || !Progress.CanSelect(nodeId) ||
                 Map.GetNode(nodeId).Type != RouteNodeType.Shop) return false;
             var offers = ShopOfferSelector.Generate(definitions, config, Map.Seed, nodeId);
             shopOffers = offers; PendingShopNodeId = nodeId; return true;
@@ -103,6 +106,46 @@ namespace DuelHero.Run
         {
             if (nodeId == null || PendingShopNodeId != nodeId || !Progress.TrySelect(nodeId)) return false;
             PendingShopNodeId = null; shopOffers = Array.Empty<ShopOffer>(); return true;
+        }
+
+        public bool TryBeginRest(string nodeId)
+        {
+            if (PlayerHealth <= 0 || HasPendingNode || !Progress.CanSelect(nodeId) ||
+                Map.GetNode(nodeId).Type != RouteNodeType.Rest) return false;
+            PendingRestNodeId = nodeId;
+            return true;
+        }
+
+        public bool TryCancelRestEntry(string nodeId)
+        {
+            if (nodeId == null || PendingRestNodeId != nodeId) return false;
+            PendingRestNodeId = null;
+            return true;
+        }
+
+        public bool TryHealAtRest(string nodeId, int amount)
+        {
+            if (amount < 0 || !TryCompleteRest(nodeId)) return false;
+            PlayerHealth += Math.Min(amount, PlayerMaxHealth - PlayerHealth);
+            return true;
+        }
+
+        public bool TryRemoveCardAtRest(string nodeId, int index, string expectedId)
+        {
+            if (cardIds.Count <= 1 || index < 0 || index >= cardIds.Count ||
+                cardIds[index] != expectedId || expectedId == WaitCard.Definition.id) return false;
+            int nextGold = checked(Gold + RestCardRemovalGold);
+            if (!TryCompleteRest(nodeId)) return false;
+            cardIds.RemoveAt(index);
+            Gold = nextGold;
+            return true;
+        }
+
+        private bool TryCompleteRest(string nodeId)
+        {
+            if (nodeId == null || PendingRestNodeId != nodeId || PlayerHealth <= 0 || !Progress.TrySelect(nodeId)) return false;
+            PendingRestNodeId = null;
+            return true;
         }
 
         public void SavePlayerState(int health, IEnumerable<string> ownedCardIds)

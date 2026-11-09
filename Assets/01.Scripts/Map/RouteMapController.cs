@@ -21,6 +21,7 @@ namespace DuelHero.Map
         [SerializeField] private ShopConfig shopConfig;
         [SerializeField] private UnityEngine.UI.Text goldLabel;
         [SerializeField] private string shopScenePath = "Assets/00.Scenes/ShopScene.unity";
+        [SerializeField] private string restScenePath = "Assets/00.Scenes/RestScene.unity";
         [SerializeField] private string battleScenePath = "Assets/00.Scenes/BattleScene.unity";
 
         private RunSession session;
@@ -66,13 +67,15 @@ namespace DuelHero.Map
         private void HandleNodeClicked(string nodeId)
         {
             if (!isActiveAndEnabled || IsTransitioning || session == null || (ownedCardsView != null && ownedCardsView.IsOpen) ||
-                session.PendingBattleNodeId != null || session.PendingShopNodeId != null || session.PlayerHealth <= 0 || !Progress.CanSelect(nodeId)) return;
+                session.HasPendingNode || session.PlayerHealth <= 0 || !Progress.CanSelect(nodeId)) return;
 
             var type = CurrentMap.GetNode(nodeId).Type;
             if (type == RouteNodeType.Battle || type == RouteNodeType.Boss)
                 EnterBattle(nodeId);
             else if (type == RouteNodeType.Shop)
                 EnterShop(nodeId);
+            else if (type == RouteNodeType.Rest)
+                EnterRest(nodeId);
             else if (Progress.TrySelect(nodeId))
                 RefreshNodeStates();
         }
@@ -125,6 +128,27 @@ namespace DuelHero.Map
             }
         }
 
+        private void EnterRest(string nodeId)
+        {
+            if (!Application.CanStreamedLevelBeLoaded(restScenePath))
+            { LastError = "휴식 씬을 불러올 수 없습니다: " + restScenePath; Debug.LogWarning(LastError, this); return; }
+            if (!session.TryBeginRest(nodeId)) return;
+            IsTransitioning = true;
+            LastError = null;
+            RefreshNodeStates();
+            try { MapSceneFade.Load(restScenePath, RestoreEntry); }
+            catch (Exception error) { RestoreEntry(error); }
+
+            void RestoreEntry(Exception error)
+            {
+                session.TryCancelRestEntry(nodeId);
+                IsTransitioning = false;
+                LastError = error.Message;
+                RefreshNodeStates();
+                Debug.LogWarning(LastError, this);
+            }
+        }
+
         [ContextMenu("Generate fixed seed preview")]
         public void GeneratePreview()
         {
@@ -173,7 +197,7 @@ namespace DuelHero.Map
         private void RefreshNodeStates()
         {
             if (goldLabel != null) goldLabel.text = "골드  " + session.Gold;
-            bool inputLocked = IsTransitioning || session.PendingBattleNodeId != null || session.PendingShopNodeId != null || session.PlayerHealth <= 0;
+            bool inputLocked = IsTransitioning || session.HasPendingNode || session.PlayerHealth <= 0;
             foreach (var node in CurrentMap.Nodes)
             {
                 var state = node.Id == Progress.CurrentNodeId ? RouteNodeState.Current

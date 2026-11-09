@@ -1523,6 +1523,7 @@ MonoBehaviour:
   shopConfig: {fileID: 11400000, guid: 38275596c72efce49897d63a0d18ed05, type: 2}
   goldLabel: {fileID: 1650826732}
   shopScenePath: Assets/00.Scenes/ShopScene.unity
+  restScenePath: Assets/00.Scenes/RestScene.unity
   battleScenePath: Assets/00.Scenes/BattleScene.unity
 --- !u!4 &892684007
 Transform:
@@ -3091,6 +3092,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3478374215680331156, guid: b04b14e89a0a1534db0af781fee72b9d, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7056488809512903680, guid: b04b14e89a0a1534db0af781fee72b9d, type: 3}
+      propertyPath: m_SizeDelta.y
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []

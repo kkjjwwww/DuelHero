@@ -14,6 +14,7 @@ namespace DuelHero.Cards
         [SerializeField] private CardReservationQueue roundSource;
         [SerializeField] private Button toggleButton;
         [SerializeField] private Button closeButton;
+        [SerializeField] private Button outsideCloseButton;
         [SerializeField] private GameObject panel;
         [SerializeField] private RectTransform content;
         [SerializeField] private Text titleLabel;
@@ -54,17 +55,23 @@ namespace DuelHero.Cards
         public event System.Action OpenChanged;
         private IReadOnlyList<CardInstance> ownedCards;
         private CardDatabase ownedDatabase;
+        private System.Action<CardInstance> selectOwnedCard;
         private bool IsPlayerList => ownedCards != null || playerSource != null;
         private int CurrentRound => roundSource != null ? roundSource.CurrentRound : 1;
         private IReadOnlyList<CardInstance> Cards => ownedCards ?? (playerSource != null ? playerSource.Cards : source.Cards);
         private CardDatabase Database => ownedDatabase != null ? ownedDatabase : playerSource != null ? playerSource.Database : source.Database;
 
         public void OpenOwnedCards(CardDatabase database, IReadOnlyList<CardInstance> cards)
+            => OpenOwnedCards(database, cards, null);
+
+        public void OpenOwnedCards(CardDatabase database, IReadOnlyList<CardInstance> cards,
+            System.Action<CardInstance> onSelected)
         {
             if (database == null || cards == null) return;
             Close();
             ownedDatabase = database;
             ownedCards = cards;
+            selectOwnedCard = onSelected;
             Open();
         }
 
@@ -72,6 +79,7 @@ namespace DuelHero.Cards
         {
             if (toggleButton != null) toggleButton.onClick.AddListener(Toggle);
             if (closeButton != null) closeButton.onClick.AddListener(Close);
+            if (outsideCloseButton != null) outsideCloseButton.onClick.AddListener(Close);
             if (source != null) source.CardsChanged += OnCardsChanged;
             if (playerSource != null) playerSource.CardsChanged += OnCardsChanged;
             if (roundSource != null) roundSource.Changed += RefreshStates;
@@ -81,6 +89,7 @@ namespace DuelHero.Cards
         {
             if (toggleButton != null) toggleButton.onClick.RemoveListener(Toggle);
             if (closeButton != null) closeButton.onClick.RemoveListener(Close);
+            if (outsideCloseButton != null) outsideCloseButton.onClick.RemoveListener(Close);
             if (source != null) source.CardsChanged -= OnCardsChanged;
             if (playerSource != null) playerSource.CardsChanged -= OnCardsChanged;
             if (roundSource != null) roundSource.Changed -= RefreshStates;
@@ -93,6 +102,7 @@ namespace DuelHero.Cards
             if (playerSource != null) playerSource.Initialize();
             Initialize();
             Synchronize();
+            if (outsideCloseButton != null) outsideCloseButton.gameObject.SetActive(true);
             panel.SetActive(true);
             if (panel.transform.parent == transform) transform.SetAsLastSibling();
             panel.transform.SetAsLastSibling();
@@ -106,8 +116,10 @@ namespace DuelHero.Cards
         public void Close()
         {
             bool wasOpen = IsOpen;
+            selectOwnedCard = null;
             HideInspection();
             if (panel != null) panel.SetActive(false);
+            if (outsideCloseButton != null) outsideCloseButton.gameObject.SetActive(false);
             if (wasOpen) OpenChanged?.Invoke();
         }
         private void Initialize()
@@ -200,7 +212,7 @@ namespace DuelHero.Cards
             entry.View = Instantiate(cardPrefab, entry.Container, false);
             entry.View.name = "Card";
             entry.View.SetFont(font);
-            entry.View.SetClickAction(null);
+            entry.View.SetClickAction(() => SelectOwnedCard(entry));
             var rect = (RectTransform)entry.View.transform;
             rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(.5f, .5f);
             rect.anchoredPosition = Vector2.zero; rect.localScale = Vector3.one * cardScale;
@@ -210,13 +222,19 @@ namespace DuelHero.Cards
             {
                 if (IsOpen && entry.Card != null)
                     inspection.Show(entry.Container, cardPrefab, entry.Card.Definition, Database, font,
-                        entry.Card.RemainingAvailabilityDelay(CurrentRound), scale: hoverScale, duration: hoverDuration,
+                        entry.Card.RemainingAvailabilityDelay(CurrentRound),
+                        click: selectOwnedCard == null ? null : () => SelectOwnedCard(entry),
+                        scale: hoverScale, duration: hoverDuration,
                         scroll: eventData => { if (scroll != null) scroll.OnScroll(eventData); }, isEnemy: !IsPlayerList);
             };
             // The presenter keeps the preview open while the pointer crosses into it.
             hover.HideInfo = null;
             entry.View.SetKeywordHoverActions((keyword, position) => hover.ShowInfo?.Invoke(), null);
             return entry;
+        }
+        private void SelectOwnedCard(Entry entry)
+        {
+            if (IsOpen && entry.Card != null) selectOwnedCard?.Invoke(entry.Card);
         }
         private void ArrangeCategories()
         {
