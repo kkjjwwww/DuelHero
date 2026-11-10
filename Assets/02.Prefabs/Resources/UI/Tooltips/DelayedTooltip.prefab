@@ -21,12 +21,16 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6183730630993680134, guid: 2e0f402fbafa63f44a40db9bc4bcdd8f, type: 3}
+      propertyPath: m_FontData.m_MinSize
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6183730630993680134, guid: 2e0f402fbafa63f44a40db9bc4bcdd8f, type: 3}
       propertyPath: m_FontData.m_FontSize
-      value: 12
+      value: 18
       objectReference: {fileID: 0}
     - target: {fileID: 6238058405841093750, guid: 2e0f402fbafa63f44a40db9bc4bcdd8f, type: 3}
       propertyPath: m_SizeDelta.x
-      value: -10
+      value: -14
       objectReference: {fileID: 0}
     - target: {fileID: 6238058405841093750, guid: 2e0f402fbafa63f44a40db9bc4bcdd8f, type: 3}
       propertyPath: m_SizeDelta.y

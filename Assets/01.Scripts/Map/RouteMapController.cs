@@ -50,22 +50,15 @@ namespace DuelHero.Map
         private void Start()
         {
             if (goldLabel != null)
-                goldDisplay = new CurrencyLabel(goldLabel, Resources.Load<Sprite>("UI/Currency/money-pouch"), 36f);
+                goldDisplay = CurrencyLabel.CreateGoldBalance(goldLabel);
             session = RunSessionStore.Current ?? CreateRun(CreateRandomSeed());
             RenderRun();
         }
 
         private void ToggleOwnedCards()
         {
-            if (IsTransitioning || session == null || ownedCardsView == null) return;
-            if (ownedCardsView.IsOpen) { ownedCardsView.Close(); return; }
-            var cards = session.CardIds.Select(id =>
-            {
-                var definition = Array.Find(cardDatabase.cards, card => card != null && card.id == id);
-                if (definition == null) throw new InvalidOperationException("존재하지 않는 카드 ID: " + id);
-                return new CardInstance(definition);
-            }).ToArray();
-            ownedCardsView.OpenOwnedCards(cardDatabase, cards);
+            if (IsTransitioning || session == null || cardDatabase == null || ownedCardsView == null) return;
+            ownedCardsView.ToggleRunDeck(cardDatabase, session.CardIds);
         }
 
         private void HandleNodeClicked(string nodeId)

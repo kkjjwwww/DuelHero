@@ -64,6 +64,18 @@ namespace DuelHero.Cards
         public void OpenOwnedCards(CardDatabase database, IReadOnlyList<CardInstance> cards)
             => OpenOwnedCards(database, cards, null);
 
+        internal void ToggleRunDeck(CardDatabase database, IReadOnlyList<string> cardIds)
+        {
+            if (IsOpen) { Close(); return; }
+            var cards = cardIds.Select(id =>
+            {
+                var definition = System.Array.Find(database.cards, card => card != null && card.id == id);
+                if (definition == null) throw new System.InvalidOperationException("존재하지 않는 카드 ID: " + id);
+                return new CardInstance(definition);
+            }).ToArray();
+            OpenOwnedCards(database, cards);
+        }
+
         public void OpenOwnedCards(CardDatabase database, IReadOnlyList<CardInstance> cards,
             System.Action<CardInstance> onSelected)
         {

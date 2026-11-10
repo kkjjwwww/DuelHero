@@ -20,6 +20,9 @@ namespace DuelHero.Shop
         [SerializeField] private Transform[] cardAnchors;
         [SerializeField] private Text goldLabel, message;
         [SerializeField] private Button exitButton;
+        [SerializeField] private Button ownedCardsButton;
+        [SerializeField] private EnemyCardListUI ownedCardsView;
+        [SerializeField] private SpriteNumberUI ownedCardsCount;
         [SerializeField] private string mapScenePath = "Assets/00.Scenes/MapScene.unity";
         private RunSession run;
         private string nodeId;
@@ -39,11 +42,19 @@ namespace DuelHero.Shop
         private void OnEnable()
         {
             if (exitButton != null) exitButton.onClick.AddListener(Exit);
+            if (ownedCardsButton != null) ownedCardsButton.onClick.AddListener(ToggleOwnedCards);
+            if (ownedCardsView != null) ownedCardsView.OpenChanged += HandleDeckVisibility;
             SetHoverEnabled(!transitioning && !completed);
         }
         private void OnDisable()
         {
             if (exitButton != null) exitButton.onClick.RemoveListener(Exit);
+            if (ownedCardsButton != null) ownedCardsButton.onClick.RemoveListener(ToggleOwnedCards);
+            if (ownedCardsView != null)
+            {
+                ownedCardsView.OpenChanged -= HandleDeckVisibility;
+                ownedCardsView.Close();
+            }
             SetHoverEnabled(false);
             if (tooltip != null) tooltip.Hide();
         }
@@ -51,7 +62,7 @@ namespace DuelHero.Shop
         {
             var canvas = GetComponentInParent<Canvas>().rootCanvas;
             overlay = (RectTransform)canvas.transform;
-            goldDisplay = new CurrencyLabel(goldLabel, Resources.Load<Sprite>("UI/Currency/money-pouch"), 36f);
+            goldDisplay = CurrencyLabel.CreateGoldBalance(goldLabel);
             priceIcon = Resources.Load<Sprite>("UI/Currency/gold-coin");
             tooltip = KeywordTooltip.Create(canvas);
             rangePreview = CardRangePreview.GetOrCreate(canvas);
@@ -108,7 +119,7 @@ namespace DuelHero.Shop
                 var hover = card.gameObject.GetComponent<CardHoverInfo>() ?? card.gameObject.AddComponent<CardHoverInfo>();
                 hover.ShowInfo = () =>
                 {
-                    if (transitioning || completed) return;
+                    if (transitioning || completed || IsDeckOpen) return;
                     scale.OnPointerEnter(null);
                     rangePreview.Show(card, shopCamera);
                 };
@@ -139,9 +150,23 @@ namespace DuelHero.Shop
                     priceLabels[i].Position.anchoredPosition = position + Vector2.down * 6f;
         }
         private bool IsCurrent => run != null && ReferenceEquals(run, RunSessionStore.Current);
+        private bool IsDeckOpen => ownedCardsView != null && ownedCardsView.IsOpen;
+
+        private void ToggleOwnedCards()
+        {
+            if (transitioning || !IsCurrent || database == null || ownedCardsView == null) return;
+            ownedCardsView.ToggleRunDeck(database, run.CardIds);
+        }
+
+        private void HandleDeckVisibility()
+        {
+            SetHoverEnabled(!IsDeckOpen && !transitioning && !completed);
+            if (IsDeckOpen) tooltip?.Hide();
+        }
+
         public bool Buy(int index)
         {
-            if (transitioning || completed || !IsCurrent || run.PendingShopNodeId != nodeId) return false;
+            if (transitioning || completed || IsDeckOpen || !IsCurrent || run.PendingShopNodeId != nodeId) return false;
             if (index < 0 || index >= offers.Count || database == null || !database.cards.Any(c => c.id == offers[index].CardId)) return false;
             if (!run.TryBuyShopOffer(nodeId, index))
             { message.text = "골드가 부족하거나 구매할 수 없는 상품입니다."; Refresh(); return false; }
@@ -150,6 +175,8 @@ namespace DuelHero.Shop
         private void Refresh()
         {
             goldDisplay.SetAmount(IsCurrent ? run.Gold : 0);
+            if (ownedCardsCount != null) ownedCardsCount.SetValue(IsCurrent ? run.CardIds.Count : 0);
+            if (ownedCardsButton != null) ownedCardsButton.interactable = !transitioning && IsCurrent && database != null;
             for (int i = 0; i < cardViews.Count; i++)
             {
                 var offer = offers[i];
@@ -167,7 +194,7 @@ namespace DuelHero.Shop
         }
         public void Exit()
         {
-            if (transitioning) return;
+            if (transitioning || IsDeckOpen) return;
             try
             {
                 if (!Application.CanStreamedLevelBeLoaded(mapScenePath)) throw new InvalidOperationException("맵 씬을 불러올 수 없습니다.");

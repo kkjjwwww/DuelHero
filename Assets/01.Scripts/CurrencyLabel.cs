@@ -1,3 +1,4 @@
+using DuelHero.Cards;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -8,6 +9,18 @@ namespace DuelHero.UI
         public RectTransform Position { get; }
         private readonly Text label;
         private readonly Image icon;
+
+        public static CurrencyLabel CreateGoldBalance(Text label)
+        {
+            var balance = new CurrencyLabel(label, Resources.Load<Sprite>("UI/Currency/money-pouch"), 36f);
+            var row = balance.Position.gameObject;
+            row.GetComponent<HorizontalLayoutGroup>().childAlignment = TextAnchor.MiddleLeft;
+            row.AddComponent<ContentSizeFitter>().horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            row.AddComponent<Image>().color = Color.clear;
+            label.raycastTarget = false;
+            row.AddComponent<DelayedTooltipTrigger>().Configure("보유골드", 0f);
+            return balance;
+        }
 
         public CurrencyLabel(Text label, Sprite sprite, float iconSize)
         {
