@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using DuelHero.Battle;
+using DuelHero.Run;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -54,9 +55,13 @@ namespace DuelHero.Map
                 yield return operation;
                 yield return null;
                 var camera = Camera.main;
-                if (camera != null && camera.gameObject.scene == SceneManager.GetActiveScene() &&
-                    camera.TryGetComponent<BattleCameraController>(out var battleCamera))
-                    battleCamera.PlayEntryZoom();
+                if (camera != null && camera.gameObject.scene == SceneManager.GetActiveScene())
+                {
+                    if (camera.TryGetComponent<BattleCameraController>(out var battleCamera))
+                        battleCamera.PlayEntryZoom();
+                    else if (camera.TryGetComponent<RestCameraMotion>(out var restCamera))
+                        restCamera.PlayEntryZoom();
+                }
             }
             yield return Fade(1f, 0f, .45f);
             Destroy(gameObject);

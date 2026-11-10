@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using DG.Tweening;
 using DuelHero.Cards;
 using DuelHero.Data;
 using DuelHero.Map;
@@ -13,6 +14,7 @@ namespace DuelHero.Run
         [SerializeField] private RunConfig config;
         [SerializeField] private CardDatabase database;
         [SerializeField] private EnemyCardListUI deckPopup;
+        [SerializeField] private RestHealthBar healthBar;
         [SerializeField] private GameObject choices, confirmation;
         [SerializeField] private Text status, message, selectedCardLabel;
         [SerializeField] private Button heal, remove, confirm, cancel, returnToMap;
@@ -21,6 +23,7 @@ namespace DuelHero.Run
         private RunSession run;
         private string nodeId;
         private bool completed, transitioning;
+        private Tween recoveryMotion;
         private int selectedIndex = -1;
         private string selectedId;
         private bool IsCurrent => run != null && ReferenceEquals(run, RunSessionStore.Current);
@@ -41,6 +44,7 @@ namespace DuelHero.Run
             cancel.onClick.AddListener(CancelRemoval);
             returnToMap.onClick.AddListener(ReturnToMap);
             deckPopup.OpenChanged += Refresh;
+            if (completed) Refresh();
         }
 
         private void OnDisable()
@@ -52,28 +56,46 @@ namespace DuelHero.Run
             returnToMap.onClick.RemoveListener(ReturnToMap);
             deckPopup.OpenChanged -= Refresh;
             deckPopup.Close();
+            recoveryMotion?.Kill();
+            recoveryMotion = null;
+            if (completed && IsCurrent) healthBar?.SetHealth(run.PlayerHealth, run.PlayerMaxHealth);
         }
 
         private void Start()
         {
             message.text = CanChoose ? "" : "맵에서 휴식 노드에 진입해주세요.";
+            if (healthBar != null)
+            {
+                healthBar.gameObject.SetActive(IsCurrent);
+                if (IsCurrent) healthBar.SetHealth(run.PlayerHealth, run.PlayerMaxHealth);
+            }
             Refresh();
         }
 
         private void Refresh()
         {
-            status.text = IsCurrent ? $"HP {run.PlayerHealth}/{run.PlayerMaxHealth}    ·    휴식 회복량 {config.restHealAmount} HP    ·    골드 {run.Gold}" : "";
+            status.text = IsCurrent ? $"휴식 회복량 {config.restHealAmount} HP    ·    골드 {run.Gold}" : "";
             bool showChoices = CanChoose && !deckPopup.IsOpen && !confirmation.activeSelf;
             choices.SetActive(showChoices);
             heal.interactable = showChoices;
             remove.interactable = showChoices && CanRemove;
-            returnToMap.gameObject.SetActive(!transitioning && (completed || !CanChoose));
+            returnToMap.gameObject.SetActive(!transitioning && recoveryMotion == null && (completed || !CanChoose));
         }
 
         private void Heal()
         {
             if (!CanChoose || deckPopup.IsOpen || confirmation.activeSelf || !CanReturn()) return;
-            if (run.TryHealAtRest(nodeId, config.restHealAmount)) FinishVisit();
+            int before = run.PlayerHealth;
+            if (!run.TryHealAtRest(nodeId, config.restHealAmount)) return;
+            if (healthBar == null) { FinishVisit(); return; }
+            completed = true;
+            recoveryMotion = healthBar.AnimateRecovery(before, run.PlayerHealth, run.PlayerMaxHealth).OnComplete(() =>
+            {
+                recoveryMotion = null;
+                healthBar.SetHealth(run.PlayerHealth, run.PlayerMaxHealth);
+                ReturnToMap();
+            });
+            Refresh();
         }
 
         private void OpenDeck()
@@ -144,7 +166,8 @@ namespace DuelHero.Run
 
         private void ReturnToMap()
         {
-            if (transitioning || (!completed && CanChoose) || !CanReturn()) return;
+            if (transitioning || recoveryMotion != null || (!completed && CanChoose)) return;
+            if (!CanReturn()) { Refresh(); return; }
             transitioning = true;
             message.text = "";
             Refresh();

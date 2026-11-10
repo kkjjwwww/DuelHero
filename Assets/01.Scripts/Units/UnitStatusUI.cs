@@ -121,13 +121,13 @@ namespace DuelHero.Units
             else if (health != targetHealth)
             {
                 bool damage = health < targetHealth;
-                ShowImpact(damage ? Color.white : new Color(.35f, 1f, .48f), damage ? 4f : 0f, damage ? 1.04f : 1f, !damage);
+                ShowImpact(damage ? Color.white : HealthBarFeedback.HealingTint, damage ? 4f : 0f, damage ? 1.04f : 1f, !damage);
                 healthMotion?.Kill();
                 trailHealth = damage ? Mathf.Max(trailHealth, displayedHealth) : 0;
                 targetHealth = health;
                 healthMotion = DOTween.Sequence().SetUpdate(true);
                 healthMotion.Append(DOTween.To(() => displayedHealth, value => displayedHealth = value,
-                    health, damage ? .15f : .3f).SetEase(Ease.OutQuad));
+                    health, damage ? .15f : HealthBarFeedback.HealFillDuration).SetEase(Ease.OutQuad));
                 if (damage)
                     healthMotion.Insert(.2f, DOTween.To(() => trailHealth, value => trailHealth = value,
                         health, .35f).SetEase(Ease.OutQuad));
@@ -183,10 +183,8 @@ namespace DuelHero.Units
         {
             if (impactRoot == null) return;
             ResetImpact();
-            frameFlash.color = new Color(color.r, color.g, color.b, 0f);
             impactMotion = DOTween.Sequence().SetUpdate(true);
-            impactMotion.Append(frameFlash.DOFade(.85f, .08f));
-            impactMotion.Append(frameFlash.DOFade(0f, .12f));
+            HealthBarFeedback.AppendFrameFlash(impactMotion, frameFlash, color);
             if (shake > 0)
                 impactMotion.Insert(0, impactRoot.DOShakeAnchorPos(.18f, new Vector2(shake, shake * .35f), 12, 30f));
             if (scale > 1f)
@@ -194,11 +192,7 @@ namespace DuelHero.Units
                 impactMotion.Insert(0, impactRoot.DOScale(restScale * scale, .06f));
                 impactMotion.Insert(.06f, impactRoot.DOScale(restScale, .12f));
             }
-            if (healing)
-            {
-                healthFill.color = color;
-                impactMotion.Insert(0, healthFill.DOColor(restFillColor, .2f));
-            }
+            if (healing) HealthBarFeedback.InsertHealingTint(impactMotion, healthFill, restFillColor);
             impactMotion.OnComplete(() => { impactMotion = null; ResetImpact(); });
         }
 
