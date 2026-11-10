@@ -4,7 +4,9 @@ using DG.Tweening;
 using DuelHero.Cards;
 using DuelHero.Data;
 using DuelHero.Map;
+using DuelHero.UI;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace DuelHero.Run
@@ -16,11 +18,15 @@ namespace DuelHero.Run
         [SerializeField] private EnemyCardListUI deckPopup;
         [SerializeField] private RestHealthBar healthBar;
         [SerializeField] private GameObject choices, confirmation;
-        [SerializeField] private Text status, message, selectedCardLabel;
+        [FormerlySerializedAs("status")]
+        [SerializeField] private Text goldLabel;
+        [SerializeField] private Text message, selectedCardLabel;
+        [SerializeField] private Text healDescription, removeDescription;
         [SerializeField] private Button heal, remove, confirm, cancel, returnToMap;
         [SerializeField] private string mapScenePath = "Assets/00.Scenes/MapScene.unity";
 
         private RunSession run;
+        private CurrencyLabel goldDisplay;
         private string nodeId;
         private bool completed, transitioning;
         private Tween recoveryMotion;
@@ -34,6 +40,7 @@ namespace DuelHero.Run
         {
             run = RunSessionStore.Current;
             nodeId = run?.PendingRestNodeId;
+            goldDisplay = CurrencyLabel.CreateGoldBalance(goldLabel);
         }
 
         private void OnEnable()
@@ -64,6 +71,9 @@ namespace DuelHero.Run
         private void Start()
         {
             message.text = CanChoose ? "" : "맵에서 휴식 노드에 진입해주세요.";
+            if (healDescription != null) healDescription.text = $"체력을 {config.restHealAmount} 회복합니다.";
+            if (removeDescription != null)
+                removeDescription.text = $"카드 한 장을 제거하고\n{RunSession.RestCardRemovalGold}골드를 얻습니다.";
             if (healthBar != null)
             {
                 healthBar.gameObject.SetActive(IsCurrent);
@@ -74,7 +84,8 @@ namespace DuelHero.Run
 
         private void Refresh()
         {
-            status.text = IsCurrent ? $"휴식 회복량 {config.restHealAmount} HP    ·    골드 {run.Gold}" : "";
+            goldDisplay.Position.gameObject.SetActive(IsCurrent);
+            if (IsCurrent) goldDisplay.SetAmount(run.Gold);
             bool showChoices = CanChoose && !deckPopup.IsOpen && !confirmation.activeSelf;
             choices.SetActive(showChoices);
             heal.interactable = showChoices;
