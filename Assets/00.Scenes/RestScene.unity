@@ -20,9 +20,9 @@ RenderSettings:
   m_FogDensity: 0.018
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
-  m_AmbientSkyColor: {r: 0.145, g: 0.201, b: 0.34, a: 1}
-  m_AmbientEquatorColor: {r: 0.092, g: 0.123, b: 0.197, a: 1}
-  m_AmbientGroundColor: {r: 0.053, g: 0.051, b: 0.082, a: 1}
+  m_AmbientSkyColor: {r: 0.1015, g: 0.1407, b: 0.238, a: 1}
+  m_AmbientEquatorColor: {r: 0.0644, g: 0.086100005, b: 0.1379, a: 1}
+  m_AmbientGroundColor: {r: 0.0371, g: 0.035699997, b: 0.0574, a: 1}
   m_AmbientIntensity: 1
   m_AmbientMode: 1
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
@@ -343,7 +343,7 @@ Light:
   serializedVersion: 12
   m_Type: 2
   m_Color: {r: 1, g: 0.37, b: 0.1, a: 1}
-  m_Intensity: 2.9
+  m_Intensity: 2
   m_Range: 3.55
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -2503,7 +2503,7 @@ Light:
   serializedVersion: 12
   m_Type: 2
   m_Color: {r: 1, g: 0.45, b: 0.13, a: 1}
-  m_Intensity: 1.25
+  m_Intensity: 0.9
   m_Range: 2.4
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -2842,7 +2842,7 @@ Light:
   serializedVersion: 12
   m_Type: 1
   m_Color: {r: 0.49, g: 0.66, b: 1, a: 1}
-  m_Intensity: 0.91
+  m_Intensity: 0.5
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -7326,6 +7326,7 @@ GameObject:
   - component: {fileID: 1569312659}
   - component: {fileID: 1569312660}
   - component: {fileID: 1569312661}
+  - component: {fileID: 1569312662}
   m_Layer: 0
   m_Name: Campfire light
   m_TagString: Untagged
@@ -7442,6 +7443,20 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
+--- !u!114 &1569312662
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1569312658}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ab76738e0b8a6f45a973cb539d640b7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Run.CampfireLightFlicker
+  flickerStrength: 0.15
+  flickerSpeed: 0.9
 --- !u!1001 &1572957096
 PrefabInstance:
   m_ObjectHideFlags: 0
