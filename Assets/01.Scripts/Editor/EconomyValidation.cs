@@ -28,7 +28,7 @@ public static class EconomyValidation
         var shop = AssetDatabase.LoadAssetAtPath<ShopConfig>(EconomyConfigSheetImporter.AssetPath("ShopConfig"));
         var runConfig = AssetDatabase.LoadAssetAtPath<RunConfig>(EconomyConfigSheetImporter.AssetPath("RunConfig"));
         var reward = AssetDatabase.LoadAssetAtPath<BattleRewardConfig>(EconomyConfigSheetImporter.AssetPath("BattleRewardConfig"));
-        Check(runConfig.startingGold == 30 && shop.cardOfferCount == 4, "latest sheet values");
+        Check(runConfig.startingGold == 30 && shop.cardOfferCount == 3, "latest sheet values");
         uint seed = ShopSeed();
         var run = new RunSession(seed, 100, 100, new[] { "slash_001" }, runConfig.startingGold);
         Check(run.Gold == 30 && run.TryBeginBattle(run.Map.StartNodeId), "start gold and battle");
@@ -37,7 +37,7 @@ public static class EconomyValidation
         string node = run.Map.GetNode(run.Progress.CurrentNodeId).NextNodeIds.First(id => run.Map.GetNode(id).Type == RouteNodeType.Shop);
         Check(run.TryBeginShop(node, db.cards, shop) && run.Progress.CurrentNodeId != node, "shop entry does not complete node");
         var offers = run.ShopOffers;
-        Check(offers.Count == 4 && offers.Select(o => o.CardId).Distinct().Count() == 4, "four distinct offers");
+        Check(offers.Count == 3 && offers.Select(o => o.CardId).Distinct().Count() == 3, "three distinct offers");
         Check(!run.TryBeginBattle(node) && !run.TryBeginShop(node, db.cards, shop), "pending shop blocks another encounter");
         var generated = ShopOfferSelector.Generate(db.cards.Reverse(), shop, seed, node);
         Check(offers.Select(o => o.CardId).SequenceEqual(generated.Select(o => o.CardId)), "seed and database order stability");

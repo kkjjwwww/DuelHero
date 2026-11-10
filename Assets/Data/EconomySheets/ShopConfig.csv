@@ -1,5 +1,5 @@
 "key","value","description"
-"cardOfferCount","4","방문당 판매 카드 종류 수"
+"cardOfferCount","3","방문당 판매 카드 종류 수"
 "commonCardPrice","30","일반 카드 가격"
 "uncommonCardPrice","50","고급 카드 가격"
 "rareCardPrice","80","희귀 카드 가격"

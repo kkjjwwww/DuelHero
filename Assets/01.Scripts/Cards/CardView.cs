@@ -64,6 +64,7 @@ namespace DuelHero.Cards
         private Action<Vector2> onKeywordMove;
         private Action onKeywordExit;
         private int displayedCooldown = int.MinValue;
+        private bool displayedGrayscale;
         private bool? displayedInteractable;
         private int displayedReservationSlot = int.MinValue;
         private static readonly string[] ReservationNumbers = { "1", "2", "3" };
@@ -181,29 +182,31 @@ namespace DuelHero.Cards
         internal void NotifyKeywordMove(Vector2 position) => onKeywordMove?.Invoke(position);
         internal void NotifyKeywordExit() => onKeywordExit?.Invoke();
 
-        public void SetState(string state, int remainingCooldown, bool interactable)
+        public void SetState(string state, int remainingCooldown, bool interactable, bool grayscale = false)
         {
             if (informationMasked) remainingCooldown = 0;
-            if (displayedCooldown == remainingCooldown && displayedInteractable == interactable) return;
+            bool coolingDown = remainingCooldown > 0;
+            bool showGrayscale = grayscale || coolingDown;
+            if (displayedCooldown == remainingCooldown && displayedInteractable == interactable && displayedGrayscale == showGrayscale) return;
             CacheTextColors();
             if (displayedInteractable != interactable) button.interactable = interactable;
-            bool coolingDown = remainingCooldown > 0;
             if (displayedCooldown != remainingCooldown)
             {
                 cooldownLabel.gameObject.SetActive(coolingDown);
                 cooldownLabel.text = coolingDown ? remainingCooldown.ToString() : string.Empty;
             }
-            if (displayedCooldown == int.MinValue || (displayedCooldown > 0) != coolingDown)
+            if (displayedCooldown == int.MinValue || displayedGrayscale != showGrayscale)
             {
                 foreach (Graphic graphic in grayscaleGraphics)
-                    if (graphic != null) graphic.material = coolingDown ? grayscaleMaterial : null;
+                    if (graphic != null) graphic.material = showGrayscale ? grayscaleMaterial : null;
                 foreach (KeyValuePair<Graphic, Color> entry in normalTextColors)
-                    if (entry.Key != null) entry.Key.color = coolingDown ? Grayscale(entry.Value) : entry.Value;
-                descriptionLabel.color = coolingDown ? Grayscale(normalDescriptionColor) : normalDescriptionColor;
-                descriptionLabel.overrideColorTags = coolingDown;
+                    if (entry.Key != null) entry.Key.color = showGrayscale ? Grayscale(entry.Value) : entry.Value;
+                descriptionLabel.color = showGrayscale ? Grayscale(normalDescriptionColor) : normalDescriptionColor;
+                descriptionLabel.overrideColorTags = showGrayscale;
             }
             displayedCooldown = remainingCooldown;
             displayedInteractable = interactable;
+            displayedGrayscale = showGrayscale;
         }
 
         public void SetFrontVisible(bool visible)

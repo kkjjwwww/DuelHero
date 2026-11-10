@@ -3,6 +3,7 @@ using System.Linq;
 using DuelHero.Cards;
 using DuelHero.Data;
 using DuelHero.Run;
+using DuelHero.UI;
 using UnityEngine;
 
 namespace DuelHero.Map
@@ -25,6 +26,7 @@ namespace DuelHero.Map
         [SerializeField] private string battleScenePath = "Assets/00.Scenes/BattleScene.unity";
 
         private RunSession session;
+        private CurrencyLabel goldDisplay;
         public RouteMap CurrentMap => session?.Map;
         public RouteMapProgress Progress => session?.Progress;
         public bool IsTransitioning { get; private set; }
@@ -47,6 +49,8 @@ namespace DuelHero.Map
 
         private void Start()
         {
+            if (goldLabel != null)
+                goldDisplay = new CurrencyLabel(goldLabel, Resources.Load<Sprite>("UI/Currency/money-pouch"), 36f);
             session = RunSessionStore.Current ?? CreateRun(CreateRandomSeed());
             RenderRun();
         }
@@ -196,7 +200,8 @@ namespace DuelHero.Map
 
         private void RefreshNodeStates()
         {
-            if (goldLabel != null) goldLabel.text = "골드  " + session.Gold;
+            if (goldDisplay != null) goldDisplay.SetAmount(session.Gold);
+            else if (goldLabel != null) goldLabel.text = "골드  " + session.Gold;
             bool inputLocked = IsTransitioning || session.HasPendingNode || session.PlayerHealth <= 0;
             foreach (var node in CurrentMap.Nodes)
             {

@@ -11,6 +11,7 @@ namespace DuelHero.Cards
         [SerializeField, Min(0f)] private float screenMargin = 8f;
         private Canvas canvas;
         private CardView owner;
+        private Camera sourceCamera;
         private readonly Vector3[] corners = new Vector3[4];
 
         public static CardRangePreview GetOrCreate(Canvas canvas)
@@ -24,9 +25,10 @@ namespace DuelHero.Cards
             return panel;
         }
 
-        public void Show(CardView card)
+        public void Show(CardView card, Camera worldCamera = null)
         {
             owner = card;
+            sourceCamera = worldCamera;
             graphic.SetOffsets(card.RangeOffsets);
             gameObject.SetActive(card.RangeOffsets.Length > 0);
             transform.SetAsLastSibling();
@@ -60,7 +62,12 @@ namespace DuelHero.Cards
             float bottom = float.PositiveInfinity, top = float.NegativeInfinity;
             foreach (var corner in corners)
             {
-                Vector3 point = root.InverseTransformPoint(corner);
+                Vector2 point;
+                if (sourceCamera == null)
+                    point = root.InverseTransformPoint(corner);
+                else if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(root,
+                    sourceCamera.WorldToScreenPoint(corner), canvas.worldCamera, out point))
+                    return;
                 left = Mathf.Min(left, point.x); right = Mathf.Max(right, point.x);
                 bottom = Mathf.Min(bottom, point.y); top = Mathf.Max(top, point.y);
             }
