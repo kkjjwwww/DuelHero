@@ -10731,6 +10731,7 @@ MonoBehaviour:
     layoutSize: {x: 0.484, y: 1.201}
   gap: 0.06
   cellPadding: 0.05
+  groundShadow: {fileID: 21300000, guid: 674373e812e0442cb246fdcf0e0e5429, type: 3}
 --- !u!1 &910000101
 GameObject:
   m_ObjectHideFlags: 0

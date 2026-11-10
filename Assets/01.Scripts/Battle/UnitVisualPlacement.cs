@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using DuelHero.Units;
 
 namespace DuelHero.Battle
@@ -22,12 +23,16 @@ namespace DuelHero.Battle
             [NonSerialized] public Vector3 position, scale;
             [NonSerialized] public bool captured;
             [NonSerialized] public int actionFacing;
+            [NonSerialized] public UnitJumpPresentation jump;
+            [NonSerialized] public SpriteRenderer shadow;
         }
         [SerializeField] private BoardOccupancy board;
         [SerializeField] private UnitVisual[] units = Array.Empty<UnitVisual>();
         [SerializeField, Min(0)] private float gap = 0.06f;
         [SerializeField, Min(0)] private float cellPadding = 0.05f;
+        [SerializeField] private Sprite groundShadow;
         private readonly List<UnitVisual> entries = new();
+        private Transform shadowRoot;
         private bool refreshRequested = true;
         private void OnEnable()
         {
@@ -75,6 +80,7 @@ namespace DuelHero.Battle
             {
                 entry.position = entry.placementRoot.localPosition;
                 entry.scale = entry.placementRoot.localScale;
+                entry.jump = entry.movement.GetComponent<UnitJumpPresentation>();
                 entry.captured = true;
             }
             return true;
@@ -97,13 +103,66 @@ namespace DuelHero.Battle
         public void UnregisterUnit(GridMovement movement)
         {
             foreach (var entry in entries.Where(e => e.movement == movement).ToArray())
-            { Unsubscribe(entry); Restore(entry); entries.Remove(entry); }
+            {
+                Unsubscribe(entry);
+                Restore(entry);
+                if (entry.shadow != null)
+                {
+                    entry.shadow.enabled = false;
+                    Destroy(entry.shadow.gameObject);
+                }
+                entries.Remove(entry);
+            }
             if (board != null) board.UnregisterUnit(movement);
             RequestRefresh();
         }
         private void LateUpdate()
         {
             if (refreshRequested) Refresh();
+            if (groundShadow != null)
+                foreach (var entry in entries) UpdateShadow(entry);
+        }
+
+        private void UpdateShadow(UnitVisual entry)
+        {
+            if (entry.movement == null || !entry.movement.isActiveAndEnabled ||
+                entry.sprite == null || !entry.sprite.enabled || !entry.sprite.gameObject.activeInHierarchy ||
+                entry.placementRoot == null || entry.movement.Board == null || entry.movement.Grid == null)
+            {
+                if (entry.shadow != null) entry.shadow.enabled = false;
+                return;
+            }
+
+            if (entry.shadow == null)
+            {
+                if (shadowRoot == null)
+                {
+                    var worldRoot = new GameObject("Unit Ground Shadows");
+                    if (worldRoot.scene != gameObject.scene)
+                        SceneManager.MoveGameObjectToScene(worldRoot, gameObject.scene);
+                    shadowRoot = worldRoot.transform;
+                }
+                var shadowObject = new GameObject(entry.movement.name + " Ground Shadow", typeof(SpriteRenderer));
+                shadowObject.transform.SetParent(shadowRoot, false);
+                entry.shadow = shadowObject.GetComponent<SpriteRenderer>();
+                entry.shadow.sprite = groundShadow;
+                entry.shadow.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                entry.shadow.receiveShadows = false;
+            }
+
+            var grid = entry.movement.Grid;
+            Vector3 up = grid.transform.up;
+            Vector3 ground = grid.CellToWorld(entry.movement.GridPosition, .012f);
+            Vector3 feet = entry.sprite.transform.parent.position;
+            Vector3 projected = ground + Vector3.ProjectOnPlane(feet - ground, up);
+            float lift = entry.jump != null ? entry.jump.LiftFraction : 0f;
+            float size = 1.5f * Width(entry) * Mathf.Lerp(1f, .88f, lift) / groundShadow.bounds.size.x;
+            entry.shadow.transform.SetPositionAndRotation(projected, Quaternion.LookRotation(-up, grid.transform.forward));
+            entry.shadow.transform.localScale = Vector3.one * size;
+            entry.shadow.color = new Color(0f, 0f, 0f, Mathf.Lerp(.58f, .50f, lift));
+            entry.shadow.sortingLayerID = entry.sprite.sortingLayerID;
+            entry.shadow.sortingOrder = entry.sprite.sortingOrder - 1;
+            entry.shadow.enabled = true;
         }
         public void Refresh()
         {
@@ -180,8 +239,18 @@ namespace DuelHero.Battle
         }
         private void OnDisable()
         {
-            foreach (var entry in entries) { Unsubscribe(entry); Restore(entry); }
+            foreach (var entry in entries)
+            {
+                Unsubscribe(entry);
+                Restore(entry);
+                if (entry.shadow != null) entry.shadow.enabled = false;
+            }
             RequestRefresh();
+        }
+
+        private void OnDestroy()
+        {
+            if (shadowRoot != null) Destroy(shadowRoot.gameObject);
         }
     }
 }

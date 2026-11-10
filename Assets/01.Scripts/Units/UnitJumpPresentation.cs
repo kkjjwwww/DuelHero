@@ -15,6 +15,7 @@ namespace DuelHero.Units
         [SerializeField, Min(0f)] private float jumpHeight = 0.2f;
 
         public bool IsPlaying { get; private set; }
+        public float LiftFraction { get; private set; }
         public Vector3 MotionWorldPosition => motionRoot != null ? motionRoot.position : transform.position;
         private Tween motion;
         private Vector3 restPosition;
@@ -49,8 +50,10 @@ namespace DuelHero.Units
                 motion = DOTween.To(() => progress, value =>
                 {
                     progress = value;
+                    float arc = 4f * value * (1f - value);
+                    LiftFraction = jumpHeight > 0f ? arc : 0f;
                     if (motionRoot != null)
-                        motionRoot.localPosition = restPosition + offset * (1f - value) + lift * (4f * value * (1f - value));
+                        motionRoot.localPosition = restPosition + offset * (1f - value) + lift * arc;
                 }, 1f, Mathf.Max(0.01f, flightDuration)).SetEase(Ease.Linear);
                 yield return motion.WaitForCompletion(true);
                 if (run != version || !isActiveAndEnabled) yield break;
@@ -71,6 +74,7 @@ namespace DuelHero.Units
             motion?.Pause();
             motion?.Kill();
             motion = null;
+            LiftFraction = 0f;
             if (IsPlaying && motionRoot != null) motionRoot.localPosition = restPosition;
             IsPlaying = false;
             if (sprites != null) sprites.ResetPose();
