@@ -11,6 +11,7 @@ Shader "DuelHero/UI/WhiteOutline"
         _StencilReadMask ("Stencil Read Mask", Float) = 255
         _ColorMask ("Color Mask", Float) = 15
         [Toggle(UNITY_UI_ALPHACLIP)] _UseUIAlphaClip ("Use Alpha Clip", Float) = 0
+        [Toggle(_OUTLINE_UV1)] _UseOutlineUv1 ("Read Outline Marker From UV1", Float) = 0
     }
 
     SubShader
@@ -32,8 +33,18 @@ Shader "DuelHero/UI/WhiteOutline"
             #include "UnityUI.cginc"
             #pragma multi_compile_local _ UNITY_UI_CLIP_RECT
             #pragma multi_compile_local _ UNITY_UI_ALPHACLIP
+            #pragma shader_feature_local _OUTLINE_UV1
 
-            struct appdata_t { float4 vertex : POSITION; float4 color : COLOR; float3 texcoord : TEXCOORD0; UNITY_VERTEX_INPUT_INSTANCE_ID };
+            struct appdata_t
+            {
+                float4 vertex : POSITION;
+                float4 color : COLOR;
+                float3 texcoord : TEXCOORD0;
+                #ifdef _OUTLINE_UV1
+                float marker : TEXCOORD1;
+                #endif
+                UNITY_VERTEX_INPUT_INSTANCE_ID
+            };
             struct v2f { float4 vertex : SV_POSITION; fixed4 color : COLOR; float3 texcoord : TEXCOORD0; float4 worldPosition : TEXCOORD1; UNITY_VERTEX_OUTPUT_STEREO };
             sampler2D _MainTex;
             fixed4 _Color;
@@ -48,6 +59,9 @@ Shader "DuelHero/UI/WhiteOutline"
                 o.worldPosition = v.vertex;
                 o.vertex = UnityObjectToClipPos(o.worldPosition);
                 o.texcoord = v.texcoord;
+                #ifdef _OUTLINE_UV1
+                o.texcoord.z = v.marker;
+                #endif
                 o.color = v.color * _Color;
                 return o;
             }

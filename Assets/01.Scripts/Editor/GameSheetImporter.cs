@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
 
-public enum SheetSyncScope { All, Cards, Units, BattleConfig, Economy }
+public enum SheetSyncScope { All, Cards, Units, BattleConfig, Economy, Artifacts }
 
 // Coordinates validation and saving; individual importers own their schemas.
 public static class GameSheetImporter
@@ -26,6 +26,8 @@ public static class GameSheetImporter
             foreach (var file in await GoogleSheetSyncClient.DownloadCsvAsync(id, cancellation)) output.Add(file.Key, file.Value);
         if (scope == SheetSyncScope.All || scope == SheetSyncScope.Units)
             foreach (var file in await GoogleSheetSyncClient.DownloadCsvAsync(id, new[] { "Player Data", "Enemy Data" }, new[] { "Players.csv", "Enemies.csv" }, "id", cancellation)) output.Add(file.Key, file.Value);
+        if (scope == SheetSyncScope.All || scope == SheetSyncScope.Artifacts)
+            foreach (var file in await GoogleSheetSyncClient.DownloadCsvAsync(id, new[] { ArtifactSheetImporter.TabName }, new[] { ArtifactSheetImporter.CsvName }, "id", cancellation)) output.Add(file.Key, file.Value);
         if (scope == SheetSyncScope.All || scope == SheetSyncScope.BattleConfig || scope == SheetSyncScope.Economy)
         {
             string[] groups = scope == SheetSyncScope.BattleConfig ? new[] { "BattleConfig" } :
@@ -68,6 +70,11 @@ public static class GameSheetImporter
                     assets.Add(new Pending { Path = EconomyConfigSheetImporter.AssetPath(name), Parsed = EconomyConfigSheetImporter.Parse(folder, name) });
                     files.Add(Path.Combine(EconomyConfigSheetImporter.SourceFolder, name + ".csv"), Path.Combine(folder, name + ".csv"));
                 }
+            if (scope == SheetSyncScope.All || scope == SheetSyncScope.Artifacts)
+            {
+                assets.Add(new Pending { Path = ArtifactSheetImporter.DatabasePath, Parsed = ArtifactSheetImporter.ParseFolder(folder) });
+                files.Add(Path.Combine(ArtifactSheetImporter.SourceFolder, ArtifactSheetImporter.CsvName), Path.Combine(folder, ArtifactSheetImporter.CsvName));
+            }
             if (assets.Count == 0) throw new ArgumentOutOfRangeException(nameof(scope));
             var incoming = files.ToDictionary(file => file.Key, file => File.ReadAllBytes(file.Value));
             foreach (var file in files) previousFiles.Add(file.Key, File.Exists(file.Key) ? File.ReadAllBytes(file.Key) : null);

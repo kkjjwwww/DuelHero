@@ -40,7 +40,7 @@ public sealed class GoogleSheetSyncWindow : EditorWindow
         using (new EditorGUI.DisabledScope(busy))
         {
             spreadsheetId = EditorGUILayout.TextField("시트 ID 또는 URL", spreadsheetId);
-            scope = (SheetSyncScope)EditorGUILayout.Popup("갱신 범위", (int)scope, new[] { "전체", "카드", "유닛 (플레이어·적)", "전투 설정", "골드·보상·상점 설정" });
+            scope = (SheetSyncScope)EditorGUILayout.Popup("갱신 범위", (int)scope, new[] { "전체", "카드", "유닛 (플레이어·적)", "전투 설정", "골드·보상·상점 설정", "유물" });
             GUILayout.Label("OAuth 설정: " + (GoogleSheetSyncClient.HasClient ? "등록됨" : "필요"));
             GUILayout.Label("저장된 로그인: " + (GoogleSheetSyncClient.HasToken ? "있음" : "없음"));
             if (GUILayout.Button("1. 데스크톱 OAuth 클라이언트 JSON 가져오기"))

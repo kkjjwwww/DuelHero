@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: CardDatabase
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Cards.CardDatabase
   sourceSpreadsheetId: 1pspfXZtUhTmSc9ZTL1iTzQDeBgvfbb_wqwCNs83EFQE
-  importedAtUtc: 2026-11-06T09:53:44.4764655Z
+  importedAtUtc: 2026-11-10T09:46:17.6540584Z
   cards:
   - id: move_up_001
     name: "\uC704 \uC774\uB3D9"

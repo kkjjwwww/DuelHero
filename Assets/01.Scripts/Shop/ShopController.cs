@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using DuelHero.Cards;
+using DuelHero.Data;
 using DuelHero.Run;
 using DuelHero.UI;
 using UnityEngine;
@@ -18,6 +19,10 @@ namespace DuelHero.Shop
         [SerializeField] private RectTransform content;
         [SerializeField] private Camera shopCamera;
         [SerializeField] private Transform[] cardAnchors;
+        [SerializeField] private Transform[] artifactAnchors;
+        [SerializeField] private ArtifactDatabase artifactDatabase;
+        [SerializeField] private Material artifactOutlineMaterial;
+        [SerializeField] private ShopConfig shopConfig;
         [SerializeField] private Text goldLabel, message;
         [SerializeField] private Button exitButton;
         [SerializeField] private Button ownedCardsButton;
@@ -36,7 +41,18 @@ namespace DuelHero.Shop
         private readonly List<CardView> cardViews = new();
         private readonly List<CurrencyLabel> priceLabels = new();
         private readonly List<ButtonHoverScale> hoverEffects = new();
+        private readonly List<ArtifactDisplay> artifactDisplays = new();
         public string LastError { get; private set; }
+
+        private sealed class ArtifactDisplay
+        {
+            public ArtifactDefinition Definition;
+            public Transform Anchor;
+            public Button Button;
+            public CurrencyLabel Price;
+            public DelayedTooltipTrigger Tooltip;
+            public UIWhiteOutline Outline;
+        }
 
         private void Awake() { run = RunSessionStore.Current; nodeId = run?.PendingShopNodeId; offers = run?.ShopOffers ?? Array.Empty<ShopOffer>(); }
         private void OnEnable()
@@ -56,11 +72,18 @@ namespace DuelHero.Shop
                 ownedCardsView.Close();
             }
             SetHoverEnabled(false);
+            foreach (var display in artifactDisplays)
+            {
+                display.Tooltip.Cancel();
+                UpdateArtifactOutline(display);
+            }
             if (tooltip != null) tooltip.Hide();
         }
         private void Start()
         {
             var canvas = GetComponentInParent<Canvas>().rootCanvas;
+            if (artifactOutlineMaterial != null)
+                canvas.additionalShaderChannels |= AdditionalCanvasShaderChannels.TexCoord1;
             overlay = (RectTransform)canvas.transform;
             goldDisplay = CurrencyLabel.CreateGoldBalance(goldLabel);
             priceIcon = Resources.Load<Sprite>("UI/Currency/gold-coin");
@@ -71,12 +94,23 @@ namespace DuelHero.Shop
             if (database == null || cardPrefab == null || cardHoverTemplate == null) { message.text = "상점 카드 데이터와 호버 설정을 연결해주세요."; Refresh(); return; }
             if (shopCamera != null && (cardAnchors == null || cardAnchors.Length < offers.Count || cardAnchors.Take(offers.Count).Any(a => a == null)))
             { message.text = "상점 카메라와 카드 진열 위치를 연결해주세요."; Refresh(); return; }
-            if (shopCamera == null && content != null && content.TryGetComponent<GridLayoutGroup>(out var layout))
-                layout.constraintCount = Math.Max(1, Math.Min(4, offers.Count));
-            for (int i = 0; i < offers.Count; i++) CreateOffer(i);
+            CreateCardOffers();
+            if (shopCamera != null && artifactDatabase != null && artifactAnchors != null)
+            {
+                var slots = artifactAnchors.Where(anchor => anchor != null).ToArray();
+                var stock = ShopOfferSelector.SelectArtifacts(artifactDatabase.artifacts, slots.Length, run.Map.Seed, nodeId);
+                for (int i = 0; i < stock.Length; i++) CreateArtifact(slots[i], stock[i]);
+            }
             message.text = offers.Count == 0 ? "판매 가능한 카드가 없습니다." : "카드를 클릭하면 구매합니다.";
             Refresh();
         }
+        private void CreateCardOffers()
+        {
+            if (shopCamera == null && content != null && content.TryGetComponent<GridLayoutGroup>(out var layout))
+                layout.constraintCount = Math.Max(1, Math.Min(4, offers.Count));
+            for (int i = 0; i < offers.Count; i++) CreateOffer(i);
+        }
+
         private void CreateOffer(int index)
         {
             var offer = offers[index];
@@ -132,15 +166,73 @@ namespace DuelHero.Shop
                 card.SetKeywordHoverActions((k, p) => tooltip.Show(k, p), () => { if (tooltip != null) tooltip.Hide(); }, p => tooltip.Move(p));
             }
             cardViews.Add(card);
-            var label = new GameObject("Price_" + index, typeof(RectTransform), typeof(Text), typeof(Shadow)); label.transform.SetParent(onStand ? overlay : holder, false);
+            var price = CreatePriceLabel("Price_" + index, onStand ? overlay : holder);
+            if (onStand) price.Position.pivot = new Vector2(.5f, 1);
+            else price.Position.anchoredPosition = new Vector2(0, -155);
+            priceLabels.Add(price);
+        }
+
+        private CurrencyLabel CreatePriceLabel(string name, RectTransform parent)
+        {
+            var label = new GameObject(name, typeof(RectTransform), typeof(Text), typeof(Shadow));
+            label.transform.SetParent(parent, false);
             var text = label.GetComponent<Text>(); text.font = message.font; text.fontSize = 22; text.alignment = TextAnchor.MiddleCenter; text.color = new Color(1, .85f, .46f); text.raycastTarget = false;
             var labelRect = (RectTransform)label.transform;
             labelRect.anchorMin = labelRect.anchorMax = labelRect.pivot = new Vector2(.5f, .5f);
             labelRect.sizeDelta = new Vector2(180, 34);
-            if (onStand) labelRect.pivot = new Vector2(.5f, 1);
-            else labelRect.anchoredPosition = new Vector2(0, -155);
-            priceLabels.Add(new CurrencyLabel(text, priceIcon, 22f));
+            return new CurrencyLabel(text, priceIcon, 22f);
         }
+
+        private void CreateArtifact(Transform anchor, ArtifactDefinition artifact)
+        {
+            var root = new GameObject("Artifact_" + artifact.id, typeof(RectTransform), typeof(Image), typeof(Button));
+            var rect = (RectTransform)root.transform;
+            rect.SetParent(overlay, false);
+            rect.anchorMin = rect.anchorMax = new Vector2(.5f, .5f);
+            rect.pivot = new Vector2(.5f, 0);
+            rect.sizeDelta = new Vector2(104, 104);
+            var icon = root.GetComponent<Image>();
+            icon.sprite = Resources.Load<Sprite>("UI/Artifacts/" + artifact.iconKey);
+            if (icon.sprite == null)
+            {
+                icon.color = new Color(.24f, .2f, .3f);
+                var fallback = new GameObject("ArtifactName", typeof(RectTransform), typeof(Text)).GetComponent<Text>();
+                fallback.transform.SetParent(rect, false);
+                fallback.rectTransform.anchorMax = Vector2.one;
+                fallback.rectTransform.offsetMin = fallback.rectTransform.offsetMax = Vector2.zero;
+                fallback.font = message.font;
+                fallback.alignment = TextAnchor.MiddleCenter;
+                fallback.text = artifact.name;
+                fallback.raycastTarget = false;
+            }
+            icon.preserveAspect = true;
+            UIWhiteOutline outline = null;
+            if (icon.sprite != null && artifactOutlineMaterial != null)
+            {
+                icon.material = artifactOutlineMaterial;
+                outline = root.AddComponent<UIWhiteOutline>();
+                outline.enabled = false;
+                outline.effectColor = Color.white;
+                outline.effectDistance = new Vector2(2f, -2f);
+            }
+            var button = root.GetComponent<Button>();
+            button.targetGraphic = icon;
+            button.onClick.AddListener(() => BuyArtifact(artifact));
+            var hover = root.AddComponent<DelayedTooltipTrigger>();
+            string description = artifact.description;
+            if (artifact.effectKey == ArtifactDefinition.Heal)
+                description = description.Replace("{value}", artifact.effectValue.ToString());
+            hover.Configure($"<b>{artifact.name}</b>\n{description}", .15f, showWhenDisabled: true);
+            var price = CreatePriceLabel("ArtifactPrice", rect);
+            price.Position.anchorMin = price.Position.anchorMax = new Vector2(.5f, 0);
+            price.Position.pivot = new Vector2(.5f, 1);
+            price.Position.anchoredPosition = Vector2.down * 6f;
+            artifactDisplays.Add(new ArtifactDisplay
+            {
+                Definition = artifact, Anchor = anchor, Button = button, Price = price, Tooltip = hover, Outline = outline
+            });
+        }
+
         private void LateUpdate()
         {
             if (shopCamera == null) return;
@@ -148,9 +240,25 @@ namespace DuelHero.Shop
                 if (RectTransformUtility.ScreenPointToLocalPointInRectangle(overlay,
                     shopCamera.WorldToScreenPoint(cardAnchors[i].position), null, out var position))
                     priceLabels[i].Position.anchoredPosition = position + Vector2.down * 6f;
+            foreach (var display in artifactDisplays)
+            {
+                if (RectTransformUtility.ScreenPointToLocalPointInRectangle(overlay,
+                    shopCamera.WorldToScreenPoint(display.Anchor.position), null, out var artifactPosition))
+                    ((RectTransform)display.Button.transform).anchoredPosition = artifactPosition;
+                UpdateArtifactOutline(display);
+            }
+        }
+
+        private void UpdateArtifactOutline(ArtifactDisplay display)
+        {
+            if (display.Outline != null)
+                display.Outline.enabled = display.Tooltip.IsHovered && display.Button.IsInteractable() && !IsDeckOpen;
         }
         private bool IsCurrent => run != null && ReferenceEquals(run, RunSessionStore.Current);
         private bool IsDeckOpen => ownedCardsView != null && ownedCardsView.IsOpen;
+        private bool CanRefreshStock => shopConfig != null && cardAnchors != null &&
+            shopConfig.cardOfferCount <= cardAnchors.Length &&
+            cardAnchors.Take(shopConfig.cardOfferCount).All(anchor => anchor != null);
 
         private void ToggleOwnedCards()
         {
@@ -161,8 +269,44 @@ namespace DuelHero.Shop
         private void HandleDeckVisibility()
         {
             SetHoverEnabled(!IsDeckOpen && !transitioning && !completed);
-            if (IsDeckOpen) tooltip?.Hide();
+            if (IsDeckOpen)
+            {
+                tooltip?.Hide();
+                foreach (var display in artifactDisplays) display.Tooltip.Cancel();
+            }
         }
+        private void BuyArtifact(ArtifactDefinition artifact)
+        {
+            if (transitioning || completed || IsDeckOpen || !IsCurrent) return;
+            if (artifact.effectKey == ArtifactDefinition.RefreshShop && !CanRefreshStock) return;
+            if (!run.TryBuyShopArtifact(nodeId, artifact, database.cards, shopConfig)) return;
+            if (artifact.effectKey == ArtifactDefinition.RefreshShop)
+            {
+                foreach (var card in cardViews)
+                {
+                    rangePreview.Hide(card);
+                    var holder = card.transform.parent.gameObject;
+                    holder.SetActive(false);
+                    Destroy(holder);
+                }
+                foreach (var price in priceLabels)
+                {
+                    price.Position.gameObject.SetActive(false);
+                    Destroy(price.Position.gameObject);
+                }
+                cardViews.Clear();
+                priceLabels.Clear();
+                hoverEffects.Clear();
+                tooltip.Hide();
+                offers = run.ShopOffers;
+                CreateCardOffers();
+                message.text = "진열 카드를 새로 뽑았습니다.";
+            }
+            else message.text = $"체력 {run.PlayerHealth}/{run.PlayerMaxHealth}";
+            LastError = null;
+            Refresh();
+        }
+
 
         public bool Buy(int index)
         {
@@ -184,6 +328,16 @@ namespace DuelHero.Shop
                 cardViews[i].SetState(string.Empty, 0, valid && !offer.Sold && IsCurrent && !transitioning && !completed, grayscale: offer.Sold);
                 if (!valid || offer.Sold) priceLabels[i].SetStatus(valid ? "품절" : "카드 데이터 없음");
                 else priceLabels[i].SetAmount(offer.Price);
+            }
+            foreach (var display in artifactDisplays)
+            {
+                bool sold = IsCurrent && run.IsShopArtifactSold(display.Definition.id);
+                display.Button.interactable = IsCurrent && !transitioning && !completed &&
+                    run.CanBuyShopArtifact(nodeId, display.Definition) &&
+                    (display.Definition.effectKey != ArtifactDefinition.RefreshShop || CanRefreshStock);
+                UpdateArtifactOutline(display);
+                if (sold) display.Price.SetStatus("품절");
+                else display.Price.SetAmount(display.Definition.shopPrice);
             }
             exitButton.interactable = !transitioning;
         }

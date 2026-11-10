@@ -356,6 +356,12 @@ MonoBehaviour:
   - {fileID: 531442482}
   - {fileID: 359806321}
   - {fileID: 1733910937}
+  artifactAnchors:
+  - {fileID: 1906580273}
+  - {fileID: 1293478327}
+  artifactDatabase: {fileID: 11400000, guid: 498c411fc39843642b0a943894b83ad6, type: 2}
+  artifactOutlineMaterial: {fileID: 2100000, guid: 8e0dab625caf4fec8b75aa82d3f91d97, type: 2}
+  shopConfig: {fileID: 11400000, guid: 38275596c72efce49897d63a0d18ed05, type: 2}
   goldLabel: {fileID: 774620465}
   message: {fileID: 280707257}
   exitButton: {fileID: 73066116}
@@ -4171,14 +4177,14 @@ RectTransform:
   m_GameObject: {fileID: 774620464}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.5, y: 1.5, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 40339755}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 32, y: 124}
+  m_AnchoredPosition: {x: 32, y: 147.1}
   m_SizeDelta: {x: 160, y: 50}
   m_Pivot: {x: 0, y: 0}
 --- !u!1 &775475202
@@ -8774,6 +8780,7 @@ MonoBehaviour:
   merchantHead: {fileID: 1273110301}
   merchantEyes: {fileID: 601638299}
   lantern: {fileID: 1308741232}
+  shopCamera: {fileID: 192125287}
   breathScale: 0.01
   breathPeriod: 4.6
   nodAngle: -2.5
@@ -8782,6 +8789,8 @@ MonoBehaviour:
   blinkDuration: 0.15
   swayAngle: 5
   swayPeriod: 5.6
+  cameraDriftDistance: {x: 0.009, y: 0.0035}
+  cameraDriftPeriod: 8
 --- !u!1 &1733910936
 GameObject:
   m_ObjectHideFlags: 0
@@ -11406,6 +11415,14 @@ PrefabInstance:
       propertyPath: m_Transition
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2514605671772176424, guid: b04b14e89a0a1534db0af781fee72b9d, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2514605671772176424, guid: b04b14e89a0a1534db0af781fee72b9d, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1.5
+      objectReference: {fileID: 0}
     - target: {fileID: 2969910279108382862, guid: b04b14e89a0a1534db0af781fee72b9d, type: 3}
       propertyPath: m_Pivot.x
       value: 0
@@ -11440,11 +11457,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2969910279108382862, guid: b04b14e89a0a1534db0af781fee72b9d, type: 3}
       propertyPath: m_LocalScale.x
-      value: 1
+      value: 1.5
       objectReference: {fileID: 0}
     - target: {fileID: 2969910279108382862, guid: b04b14e89a0a1534db0af781fee72b9d, type: 3}
       propertyPath: m_LocalScale.y
-      value: 1
+      value: 1.5
       objectReference: {fileID: 0}
     - target: {fileID: 2969910279108382862, guid: b04b14e89a0a1534db0af781fee72b9d, type: 3}
       propertyPath: m_AnchoredPosition.x

@@ -24,6 +24,8 @@ namespace DuelHero.Run
         public const int RestCardRemovalGold = 30;
         public int Gold { get; private set; }
         private ShopOffer[] shopOffers = Array.Empty<ShopOffer>();
+        private readonly HashSet<string> boughtShopArtifacts = new();
+        private int shopRefreshCount;
         public IReadOnlyList<ShopOffer> ShopOffers => Array.AsReadOnly(shopOffers);
         public int PlayerHealth { get; private set; }
         public int PlayerMaxHealth { get; }
@@ -83,13 +85,15 @@ namespace DuelHero.Run
             if (PlayerHealth <= 0 || HasPendingNode || !Progress.CanSelect(nodeId) ||
                 Map.GetNode(nodeId).Type != RouteNodeType.Shop) return false;
             var offers = ShopOfferSelector.Generate(definitions, config, Map.Seed, nodeId);
+            boughtShopArtifacts.Clear();
+            shopRefreshCount = 0;
             shopOffers = offers; PendingShopNodeId = nodeId; return true;
         }
 
         // Only used when entry failed before the shop scene opened. No purchase is discarded.
         public bool TryCancelShopEntry(string nodeId)
         {
-            if (PendingShopNodeId != nodeId || Array.Exists(shopOffers, o => o.Sold)) return false;
+            if (nodeId == null || PendingShopNodeId != nodeId || boughtShopArtifacts.Count != 0 || Array.Exists(shopOffers, o => o.Sold)) return false;
             PendingShopNodeId = null; shopOffers = Array.Empty<ShopOffer>(); return true;
         }
 
@@ -106,6 +110,41 @@ namespace DuelHero.Run
         {
             if (nodeId == null || PendingShopNodeId != nodeId || !Progress.TrySelect(nodeId)) return false;
             PendingShopNodeId = null; shopOffers = Array.Empty<ShopOffer>(); return true;
+        }
+
+        public bool IsShopArtifactSold(string id) => boughtShopArtifacts.Contains(id);
+
+        public bool CanBuyShopArtifact(string nodeId, ArtifactDefinition artifact)
+        {
+            if (PlayerHealth <= 0 || nodeId == null || PendingShopNodeId != nodeId || artifact == null ||
+                !artifact.shopEnabled || string.IsNullOrEmpty(artifact.id) || artifact.shopPrice < 0 ||
+                Gold < artifact.shopPrice || IsShopArtifactSold(artifact.id)) return false;
+            return artifact.effectKey switch
+            {
+                ArtifactDefinition.Heal => artifact.effectValue > 0 && PlayerHealth < PlayerMaxHealth,
+                ArtifactDefinition.RefreshShop => shopOffers.Length > 0,
+                _ => false
+            };
+        }
+
+        public bool TryBuyShopArtifact(string nodeId, ArtifactDefinition artifact, IEnumerable<CardDefinition> definitions, ShopConfig config)
+        {
+            if (!CanBuyShopArtifact(nodeId, artifact)) return false;
+            if (artifact.effectKey == ArtifactDefinition.RefreshShop)
+            {
+                if (definitions == null || config == null) return false;
+                var newOffers = ShopOfferSelector.Generate(definitions, config, Map.Seed, nodeId, shopRefreshCount + 1);
+                if (newOffers.Length == 0) return false;
+                shopOffers = newOffers;
+                shopRefreshCount++;
+            }
+            else
+            {
+                PlayerHealth += Math.Min(artifact.effectValue, PlayerMaxHealth - PlayerHealth);
+            }
+            Gold -= artifact.shopPrice;
+            boughtShopArtifacts.Add(artifact.id);
+            return true;
         }
 
         public bool TryBeginRest(string nodeId)

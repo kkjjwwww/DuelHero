@@ -15,7 +15,9 @@ namespace DuelHero.Cards
             for (int i = 0; i < vh.currentVertCount; i++)
             {
                 vh.PopulateUIVertex(ref vertex, i);
-                vertex.uv0.z = i < vh.currentVertCount - originalVertices ? 1f : 0f;
+                float marker = i < vh.currentVertCount - originalVertices ? 1f : 0f;
+                vertex.uv0.z = marker;
+                vertex.uv1.x = marker;
                 vh.SetUIVertex(vertex, i);
             }
         }

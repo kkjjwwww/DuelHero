@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: UnitDatabase
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Data.UnitDatabase
   sourceSpreadsheetId: 1pspfXZtUhTmSc9ZTL1iTzQDeBgvfbb_wqwCNs83EFQE
-  importedAtUtc: 2026-11-09T01:55:42.2632462Z
+  importedAtUtc: 2026-11-10T09:46:17.6576537Z
   players:
   - id: player_dummy_001
     name: "\uD50C\uB808\uC774\uC5B4"
