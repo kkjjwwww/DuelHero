@@ -12,6 +12,9 @@ namespace DuelHero.Title
         private const string MapScenePath = "Assets/00.Scenes/MapScene.unity";
         [SerializeField] private Button continueButton;
         [SerializeField] private Text errorLabel;
+        [SerializeField] private Sprite noticePanel;
+        [SerializeField] private Sprite popupButton;
+        [SerializeField] private Sprite disabledPopupButton;
         private bool starting;
         private GameObject confirmation;
 
@@ -86,10 +89,18 @@ namespace DuelHero.Title
             rect.offsetMin = rect.offsetMax = Vector2.zero;
             confirmation.GetComponent<Image>().color = new Color(0f, 0f, 0f, .85f);
 
-            var message = CreateText("Message", rect, new Vector2(0, 80), new Vector2(900, 140));
+            var panelImage = new GameObject("Notice Panel", typeof(RectTransform), typeof(Image)).GetComponent<Image>();
+            var panel = panelImage.rectTransform;
+            panel.SetParent(rect, false);
+            panel.anchorMin = panel.anchorMax = new Vector2(.5f, .5f);
+            panel.sizeDelta = new Vector2(920f, 360f);
+            panelImage.sprite = noticePanel;
+            panelImage.type = Image.Type.Sliced;
+
+            var message = CreateText("Message", panel, new Vector2(0, 44), new Vector2(800, 140));
             message.text = "새로 시작하면 기존 저장 데이터가 삭제됩니다.\n새 게임을 시작할까요?";
-            CreateConfirmationButton("확인", rect, new Vector2(-120, -45), () => BeginNewGame(true));
-            CreateConfirmationButton("취소", rect, new Vector2(120, -45), () => confirmation.SetActive(false));
+            CreateConfirmationButton("확인", panel, new Vector2(-120, -72), () => BeginNewGame(true));
+            CreateConfirmationButton("취소", panel, new Vector2(120, -72), () => confirmation.SetActive(false));
         }
 
         private void CreateConfirmationButton(string label, RectTransform parent, Vector2 position, UnityEngine.Events.UnityAction action)
@@ -99,8 +110,13 @@ namespace DuelHero.Title
             rect.SetParent(parent, false);
             rect.anchorMin = rect.anchorMax = new Vector2(.5f, .5f);
             rect.anchoredPosition = position; rect.sizeDelta = new Vector2(200, 65);
-            obj.GetComponent<Image>().color = new Color(.25f, .27f, .32f, 1f);
-            obj.GetComponent<Button>().onClick.AddListener(action);
+            var image = obj.GetComponent<Image>();
+            image.sprite = popupButton;
+            var button = obj.GetComponent<Button>();
+            button.targetGraphic = image;
+            button.transition = Selectable.Transition.SpriteSwap;
+            button.spriteState = new SpriteState { disabledSprite = disabledPopupButton };
+            button.onClick.AddListener(action);
             CreateText("Label", rect, Vector2.zero, new Vector2(200, 65)).text = label;
         }
 

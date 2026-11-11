@@ -454,6 +454,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Title.TitleMenuController
   continueButton: {fileID: 212238418}
   errorLabel: {fileID: 1892941505}
+  noticePanel: {fileID: 21300000, guid: ec46fd1eb9504df5ba96b70a3f159020, type: 3}
+  popupButton: {fileID: 21300000, guid: 1dc6a8570647491983464ab1e0983969, type: 3}
+  disabledPopupButton: {fileID: 21300000, guid: 671338b2c003486e83d5a65fc6866891, type: 3}
 --- !u!1 &409116251
 GameObject:
   m_ObjectHideFlags: 0
