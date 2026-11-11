@@ -12,7 +12,7 @@ namespace DuelHero.Map
         [SerializeField] private RouteNodeView nodePrefab;
         [SerializeField] private RouteMapConnections connections;
         [SerializeField] private Text seedLabel;
-        [SerializeField] private Text clearLabel;
+        [SerializeField] private GameObject clearBanner;
         [SerializeField] private Button restartButton;
         [SerializeField] private RectTransform viewport;
         [SerializeField] private RectTransform mapContent;
@@ -34,7 +34,7 @@ namespace DuelHero.Map
 
         private void HandleRestartClicked() => RestartRequested?.Invoke();
 
-        public void SetCleared(bool cleared) => clearLabel.gameObject.SetActive(cleared);
+        public void SetCleared(bool cleared) => clearBanner.SetActive(cleared);
 
         public void SetRestartInteractable(bool interactable) => restartButton.interactable = interactable;
 
