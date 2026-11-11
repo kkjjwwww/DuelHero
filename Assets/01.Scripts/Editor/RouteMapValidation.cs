@@ -28,6 +28,8 @@ internal static class RouteMapValidation
                 seed, "첫 전투 뒤에 전투·상점·휴식 선택지가 모두 있어야 합니다.");
             Require(map.Nodes.Select(node => node.Id).Distinct().Count() == map.Nodes.Count,
                 seed, "노드 ID가 중복됩니다.");
+            Require(map.Nodes.Select(node => (node.Stage, node.Type)).Distinct().Count() == map.Nodes.Count,
+                seed, "화면에서 같은 아이콘에 실제 노드가 여러 개 겹칩니다.");
 
             var visited = new HashSet<string>();
             var lanes = map.Nodes.GroupBy(node => node.Stage)

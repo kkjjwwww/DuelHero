@@ -15,8 +15,15 @@ namespace DuelHero.Map
         [SerializeField, Min(1f)] private float dashLength = 26f;
         [SerializeField, Min(0f)] private float dashGap = 12f;
         private IEnumerable<Vector4> preview;
+        private float revealProgress = 1f;
 
         public override Texture mainTexture => dashTexture != null ? dashTexture : Texture2D.whiteTexture;
+
+        public void SetRevealProgress(float progress)
+        {
+            revealProgress = progress;
+            SetVerticesDirty();
+        }
 
         public void SetPreview(IEnumerable<Vector4> connections)
         {
@@ -33,6 +40,7 @@ namespace DuelHero.Map
         protected override void OnPopulateMesh(VertexHelper vertices)
         {
             vertices.Clear();
+            if (revealProgress <= 0f) return;
             if (preview != null)
             {
                 var previewColor = color;
@@ -45,6 +53,7 @@ namespace DuelHero.Map
         private void DrawConnections(VertexHelper vertices, IEnumerable<Vector4> connections, Color tint)
         {
             var rect = rectTransform.rect;
+            float revealHeight = Mathf.Lerp(rect.yMin, rect.yMax, revealProgress);
             foreach (var segment in connections)
             {
                 var start = new Vector2(rect.xMin + segment.x * rect.width,
@@ -73,6 +82,7 @@ namespace DuelHero.Map
                     float dashOffset = margin + dash * spacing;
                     var dashStart = PointOnRoute(dashOffset);
                     var dashEnd = PointOnRoute(dashOffset + length);
+                    if (revealProgress < 1f && Mathf.Max(dashStart.y, dashEnd.y) > revealHeight) continue;
                     var tangent = (dashEnd - dashStart).normalized;
                     var halfWidth = new Vector2(-tangent.y, tangent.x) * (lineWidth * .5f);
                     int index = vertices.currentVertCount;

@@ -11,6 +11,8 @@ namespace DuelHero.Map
     internal sealed class MapSceneFade : MonoBehaviour
     {
         private CanvasGroup overlay;
+        private static int activeTransitions;
+        internal static bool IsInProgress => activeTransitions > 0;
 
         public static void Load(string scenePath, Action<Exception> onFailure, Action onLoadStarted = null)
         {
@@ -31,8 +33,11 @@ namespace DuelHero.Map
             var transition = root.AddComponent<MapSceneFade>();
             transition.overlay = root.GetComponent<CanvasGroup>();
             transition.overlay.alpha = 0f;
+            activeTransitions++;
             transition.StartCoroutine(transition.Run(scenePath, onFailure, onLoadStarted));
         }
+
+        private void OnDestroy() => activeTransitions--;
 
         private IEnumerator Run(string scenePath, Action<Exception> onFailure, Action onLoadStarted)
         {

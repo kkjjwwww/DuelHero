@@ -1071,7 +1071,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &645970198
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1963,8 +1963,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 12800000, guid: 43a8f8f4413a2204692c2b9dacb84e9f, type: 3}
-    m_FontSize: 26
+    m_Font: {fileID: 12800000, guid: eb27a02f8f470c14eab62f14ada5c132, type: 3}
+    m_FontSize: 28
     m_FontStyle: 1
     m_BestFit: 0
     m_MinSize: 10
@@ -2000,7 +2000,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 232, y: 304}
+  m_AnchoredPosition: {x: 32, y: 147.1}
   m_SizeDelta: {x: 160, y: 50}
   m_Pivot: {x: 0, y: 0}
 --- !u!1 &1735542351
@@ -2653,11 +2653,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2969910279108382862, guid: b04b14e89a0a1534db0af781fee72b9d, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 218
+      value: 32
       objectReference: {fileID: 0}
     - target: {fileID: 2969910279108382862, guid: b04b14e89a0a1534db0af781fee72b9d, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 185
+      value: 32
       objectReference: {fileID: 0}
     - target: {fileID: 3478374215680331156, guid: b04b14e89a0a1534db0af781fee72b9d, type: 3}
       propertyPath: m_Pivot.x

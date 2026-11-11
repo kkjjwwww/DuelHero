@@ -17,6 +17,10 @@ namespace DuelHero.Battle
             goldRewardLabel.text = amount.HasValue ? (awarded ? "획득 골드  +" : "획득 예정 골드  +") + amount.Value : string.Empty;
         }
         public event Action ActionRequested;
+        public void ShowError(string error)
+        {
+            if (resultLabel != null && !string.IsNullOrEmpty(error)) resultLabel.text = error;
+        }
         private void OnEnable()
         {
             if (restartButton != null) restartButton.onClick.AddListener(RequestAction);

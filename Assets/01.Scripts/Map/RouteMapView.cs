@@ -22,7 +22,8 @@ namespace DuelHero.Map
 
         private readonly Dictionary<RouteNodeView, RouteNode[]> nodeViews = new Dictionary<RouteNodeView, RouteNode[]>();
         private readonly Dictionary<string, Vector2> positions = new Dictionary<string, Vector2>();
-        private RouteMap map;
+        private readonly HashSet<Vector4> allConnections = new HashSet<Vector4>();
+        private RouteMap renderedMap;
         private string focusNodeId;
         private Vector2 mapFollowVelocity;
         public event Action<string> NodeClicked;
@@ -38,6 +39,17 @@ namespace DuelHero.Map
         public void SetRestartInteractable(bool interactable) => restartButton.interactable = interactable;
 
         private void HandleNodeClicked(string nodeId) => NodeClicked?.Invoke(nodeId);
+
+        public void SetRevealProgress(float progress)
+        {
+            connections.SetRevealProgress(progress);
+            foreach (var entry in nodeViews)
+            {
+                bool visible = progress > 0f && positions[entry.Value[0].Id].y <= progress;
+                if (entry.Key.gameObject.activeSelf != visible)
+                    entry.Key.gameObject.SetActive(visible);
+            }
+        }
 
         public void FocusNode(string nodeId)
         {
@@ -101,26 +113,6 @@ namespace DuelHero.Map
                 Mathf.Clamp(position.y, -limits.y, limits.y));
         }
 
-        private void UpdateRoutePreview(RouteMapProgress progress)
-        {
-            var segments = new HashSet<Vector4>();
-            var visited = new HashSet<string>();
-            foreach (var node in map.Nodes)
-                if (progress.CanSelect(node.Id))
-                    Visit(node.Id);
-            connections.SetPreview(segments);
-
-            void Visit(string sourceId)
-            {
-                if (!visited.Add(sourceId)) return;
-                foreach (var targetId in map.GetNode(sourceId).NextNodeIds)
-                {
-                    segments.Add(GetConnection(sourceId, targetId));
-                    Visit(targetId);
-                }
-            }
-        }
-
         public void RefreshProgress(RouteMapProgress progress, bool inputLocked)
         {
             var segments = new List<Vector4>();
@@ -150,7 +142,17 @@ namespace DuelHero.Map
             }
 
             connections.SetConnections(segments);
-            UpdateRoutePreview(progress);
+            var backgroundConnections = allConnections.Except(segments);
+            if (renderedMap.RulesVersion < RouteMapGenerator.RulesVersion && progress.CurrentNodeId != null)
+            {
+                // Old checkpoints can have several logical nodes on one icon.
+                var current = renderedMap.GetNode(progress.CurrentNodeId);
+                var position = positions[current.Id];
+                var validOutgoing = current.NextNodeIds.Select(id => GetConnection(current.Id, id)).ToHashSet();
+                backgroundConnections = backgroundConnections.Where(segment =>
+                    segment.x != position.x || segment.y != position.y || validOutgoing.Contains(segment));
+            }
+            connections.SetPreview(backgroundConnections.ToArray());
         }
 
         private Vector4 GetConnection(string sourceId, string targetId)
@@ -163,8 +165,8 @@ namespace DuelHero.Map
         public void Render(RouteMap map)
         {
             ClearNodes();
-            this.map = map;
-            connections.SetPreview(null);
+            renderedMap = map;
+            allConnections.Clear();
             var layoutRandom = new System.Random(unchecked((int)map.Seed));
             for (int stage = 1; stage <= 5; stage++)
             {
@@ -184,6 +186,10 @@ namespace DuelHero.Map
                     nodeViews.Add(CreateNode(group[0], position, iconAngle), group);
                 }
             }
+
+            foreach (var node in map.Nodes)
+                foreach (var targetId in node.NextNodeIds)
+                    allConnections.Add(GetConnection(node.Id, targetId));
 
             seedLabel.text = $"시드 {map.Seed}";
         }

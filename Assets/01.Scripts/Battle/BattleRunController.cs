@@ -120,6 +120,17 @@ namespace DuelHero.Battle
                 RefreshView();
                 return;
             }
+            if (run != null && outcome == BattleOutcome.Victory)
+            {
+                try { RunCheckpoint.Save(run); }
+                catch (Exception error)
+                {
+                    LastError = "저장하지 못했습니다. 다시 시도해주세요.";
+                    Debug.LogWarning(LastError + " " + error.Message, this);
+                    RefreshView();
+                    return;
+                }
+            }
             transitioning = true;
             LastError = null;
             RefreshView();
@@ -189,6 +200,7 @@ namespace DuelHero.Battle
             string label = run != null && outcome == BattleOutcome.Victory ? "계속" : "재시작";
             view.Show(outcome, label, processed && !transitioning &&
                 (run != null || standaloneRestart != null));
+            view.ShowError(LastError);
             view.ShowGold(outcome == BattleOutcome.Victory && run != null ? victoryGold : (int?)null, processed && !rewardPending);
         }
     }

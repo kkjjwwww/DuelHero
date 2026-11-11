@@ -1,5 +1,7 @@
 using System;
+using System.Collections;
 using System.Linq;
+using DG.Tweening;
 using DuelHero.Cards;
 using DuelHero.Data;
 using DuelHero.Run;
@@ -28,6 +30,9 @@ namespace DuelHero.Map
 
         private RunSession session;
         private CurrencyLabel goldDisplay;
+        private bool drawingMap;
+        private Coroutine revealRoutine;
+        private Tween revealTween;
         public RouteMap CurrentMap => session?.Map;
         public RouteMapProgress Progress => session?.Progress;
         public bool IsTransitioning { get; private set; }
@@ -38,6 +43,7 @@ namespace DuelHero.Map
             view.NodeClicked += HandleNodeClicked;
             view.RestartRequested += RestartRun;
             if (ownedCardsButton != null) ownedCardsButton.onClick.AddListener(ToggleOwnedCards);
+            if (session != null) RefreshNodeStates();
         }
 
         private void OnDisable()
@@ -46,19 +52,27 @@ namespace DuelHero.Map
             view.RestartRequested -= RestartRun;
             if (ownedCardsButton != null) ownedCardsButton.onClick.RemoveListener(ToggleOwnedCards);
             if (ownedCardsView != null) ownedCardsView.Close();
+            if (revealRoutine != null) StopCoroutine(revealRoutine);
+            revealRoutine = null;
+            revealTween?.Kill();
+            revealTween = null;
+            if (drawingMap) view.SetRevealProgress(1f);
+            drawingMap = false;
         }
 
         private void Start()
         {
             if (goldLabel != null)
                 goldDisplay = CurrencyLabel.CreateGoldBalance(goldLabel);
-            session = RunSessionStore.Current ?? CreateRun(CreateRandomSeed());
-            RenderRun();
+            session = RunSessionStore.Current;
+            bool newMap = session == null;
+            session ??= CreateRun(CreateRandomSeed());
+            RenderRun(newMap);
         }
 
         private void ToggleOwnedCards()
         {
-            if (IsTransitioning || session == null || cardDatabase == null || ownedCardsView == null) return;
+            if (IsTransitioning || drawingMap || session == null || cardDatabase == null || ownedCardsView == null) return;
             ownedCardsView.ToggleRunDeck(cardDatabase, session.CardIds);
         }
 
@@ -70,14 +84,14 @@ namespace DuelHero.Map
             bool pointerInside = pointer.x >= 0f && pointer.y >= 0f &&
                 pointer.x <= Screen.width && pointer.y <= Screen.height;
             bool followPointer = mouse != null && pointerInside && Application.isFocused &&
-                !IsTransitioning && (ownedCardsView == null || !ownedCardsView.IsOpen);
+                !IsTransitioning && !drawingMap && (ownedCardsView == null || !ownedCardsView.IsOpen);
             var normalizedPointer = new Vector2(pointer.x / Screen.width, pointer.y / Screen.height);
             view.PositionMap(normalizedPointer, followPointer);
         }
 
         private void HandleNodeClicked(string nodeId)
         {
-            if (!isActiveAndEnabled || IsTransitioning || session == null || (ownedCardsView != null && ownedCardsView.IsOpen) ||
+            if (!isActiveAndEnabled || IsTransitioning || drawingMap || session == null || (ownedCardsView != null && ownedCardsView.IsOpen) ||
                 session.HasPendingNode || session.PlayerHealth <= 0 || !Progress.CanSelect(nodeId)) return;
 
             var type = CurrentMap.GetNode(nodeId).Type;
@@ -163,16 +177,16 @@ namespace DuelHero.Map
         [ContextMenu("Generate fixed seed preview")]
         public void GeneratePreview()
         {
-            if (IsTransitioning) return;
+            if (IsTransitioning || drawingMap) return;
             session = CreateRun(previewSeed);
             RenderRun();
         }
 
         public void RestartRun()
         {
-            if (IsTransitioning) return;
+            if (IsTransitioning || drawingMap) return;
             session = CreateRun(CreateRandomSeed());
-            RenderRun();
+            RenderRun(Application.isPlaying);
         }
 
         private uint CreateRandomSeed()
@@ -196,13 +210,31 @@ namespace DuelHero.Map
                 : new RunSession(seed, player.startingHealth, player.maxHealth, cards, runConfig.startingGold);
         }
 
-        private void RenderRun()
+        private void RenderRun(bool reveal = false)
         {
             if (ownedCardsView != null) ownedCardsView.Close();
             if (ownedCardsCount != null) ownedCardsCount.SetValue(session.CardIds.Count);
             LastError = null;
             view.Render(CurrentMap);
             view.FocusNode(Progress.CurrentNodeId ?? CurrentMap.StartNodeId);
+            drawingMap = reveal;
+            view.SetRevealProgress(reveal ? 0f : 1f);
+            RefreshNodeStates();
+            if (reveal) revealRoutine = StartCoroutine(RevealMapAfterFade());
+        }
+
+        private IEnumerator RevealMapAfterFade()
+        {
+            while (MapSceneFade.IsInProgress) yield return null;
+
+            revealTween = DOVirtual.Float(0f, 1f, 1.2f, view.SetRevealProgress)
+                .SetEase(Ease.Linear).SetUpdate(true);
+            yield return revealTween.WaitForCompletion();
+
+            revealRoutine = null;
+            revealTween = null;
+            drawingMap = false;
+            view.SetRevealProgress(1f);
             RefreshNodeStates();
         }
 
@@ -210,10 +242,10 @@ namespace DuelHero.Map
         {
             if (goldDisplay != null) goldDisplay.SetAmount(session.Gold);
             else if (goldLabel != null) goldLabel.text = "골드  " + session.Gold;
-            bool inputLocked = IsTransitioning || session.HasPendingNode || session.PlayerHealth <= 0;
+            bool inputLocked = IsTransitioning || drawingMap || session.HasPendingNode || session.PlayerHealth <= 0;
             view.RefreshProgress(Progress, inputLocked);
             view.SetCleared(Progress.IsComplete);
-            view.SetRestartInteractable(!IsTransitioning);
+            view.SetRestartInteractable(!IsTransitioning && !drawingMap);
         }
     }
 }
