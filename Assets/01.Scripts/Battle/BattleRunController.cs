@@ -19,6 +19,7 @@ namespace DuelHero.Battle
         [SerializeField] private DuelHero.Data.BattleRewardConfig goldRewardConfig;
         [SerializeField] private CardRewardUI rewardView;
         [SerializeField] private string mapScenePath = "Assets/00.Scenes/MapScene.unity";
+        [SerializeField] private string titleScenePath = "Assets/00.Scenes/TitleScene.unity";
 
         private RunSession run;
         private string battleNodeId;
@@ -113,9 +114,10 @@ namespace DuelHero.Battle
             if (rewardPending) { ResolveReward(null); return; }
             if (!processed || transitioning) return;
             if (run != null && !ReferenceEquals(run, RunSessionStore.Current)) return;
-            if (run != null && !Application.CanStreamedLevelBeLoaded(mapScenePath))
+            string destination = outcome == BattleOutcome.Victory ? mapScenePath : titleScenePath;
+            if (run != null && !Application.CanStreamedLevelBeLoaded(destination))
             {
-                LastError = $"맵 씬을 불러올 수 없습니다: {mapScenePath}";
+                LastError = $"씬을 불러올 수 없습니다: {destination}";
                 Debug.LogWarning(LastError, this);
                 RefreshView();
                 return;
@@ -140,7 +142,7 @@ namespace DuelHero.Battle
                     standaloneRestart.Restart();
                 else
                 {
-                    MapSceneFade.Load(mapScenePath, RestoreReturn, () =>
+                    MapSceneFade.Load(destination, RestoreReturn, () =>
                     {
                         if (outcome != BattleOutcome.Victory) RunSessionStore.Clear();
                     });
@@ -197,7 +199,7 @@ namespace DuelHero.Battle
                 if (processed) rewardView.ShowReturn(victoryGold, transitioning, LastError);
                 return;
             }
-            string label = run != null && outcome == BattleOutcome.Victory ? "계속" : "재시작";
+            string label = run == null ? "재시작" : outcome == BattleOutcome.Victory ? "계속" : "타이틀로";
             view.Show(outcome, label, processed && !transitioning &&
                 (run != null || standaloneRestart != null));
             view.ShowError(LastError);

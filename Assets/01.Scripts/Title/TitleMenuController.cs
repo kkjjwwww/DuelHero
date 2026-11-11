@@ -13,6 +13,7 @@ namespace DuelHero.Title
         [SerializeField] private Button continueButton;
         [SerializeField] private Text errorLabel;
         private bool starting;
+        private GameObject confirmation;
 
         private void Start()
         {
@@ -38,15 +39,82 @@ namespace DuelHero.Title
         public void StartNewGame()
         {
             if (starting) return;
+            if (File.Exists(RunCheckpoint.DefaultPath))
+            {
+                if (confirmation == null) CreateConfirmation();
+                errorLabel.text = string.Empty;
+                confirmation.SetActive(true);
+                confirmation.transform.SetAsLastSibling();
+                return;
+            }
+            BeginNewGame(false);
+        }
+
+        private void BeginNewGame(bool deleteSave)
+        {
             if (!Application.CanStreamedLevelBeLoaded(MapScenePath))
             {
-                Debug.LogError("맵 씬을 불러올 수 없습니다: " + MapScenePath, this);
+                errorLabel.text = "맵 씬을 불러올 수 없습니다.";
                 return;
             }
 
+            try
+            {
+                if (deleteSave) File.Delete(RunCheckpoint.DefaultPath);
+            }
+            catch (Exception error)
+            {
+                confirmation.SetActive(false);
+                errorLabel.text = "저장 파일을 삭제하지 못했습니다. 다시 시도해주세요.";
+                Debug.LogWarning(error.Message, this);
+                return;
+            }
+            if (confirmation != null) confirmation.SetActive(false);
+            continueButton.interactable = File.Exists(RunCheckpoint.DefaultPath);
+            errorLabel.text = string.Empty;
             starting = true;
             try { MapSceneFade.Load(MapScenePath, RestoreTitle, RunSessionStore.Clear); }
             catch (Exception error) { RestoreTitle(error); }
+        }
+
+        private void CreateConfirmation()
+        {
+            confirmation = new GameObject("New Game Confirmation", typeof(RectTransform), typeof(Image));
+            var rect = confirmation.GetComponent<RectTransform>();
+            rect.SetParent(transform, false);
+            rect.anchorMin = Vector2.zero; rect.anchorMax = Vector2.one;
+            rect.offsetMin = rect.offsetMax = Vector2.zero;
+            confirmation.GetComponent<Image>().color = new Color(0f, 0f, 0f, .85f);
+
+            var message = CreateText("Message", rect, new Vector2(0, 80), new Vector2(900, 140));
+            message.text = "새로 시작하면 기존 저장 데이터가 삭제됩니다.\n새 게임을 시작할까요?";
+            CreateConfirmationButton("확인", rect, new Vector2(-120, -45), () => BeginNewGame(true));
+            CreateConfirmationButton("취소", rect, new Vector2(120, -45), () => confirmation.SetActive(false));
+        }
+
+        private void CreateConfirmationButton(string label, RectTransform parent, Vector2 position, UnityEngine.Events.UnityAction action)
+        {
+            var obj = new GameObject(label, typeof(RectTransform), typeof(Image), typeof(Button));
+            var rect = obj.GetComponent<RectTransform>();
+            rect.SetParent(parent, false);
+            rect.anchorMin = rect.anchorMax = new Vector2(.5f, .5f);
+            rect.anchoredPosition = position; rect.sizeDelta = new Vector2(200, 65);
+            obj.GetComponent<Image>().color = new Color(.25f, .27f, .32f, 1f);
+            obj.GetComponent<Button>().onClick.AddListener(action);
+            CreateText("Label", rect, Vector2.zero, new Vector2(200, 65)).text = label;
+        }
+
+        private Text CreateText(string name, RectTransform parent, Vector2 position, Vector2 size)
+        {
+            var obj = new GameObject(name, typeof(RectTransform), typeof(Text));
+            var rect = obj.GetComponent<RectTransform>();
+            rect.SetParent(parent, false);
+            rect.anchorMin = rect.anchorMax = new Vector2(.5f, .5f);
+            rect.anchoredPosition = position; rect.sizeDelta = size;
+            var label = obj.GetComponent<Text>();
+            label.font = errorLabel.font; label.fontSize = 28; label.alignment = TextAnchor.MiddleCenter;
+            label.color = Color.white; label.raycastTarget = false;
+            return label;
         }
 
         private void RestoreTitle(Exception error)
