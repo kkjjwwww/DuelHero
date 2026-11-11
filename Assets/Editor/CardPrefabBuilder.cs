@@ -99,7 +99,7 @@ namespace DuelHero.Editor
             RectTransform descriptionArea = (RectTransform)NewUI("DescriptionArea", frontRoot.transform).transform;
             SetRect(descriptionArea, new Vector2(0.105f, 0.085f), new Vector2(0.895f, 0.45f), Vector2.zero, new Vector2(0f, -2f));
             var description = NewUI("Description", descriptionArea).AddComponent<TextMeshProUGUI>();
-            description.font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/Art/UI/Fonts/NotoSansKR SDF.asset")
+            description.font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/Art/UI/Fonts/BusanDandiM SDF.asset")
                 ?? throw new InvalidOperationException("Card description TMP font asset is missing.");
             description.text = "범위 내 모든 적에게 피해 10을 줍니다. [방향지정]";
             description.fontSize = 9f;
