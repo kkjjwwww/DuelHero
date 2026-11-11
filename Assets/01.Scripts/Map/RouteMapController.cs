@@ -5,6 +5,7 @@ using DuelHero.Data;
 using DuelHero.Run;
 using DuelHero.UI;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace DuelHero.Map
 {
@@ -59,6 +60,19 @@ namespace DuelHero.Map
         {
             if (IsTransitioning || session == null || cardDatabase == null || ownedCardsView == null) return;
             ownedCardsView.ToggleRunDeck(cardDatabase, session.CardIds);
+        }
+
+        private void Update()
+        {
+            if (session == null) return;
+            var mouse = Mouse.current;
+            var pointer = mouse != null ? mouse.position.ReadValue() : Vector2.zero;
+            bool pointerInside = pointer.x >= 0f && pointer.y >= 0f &&
+                pointer.x <= Screen.width && pointer.y <= Screen.height;
+            bool followPointer = mouse != null && pointerInside && Application.isFocused &&
+                !IsTransitioning && (ownedCardsView == null || !ownedCardsView.IsOpen);
+            var normalizedPointer = new Vector2(pointer.x / Screen.width, pointer.y / Screen.height);
+            view.PositionMap(normalizedPointer, followPointer);
         }
 
         private void HandleNodeClicked(string nodeId)
@@ -188,6 +202,7 @@ namespace DuelHero.Map
             if (ownedCardsCount != null) ownedCardsCount.SetValue(session.CardIds.Count);
             LastError = null;
             view.Render(CurrentMap);
+            view.FocusNode(Progress.CurrentNodeId ?? CurrentMap.StartNodeId);
             RefreshNodeStates();
         }
 
@@ -196,14 +211,7 @@ namespace DuelHero.Map
             if (goldDisplay != null) goldDisplay.SetAmount(session.Gold);
             else if (goldLabel != null) goldLabel.text = "골드  " + session.Gold;
             bool inputLocked = IsTransitioning || session.HasPendingNode || session.PlayerHealth <= 0;
-            foreach (var node in CurrentMap.Nodes)
-            {
-                var state = node.Id == Progress.CurrentNodeId ? RouteNodeState.Current
-                    : Progress.CompletedNodeIds.Contains(node.Id) ? RouteNodeState.Completed
-                    : !inputLocked && Progress.CanSelect(node.Id) ? RouteNodeState.Available
-                    : RouteNodeState.Locked;
-                view.SetNodeState(node.Id, state);
-            }
+            view.RefreshProgress(Progress, inputLocked);
             view.SetCleared(Progress.IsComplete);
             view.SetRestartInteractable(!IsTransitioning);
         }

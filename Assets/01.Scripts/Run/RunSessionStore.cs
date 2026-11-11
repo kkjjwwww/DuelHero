@@ -18,6 +18,11 @@ namespace DuelHero.Run
 
         public static void Clear() => Current = null;
 
+        public static void Restore(RunSession session)
+        {
+            Current = session ?? throw new System.ArgumentNullException(nameof(session));
+        }
+
         // Also reset when Enter Play Mode has domain reload disabled.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetOnPlay() => Clear();

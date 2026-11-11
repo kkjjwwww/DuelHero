@@ -18,7 +18,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &4895310572224662610
 RectTransform:
   m_ObjectHideFlags: 0
@@ -36,7 +36,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 75, y: 75}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &468520475707248638
 CanvasRenderer:
@@ -66,7 +66,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 21300000, guid: 5aa32bd8334e401a881e7337854a7b8d, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -114,7 +114,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &6987803277845244329
 RectTransform:
   m_ObjectHideFlags: 0
@@ -131,8 +131,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 7}
+  m_SizeDelta: {x: 144, y: 28}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &516265487886851567
 CanvasRenderer:
@@ -155,7 +155,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.76, g: 0.57, b: 0.35, a: 1}
+  m_Color: {r: 0.15, g: 0.12, b: 0.11, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -164,7 +164,7 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 12800000, guid: eb27a02f8f470c14eab62f14ada5c132, type: 3}
-    m_FontSize: 24
+    m_FontSize: 20
     m_FontStyle: 0
     m_BestFit: 0
     m_MinSize: 10
@@ -214,7 +214,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &3405414990137801908
 RectTransform:
   m_ObjectHideFlags: 0
@@ -305,7 +305,7 @@ GameObject:
   - component: {fileID: 2735019367093555184}
   - component: {fileID: 7912019970253230661}
   m_Layer: 0
-  m_Name: Frame
+  m_Name: Hit Area
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -351,7 +351,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.76, g: 0.57, b: 0.35, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 0}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -360,7 +360,7 @@ MonoBehaviour:
       m_Calls: []
   m_Sprite: {fileID: 0}
   m_Type: 0
-  m_PreserveAspect: 0
+  m_PreserveAspect: 1
   m_FillCenter: 1
   m_FillMethod: 4
   m_FillAmount: 1
@@ -428,7 +428,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 164, y: 64}
+  m_SizeDelta: {x: 104, y: 104}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &887203416132665841
 MonoBehaviour:
@@ -443,20 +443,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Map.RouteNodeView
   button: {fileID: 627400034234598001}
-  border: {fileID: 2735019367093555184}
-  background: {fileID: 4561198922977196160}
   icon: {fileID: 5966846135942144037}
-  label: {fileID: 8813109968914387411}
-  battleIcon: {fileID: 0}
-  restIcon: {fileID: 0}
-  shopIcon: {fileID: 0}
-  bossIcon: {fileID: 0}
-  battleColor: {r: 0.76, g: 0.57, b: 0.35, a: 1}
-  restColor: {r: 0.42, g: 0.75, b: 0.67, a: 1}
-  shopColor: {r: 0.9, g: 0.77, b: 0.47, a: 1}
-  bossColor: {r: 0.71, g: 0.57, b: 0.88, a: 1}
-  backgroundColor: {r: 0.075, g: 0.105, b: 0.135, a: 1}
-  currentColor: {r: 1, g: 0.88, b: 0.55, a: 1}
+  battleIcon: {fileID: 21300000, guid: 5aa32bd8334e401a881e7337854a7b8d, type: 3}
+  restIcon: {fileID: 21300000, guid: 053bd0accaa7441f800097f58c24f162, type: 3}
+  shopIcon: {fileID: 21300000, guid: 8d4cf2e0f1ff45b99caaedb0bc069bcc, type: 3}
+  bossIcon: {fileID: 21300000, guid: 3746a9b3cc424b5a956d1fd7d3381042, type: 3}
 --- !u!114 &9088957469546574035
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -464,7 +455,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4346361739972046895}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 30649d3a9faa99c48a7b1166b86bf2a0, type: 3}
   m_Name: 

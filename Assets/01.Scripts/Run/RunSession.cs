@@ -32,6 +32,11 @@ namespace DuelHero.Run
         public IReadOnlyList<string> CardIds => cardIdsView;
 
         public RunSession(uint seed, int startingHealth, int maxHealth, IEnumerable<string> startingCardIds, int startingGold = 0)
+            : this(RouteMapGenerator.Generate(seed), startingHealth, maxHealth, startingCardIds, startingGold)
+        {
+        }
+
+        internal RunSession(RouteMap map, int startingHealth, int maxHealth, IEnumerable<string> startingCardIds, int startingGold)
         {
             if (maxHealth <= 0 || startingHealth <= 0 || startingHealth > maxHealth)
                 throw new ArgumentOutOfRangeException(nameof(startingHealth), "런 시작 체력과 최대 체력을 확인해주세요.");
@@ -42,7 +47,7 @@ namespace DuelHero.Run
             cardIdsView = cardIds.AsReadOnly();
             PlayerHealth = startingHealth;
             PlayerMaxHealth = maxHealth;
-            Map = RouteMapGenerator.Generate(seed);
+            Map = map;
             Progress = new RouteMapProgress(Map);
         }
 

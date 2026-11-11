@@ -10,50 +10,65 @@ internal static class RouteMapValidation
     [MenuItem("Tools/Duel Hero/Map/Validate routes")]
     private static void ValidateRoutes()
     {
-        Require(Signature(RouteMapGenerator.Generate(0)) !=
-                Signature(RouteMapGenerator.Generate(0x6D2B79F5u)),
-            0, "시드 0과 이전 대체 시드가 같은 맵을 만듭니다.");
-
+        var signatures = new HashSet<string>();
         for (uint seed = 0; seed < 1000; seed++)
         {
             var map = RouteMapGenerator.Generate(seed);
             var repeat = RouteMapGenerator.Generate(seed);
+            signatures.Add(Signature(map));
             Require(Signature(map) == Signature(repeat), seed, "같은 시드의 결과가 다릅니다.");
             Require(map.Seed == seed && map.RulesVersion == RouteMapGenerator.RulesVersion,
                 seed, "시드 또는 생성 규칙 버전이 다릅니다.");
 
             var start = map.GetNode(map.StartNodeId);
-            Require(start.Stage == 1 && start.Type == RouteNodeType.Battle && start.NextNodeIds.Count >= 2,
-                seed, "첫 전투 뒤에 두 갈래 이상이 없습니다.");
+            var secondStageTypes = start.NextNodeIds.Select(id => map.GetNode(id).Type);
+            Require(start.Stage == 1 && start.Type == RouteNodeType.Battle &&
+                    new HashSet<RouteNodeType>(secondStageTypes).SetEquals(
+                        new[] { RouteNodeType.Battle, RouteNodeType.Shop, RouteNodeType.Rest }),
+                seed, "첫 전투 뒤에 전투·상점·휴식 선택지가 모두 있어야 합니다.");
             Require(map.Nodes.Select(node => node.Id).Distinct().Count() == map.Nodes.Count,
                 seed, "노드 ID가 중복됩니다.");
 
             var visited = new HashSet<string>();
-            var utilityStages = new HashSet<int>();
-            Visit(map, start, 0, 0, visited, utilityStages);
+            var lanes = map.Nodes.GroupBy(node => node.Stage)
+                .SelectMany(stage => stage.GroupBy(node => node.Type)
+                    .SelectMany((group, index) => group.Select(node =>
+                        (node.Id, Lane: stage.Key == 1 || stage.Key == 5 ? 1 : index))))
+                .ToDictionary(entry => entry.Id, entry => entry.Lane);
+            var combinations = new HashSet<(int Battles, int Shops, int Rests)>();
+            Visit(map, start, 0, 0, 0, visited, lanes, combinations);
             Require(visited.Count == map.Nodes.Count, seed, "도달할 수 없는 노드가 있습니다.");
-            Require(utilityStages.Count >= 2, seed, "경로별 휴식·상점 조우 시점이 같습니다.");
+            for (int stage = 1; stage < 5; stage++)
+            {
+                var links = map.Nodes.Where(node => node.Stage == stage)
+                    .SelectMany(node => node.NextNodeIds.Select(target => (From: lanes[node.Id], To: lanes[target])))
+                    .Distinct().ToArray();
+                Require(links.Length <= 6, seed, "인접 단계 사이의 선이 6개를 초과합니다.");
+                int crossings = links.Sum(left => links.Count(right => left.From < right.From && left.To > right.To));
+                Require(crossings <= 1, seed, "인접 단계 사이의 교차가 한 곳을 초과합니다.");
+            }
+            Require(combinations.SetEquals(new[] { (2, 1, 1), (2, 2, 0), (2, 0, 2), (3, 1, 0), (3, 0, 1) }),
+                seed, "보스 전 방문 조합이 누락되었습니다.");
         }
 
+        Require(signatures.Count > 1, 0, "시드에 따른 맵 배치 변화가 없습니다.");
         Debug.Log("경로 맵 검증 완료: 시드 1,000개와 모든 시작점→보스 경로가 통과했습니다.");
     }
 
-    private static void Visit(RouteMap map, RouteNode node, int battles, int utilities,
-        HashSet<string> visited, HashSet<int> utilityStages)
+    private static void Visit(RouteMap map, RouteNode node, int battles, int shops, int rests,
+        HashSet<string> visited, Dictionary<string, int> lanes,
+        HashSet<(int Battles, int Shops, int Rests)> combinations)
     {
         visited.Add(node.Id);
         if (node.Type == RouteNodeType.Battle) battles++;
-        if (node.Type == RouteNodeType.Rest || node.Type == RouteNodeType.Shop)
-        {
-            utilities++;
-            utilityStages.Add(node.Stage);
-        }
-
+        if (node.Type == RouteNodeType.Shop) shops++;
+        if (node.Type == RouteNodeType.Rest) rests++;
         if (node.Type == RouteNodeType.Boss)
         {
-            Require(node.Id == map.BossNodeId && node.Stage == 5 && battles == 3 && utilities == 1,
+            Require(node.Id == map.BossNodeId && node.Stage == 5 && battles >= 2 && battles <= 3,
                 map.Seed, "완주 경로의 노드 구성이 잘못되었습니다.");
             Require(node.NextNodeIds.Count == 0, map.Seed, "보스 뒤에 연결된 노드가 있습니다.");
+            combinations.Add((battles, shops, rests));
             return;
         }
 
@@ -62,7 +77,8 @@ internal static class RouteMapValidation
         {
             var target = map.GetNode(targetId);
             Require(target.Stage == node.Stage + 1, map.Seed, "인접하지 않은 단계가 연결되었습니다.");
-            Visit(map, target, battles, utilities, visited, utilityStages);
+            Require(Math.Abs(lanes[node.Id] - lanes[target.Id]) <= 1, map.Seed, "두 칸 이상 건너뛰는 연결이 있습니다.");
+            Visit(map, target, battles, shops, rests, visited, lanes, combinations);
         }
     }
 
