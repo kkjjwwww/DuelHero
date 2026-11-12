@@ -26,6 +26,12 @@ Shader "DuelHero/UI/TitleWind"
             sampler2D _MainTex;
             float _Mode, _Phase, _Clock;
 
+            float Foliage(float2 uv)
+            {
+                fixed4 pixel = tex2D(_MainTex, uv);
+                return smoothstep(0.025, 0.09, min(pixel.r, pixel.g) - pixel.b) * pixel.a;
+            }
+
             Fragment vert(Vertex input)
             {
                 Fragment output;
@@ -53,14 +59,16 @@ Shader "DuelHero/UI/TitleWind"
                 }
                 else
                 {
-                    fixed4 original = tex2D(_MainTex, uv);
-                    float2 shifted = uv + float2(sin(time + uv.x * 32.0) * 0.0025, 0);
-                    fixed4 bent = tex2D(_MainTex, shifted);
-                    // Olive foliage is the only warm green in these stone layers.
-                    float originalLeaf = smoothstep(0.025, 0.09, min(original.r, original.g) - original.b) * original.a;
-                    float bentLeaf = smoothstep(0.025, 0.09, min(bent.r, bent.g) - bent.b) * bent.a;
-                    float exposed = 1.0 - step(0.05, original.a);
-                    return lerp(original, bent, max(originalLeaf * bentLeaf, exposed * bentLeaf)) * input.color;
+                    // Include the dark outline and nearby transparent pixels in the wind mask.
+                    float mask = Foliage(uv);
+                    for (int i = 0; i < 8; i++)
+                    {
+                        float angle = i * 0.78539816;
+                        float2 direction = float2(cos(angle), sin(angle));
+                        mask = max(mask, Foliage(uv + direction * 0.005));
+                        mask = max(mask, Foliage(uv + direction * 0.010) * 0.5);
+                    }
+                    uv.x += sin(time + uv.x * 32.0) * 0.00125 * mask;
                 }
                 return tex2D(_MainTex, uv) * input.color;
             }

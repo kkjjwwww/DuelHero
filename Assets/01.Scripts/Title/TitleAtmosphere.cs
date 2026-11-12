@@ -7,7 +7,13 @@ namespace DuelHero.Title
     internal sealed class TitleAtmosphere : MonoBehaviour
     {
         private const float Tau = 2f * Mathf.PI;
+        private const float ZoomDuration = 1.2f;
+        private const float MenuDuration = 0.45f;
+        private static readonly Vector2 MenuOffset = Vector2.up * 24f;
         private RectTransform artwork;
+        private Vector3 artworkScale;
+        private Vector3 backgroundScale;
+        private readonly System.Collections.Generic.List<(RectTransform Rect, Vector2 Position, CanvasGroup Group)> introItems = new();
         private RectTransform[] layers;
         private Vector2[] origins;
         private RectTransform lanternPivot;
@@ -91,6 +97,47 @@ namespace DuelHero.Title
                 fireflies[i] = image;
                 ScheduleFirefly(i, Random.Range(0f, 4f));
             }
+
+            artworkScale = artwork.localScale;
+            backgroundScale = layers[0].localScale;
+            AddIntroItem((RectTransform)transform.Find("Logo Placeholder"));
+            foreach (Transform child in transform)
+                if (child.TryGetComponent<Button>(out _))
+                    AddIntroItem((RectTransform)child);
+            UpdateIntro();
+        }
+
+        private void AddIntroItem(RectTransform rect)
+        {
+            var group = rect.gameObject.AddComponent<CanvasGroup>();
+            group.interactable = false;
+            group.blocksRaycasts = false;
+            introItems.Add((rect, rect.anchoredPosition, group));
+        }
+
+        private void UpdateIntro()
+        {
+            float zoomProgress = Mathf.Clamp01(elapsed / ZoomDuration);
+            float remaining = 1f - zoomProgress;
+            float zoom = 1f + 0.12f * remaining * remaining * remaining;
+            artwork.localScale = artworkScale * zoom;
+            layers[0].localScale = backgroundScale * zoom;
+
+            float progress = Mathf.Clamp01((elapsed - ZoomDuration) / MenuDuration);
+            remaining = 1f - progress;
+            float slide = remaining * remaining * remaining;
+            foreach (var item in introItems)
+            {
+                item.Rect.anchoredPosition = item.Position + MenuOffset * slide;
+                item.Group.alpha = progress;
+                if (progress >= 1f)
+                {
+                    item.Group.interactable = true;
+                    item.Group.blocksRaycasts = true;
+                }
+            }
+
+            if (progress >= 1f) introItems.Clear();
         }
 
         private RectTransform AddCloud(RectTransform source, string cloudName, Vector2 position, float size)
@@ -128,6 +175,7 @@ namespace DuelHero.Title
         private void Update()
         {
             elapsed += Time.unscaledDeltaTime;
+            if (introItems.Count > 0) UpdateIntro();
             float sway = 3f * Mathf.Sin(elapsed * Tau / 16f);
             Move(0, sway);
             Move(1, sway);
