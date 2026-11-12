@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 13517568402949023}
   - component: {fileID: 5725919143083777397}
   - component: {fileID: 1738188351482355711}
+  - component: {fileID: 7496334738398457105}
   m_Layer: 0
   m_Name: OptionsPopup
   m_TagString: Untagged
@@ -76,6 +77,18 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &7496334738398457105
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5189324533006214706}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e15ef9d050a03414cbc263a2717429d1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Cards.OptionsPopupBackdrop
 --- !u!1 &6518247557468138461
 GameObject:
   m_ObjectHideFlags: 0
