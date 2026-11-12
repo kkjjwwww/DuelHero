@@ -47,11 +47,14 @@ namespace DuelHero.Title
             artwork = (RectTransform)transform.Find("Title Artwork");
             string[] names = { "Moon", "Midground", "LeftWall", "RightWall",
                 "Left Flagpole", "Right Flagpole", "Foreground", "Hero", "Cloud Far", "Cloud Middle" };
-            layers = new RectTransform[names.Length + 1];
+            layers = new RectTransform[names.Length + 4];
             origins = new Vector2[layers.Length];
             layers[0] = (RectTransform)transform.Find("Background");
             for (int i = 0; i < names.Length; i++)
                 layers[i + 1] = (RectTransform)artwork.Find(names[i]);
+            layers[11] = AddCloud(layers[9], "Cloud Small Left", new Vector2(-690f, 460f), 0.32f);
+            layers[12] = AddCloud(layers[10], "Cloud Small Right", new Vector2(745f, 455f), 0.38f);
+            layers[13] = AddCloud(layers[9], "Cloud Medium Low", new Vector2(90f, 305f), 0.58f);
             for (int i = 0; i < layers.Length; i++) origins[i] = layers[i].anchoredPosition;
             heroScale = layers[8].localScale;
             var wind = Resources.Load<Shader>("Title/TitleWind");
@@ -88,6 +91,16 @@ namespace DuelHero.Title
                 fireflies[i] = image;
                 ScheduleFirefly(i, Random.Range(0f, 4f));
             }
+        }
+
+        private RectTransform AddCloud(RectTransform source, string cloudName, Vector2 position, float size)
+        {
+            var cloud = Instantiate(source, artwork, false);
+            cloud.name = cloudName;
+            cloud.anchoredPosition = position;
+            cloud.sizeDelta = source.sizeDelta * size;
+            cloud.SetSiblingIndex(source.GetSiblingIndex() + 1);
+            return cloud;
         }
 
         private RectTransform CreateRect(string objectName)
@@ -130,6 +143,9 @@ namespace DuelHero.Title
             foreach (var material in windMaterials) material.SetFloat("_Clock", elapsed);
             Scroll(9, 8f);
             Scroll(10, 14f);
+            Scroll(11, 5f);
+            Scroll(12, 7f);
+            Scroll(13, 11f);
 
             lanternPivot.anchoredPosition = lanternOrigin + Vector2.right * (sway * 5f);
             lanternPivot.localRotation = Quaternion.Euler(0f, 0f, 3f * Mathf.Sin(elapsed * Tau / 5f));
