@@ -54,6 +54,7 @@ namespace DuelHero.Cards
         }
         private void Update()
         {
+            if (OptionsPopupBackdrop.IsOpen) return;
             if (!Application.isPlaying || !hoverEnabled || Mouse.current == null) return;
             UpdateHover(Mouse.current.position.ReadValue());
         }

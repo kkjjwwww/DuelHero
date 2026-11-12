@@ -78,7 +78,7 @@ namespace DuelHero.Map
 
         private void Update()
         {
-            if (session == null) return;
+            if (session == null || OptionsPopupBackdrop.IsOpen) return;
             var mouse = Mouse.current;
             var pointer = mouse != null ? mouse.position.ReadValue() : Vector2.zero;
             bool pointerInside = pointer.x >= 0f && pointer.y >= 0f &&

@@ -52,7 +52,7 @@ namespace DuelHero.Cards
         private void LateUpdate() { if (pointerInside) UpdateLink(); }
         private void UpdateLink()
         {
-            if (!hoverEnabled || !pointerInside || text == null || !text.gameObject.activeInHierarchy) { ClearLink(); return; }
+            if (OptionsPopupBackdrop.IsOpen || !hoverEnabled || !pointerInside || text == null || !text.gameObject.activeInHierarchy) { ClearLink(); return; }
             if (text.havePropertiesChanged) text.ForceMeshUpdate();
             var camera = canvas == null || canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
             int index = TMP_TextUtilities.FindIntersectingLink(text, pointerPosition, camera);
