@@ -1804,7 +1804,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 8.842105, y: 12.491228}
+  m_SizeDelta: {x: 6.4805975, y: 12.491228}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &145755770
 MonoBehaviour:
@@ -1826,7 +1826,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: cf0e430691be5ad438017066a0701119, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 22d05eb624785fb4092690890d9fbc4a, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -1958,7 +1958,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 8.842105, y: 12.491228}
+  m_SizeDelta: {x: 8.856485, y: 12.491228}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &155747563
 MonoBehaviour:
@@ -1980,7 +1980,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: cf0e430691be5ad438017066a0701119, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 2249e4fe66478444e950bac7a75f68c2, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -7091,7 +7091,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 8.842105, y: 12.491228}
+  m_SizeDelta: {x: 6.4805975, y: 12.491228}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &722647078
 MonoBehaviour:
@@ -7113,7 +7113,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: cf0e430691be5ad438017066a0701119, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 22d05eb624785fb4092690890d9fbc4a, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -7522,7 +7522,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 8.842105, y: 12.491228}
+  m_SizeDelta: {x: 9.793419, y: 12.491228}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &745925035
 MonoBehaviour:
@@ -7544,7 +7544,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: cf0e430691be5ad438017066a0701119, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 4a9fdb6caab49964996427f5b40dca43, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -16702,7 +16702,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 8.842105, y: 12.491228}
+  m_SizeDelta: {x: 9.272857, y: 12.491228}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1494916534
 MonoBehaviour:
@@ -16724,7 +16724,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: cf0e430691be5ad438017066a0701119, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 1b171e88003e48e45861e577bf96c4de, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -23639,11 +23639,17 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 13517568402949023, guid: c4a2f3481c69a8441bc811479ae579c2, type: 3}
   m_PrefabInstance: {fileID: 2124919958}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &2124919960 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 5189324533006214706, guid: c4a2f3481c69a8441bc811479ae579c2, type: 3}
+--- !u!114 &2124919960 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7496334738398457105, guid: c4a2f3481c69a8441bc811479ae579c2, type: 3}
   m_PrefabInstance: {fileID: 2124919958}
   m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e15ef9d050a03414cbc263a2717429d1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Cards.OptionsPopupBackdrop
 --- !u!1 &2125232195
 GameObject:
   m_ObjectHideFlags: 0
@@ -24055,7 +24061,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8843807872622944592, guid: 12ab359e06fb8d14e9b0dce2f0abbc35, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
-      value: 6
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8843807872622944592, guid: 12ab359e06fb8d14e9b0dce2f0abbc35, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
@@ -24067,15 +24073,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8843807872622944592, guid: 12ab359e06fb8d14e9b0dce2f0abbc35, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: SetActive
+      value: OpenWithSound
       objectReference: {fileID: 0}
     - target: {fileID: 8843807872622944592, guid: 12ab359e06fb8d14e9b0dce2f0abbc35, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
-      value: UnityEngine.GameObject, UnityEngine
+      value: DuelHero.Cards.OptionsPopupBackdrop, Assembly-CSharp
       objectReference: {fileID: 0}
     - target: {fileID: 8843807872622944592, guid: 12ab359e06fb8d14e9b0dce2f0abbc35, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_BoolArgument
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8843807872622944592, guid: 12ab359e06fb8d14e9b0dce2f0abbc35, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -120,6 +120,7 @@ namespace DuelHero.Title
             var image = obj.GetComponent<Image>();
             image.sprite = popupButton;
             var button = obj.GetComponent<Button>();
+            obj.AddComponent<TitleButtonHoverSound>();
             button.targetGraphic = image;
             button.transition = Selectable.Transition.SpriteSwap;
             button.spriteState = new SpriteState { disabledSprite = disabledPopupButton };

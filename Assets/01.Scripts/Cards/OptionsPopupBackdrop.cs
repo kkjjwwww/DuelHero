@@ -40,14 +40,13 @@ namespace DuelHero.Cards
             rect.offsetMin = Vector2.zero;
             rect.offsetMax = Vector2.zero;
             var button = backdrop.GetComponent<Button>();
-            button.onClick.RemoveListener(Close);
-            button.onClick.AddListener(Close);
+            button.onClick.RemoveListener(CloseWithSound);
+            button.onClick.AddListener(CloseWithSound);
             transform.SetAsLastSibling();
             backdrop.transform.SetSiblingIndex(transform.GetSiblingIndex() - 1);
             backdrop.SetActive(true);
         }
 
-        private void Close() => gameObject.SetActive(false);
         private void OnDisable()
         {
             if (backdrop != null)

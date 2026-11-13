@@ -978,7 +978,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8843807872622944592, guid: 12ab359e06fb8d14e9b0dce2f0abbc35, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
-      value: 6
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8843807872622944592, guid: 12ab359e06fb8d14e9b0dce2f0abbc35, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
@@ -990,15 +990,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8843807872622944592, guid: 12ab359e06fb8d14e9b0dce2f0abbc35, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: SetActive
+      value: OpenWithSound
       objectReference: {fileID: 0}
     - target: {fileID: 8843807872622944592, guid: 12ab359e06fb8d14e9b0dce2f0abbc35, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
-      value: UnityEngine.GameObject, UnityEngine
+      value: DuelHero.Cards.OptionsPopupBackdrop, Assembly-CSharp
       objectReference: {fileID: 0}
     - target: {fileID: 8843807872622944592, guid: 12ab359e06fb8d14e9b0dce2f0abbc35, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_BoolArgument
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8843807872622944592, guid: 12ab359e06fb8d14e9b0dce2f0abbc35, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2068,11 +2072,17 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 13517568402949023, guid: c4a2f3481c69a8441bc811479ae579c2, type: 3}
   m_PrefabInstance: {fileID: 1417190835}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &1417190837 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 5189324533006214706, guid: c4a2f3481c69a8441bc811479ae579c2, type: 3}
+--- !u!114 &1417190837 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7496334738398457105, guid: c4a2f3481c69a8441bc811479ae579c2, type: 3}
   m_PrefabInstance: {fileID: 1417190835}
   m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e15ef9d050a03414cbc263a2717429d1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Cards.OptionsPopupBackdrop
 --- !u!1001 &1566324840
 PrefabInstance:
   m_ObjectHideFlags: 0
