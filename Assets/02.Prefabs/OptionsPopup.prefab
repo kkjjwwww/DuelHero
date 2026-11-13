@@ -1960,6 +1960,7 @@ GameObject:
   - component: {fileID: 1738188351482355711}
   - component: {fileID: 7496334738398457105}
   - component: {fileID: 9221866536733645134}
+  - component: {fileID: 7971271840757945861}
   m_Layer: 0
   m_Name: OptionsPopup
   m_TagString: Untagged
@@ -2052,6 +2053,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0c299219a1f35fa44b9d458e87a39087, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Cards.OptionsDisplaySettings
+--- !u!114 &7971271840757945861
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5189324533006214706}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3be2b4c3903f4014f9d238e2af76a06a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Cards.OptionsAudioSettings
+  mixer: {fileID: 24100000, guid: 572b36331fc1d2f4c97f9bac95ba5516, type: 2}
 --- !u!1 &5490669853668930587
 GameObject:
   m_ObjectHideFlags: 0

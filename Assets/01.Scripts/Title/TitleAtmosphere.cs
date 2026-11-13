@@ -7,7 +7,7 @@ namespace DuelHero.Title
     internal sealed class TitleAtmosphere : MonoBehaviour
     {
         private const float Tau = 2f * Mathf.PI;
-        private const float ZoomDuration = 1.2f;
+        private const float ZoomDuration = 1.6f;
         private const float MenuDuration = 0.45f;
         private static readonly Vector2 MenuOffset = Vector2.up * 24f;
         private RectTransform artwork;
