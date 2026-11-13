@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f207234098e542a4b932c4693b5f5eaa, type: 3}
+  m_Name: SoundEffectCatalog
+  m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Audio.SoundEffectCatalog
+  entries:
+  - id: card.reserve
+    clip: {fileID: 0}
+    volume: 1
+  - id: card.cancel
+    clip: {fileID: 0}
+    volume: 1
+  - id: title.button.hover
+    clip: {fileID: 8300000, guid: 052912a3deb6b894e9d77ccd78cf0778, type: 3}
+    volume: 1
+  - id: title.popup.open
+    clip: {fileID: 8300000, guid: 70df323b80e336c4196a4318262ba352, type: 3}
+    volume: 1
+  - id: title.popup.close
+    clip: {fileID: 8300000, guid: 70df323b80e336c4196a4318262ba352, type: 3}
+    volume: 1

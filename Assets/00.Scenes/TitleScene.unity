@@ -577,6 +577,34 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5603729085186867480, guid: c4a2f3481c69a8441bc811479ae579c2, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 5603729085186867480, guid: c4a2f3481c69a8441bc811479ae579c2, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_Mode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5603729085186867480, guid: c4a2f3481c69a8441bc811479ae579c2, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_Target
+      value: 
+      objectReference: {fileID: 341377278}
+    - target: {fileID: 5603729085186867480, guid: c4a2f3481c69a8441bc811479ae579c2, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 5603729085186867480, guid: c4a2f3481c69a8441bc811479ae579c2, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_MethodName
+      value: CloseWithSound
+      objectReference: {fileID: 0}
+    - target: {fileID: 5603729085186867480, guid: c4a2f3481c69a8441bc811479ae579c2, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_TargetAssemblyTypeName
+      value: DuelHero.Cards.OptionsPopupBackdrop, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 5603729085186867480, guid: c4a2f3481c69a8441bc811479ae579c2, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -592,6 +620,17 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 5189324533006214706, guid: c4a2f3481c69a8441bc811479ae579c2, type: 3}
   m_PrefabInstance: {fileID: 341377273}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &341377278 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7496334738398457105, guid: c4a2f3481c69a8441bc811479ae579c2, type: 3}
+  m_PrefabInstance: {fileID: 341377273}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 341377275}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e15ef9d050a03414cbc263a2717429d1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Cards.OptionsPopupBackdrop
 --- !u!1 &353846442
 GameObject:
   m_ObjectHideFlags: 0
@@ -810,6 +849,18 @@ MonoBehaviour:
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 1
+        m_CallState: 2
+      - m_Target: {fileID: 341377278}
+        m_TargetAssemblyTypeName: DuelHero.Cards.OptionsPopupBackdrop, Assembly-CSharp
+        m_MethodName: OpenWithSound
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 

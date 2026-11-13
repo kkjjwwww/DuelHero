@@ -255,8 +255,9 @@ namespace DuelHero.Cards
             CardView view = entry.View;
             view.SetClickAction(() =>
             {
-                if (Application.isPlaying && !IsInputLocked && !IsTransitioning && entry.Instance != null && reservationQueue != null)
-                    reservationQueue.TryReserve(entry.Instance);
+                if (Application.isPlaying && !IsInputLocked && !IsTransitioning && entry.Instance != null && reservationQueue != null &&
+                    reservationQueue.TryReserve(entry.Instance))
+                    DuelHero.Audio.SoundEffectPlayer.Play("card.reserve");
             });
             view.SetKeywordHoverActions((keyword, position) =>
             {

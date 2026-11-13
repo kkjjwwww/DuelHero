@@ -39,6 +39,11 @@ public class ActionQueueUI : MonoBehaviour
     private readonly List<UnityEngine.Events.UnityAction> cancelListeners = new();
     private readonly List<Button> reservationButtons = new();
     public bool UsesCardReservations => reservationQueue != null;
+    private void CancelFromUI(int slot)
+    {
+        if (reservationQueue.CancelAt(slot))
+            DuelHero.Audio.SoundEffectPlayer.Play("card.cancel");
+    }
     private void OnEnable()
     {
         if (executeButton != null) executeButton.interactable = false;
@@ -54,7 +59,7 @@ public class ActionQueueUI : MonoBehaviour
             var button = slotImages[i].GetComponent<Button>();
             if (button == null) button = slotImages[i].gameObject.AddComponent<Button>();
             button.targetGraphic = slotImages[i];
-            UnityEngine.Events.UnityAction listener = () => reservationQueue.CancelAt(slot);
+            UnityEngine.Events.UnityAction listener = () => CancelFromUI(slot);
             button.onClick.AddListener(listener); cancelListeners.Add(listener); reservationButtons.Add(button);
         }
         RefreshCards();
@@ -172,7 +177,7 @@ public class ActionQueueUI : MonoBehaviour
             if (cardFont == null) cardFont = DuelHero.UI.GameFonts.UI;
             view.SetFont(cardFont);
             int slot = index;
-            view.SetClickAction(() => { if (!reservationQueue.IsExecuting) reservationQueue.CancelAt(slot); });
+            view.SetClickAction(() => CancelFromUI(slot));
             view.SetKeywordHoverActions((keyword, position) =>
             {
                 if (!CanInspect) return;

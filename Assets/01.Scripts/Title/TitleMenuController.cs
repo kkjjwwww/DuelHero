@@ -1,7 +1,8 @@
-using System;
-using System.IO;
+using DuelHero.Audio;
 using DuelHero.Map;
 using DuelHero.Run;
+using System;
+using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -47,6 +48,7 @@ namespace DuelHero.Title
                 if (confirmation == null) CreateConfirmation();
                 errorLabel.text = string.Empty;
                 confirmation.SetActive(true);
+                SoundEffectPlayer.Play("title.popup.open"); 
                 confirmation.transform.SetAsLastSibling();
                 return;
             }
@@ -100,7 +102,12 @@ namespace DuelHero.Title
             var message = CreateText("Message", panel, new Vector2(0, 44), new Vector2(800, 140));
             message.text = "새로 시작하면 기존 저장 데이터가 삭제됩니다.\n새 게임을 시작할까요?";
             CreateConfirmationButton("확인", panel, new Vector2(-120, -72), () => BeginNewGame(true));
-            CreateConfirmationButton("취소", panel, new Vector2(120, -72), () => confirmation.SetActive(false));
+            CreateConfirmationButton("취소", panel, new Vector2(120, -72), () =>
+            {
+                confirmation.SetActive(false);
+                SoundEffectPlayer.Play("title.popup.close");
+            });
+
         }
 
         private void CreateConfirmationButton(string label, RectTransform parent, Vector2 position, UnityEngine.Events.UnityAction action)

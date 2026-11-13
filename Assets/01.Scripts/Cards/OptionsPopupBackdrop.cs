@@ -10,6 +10,18 @@ namespace DuelHero.Cards
         private static float previousTimeScale;
         public static bool IsOpen => openCount > 0;
 
+        public void OpenWithSound()
+        {
+            gameObject.SetActive(true);
+            DuelHero.Audio.SoundEffectPlayer.Play("title.popup.open");
+        }
+
+        public void CloseWithSound()
+        {
+            gameObject.SetActive(false);
+            DuelHero.Audio.SoundEffectPlayer.Play("title.popup.close");
+        }
+
         private void OnEnable()
         {
             if (openCount++ == 0)
