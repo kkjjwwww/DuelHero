@@ -183,6 +183,7 @@ namespace DuelHero.Battle
                 SlotPresenting?.Invoke(slot);
                 if (cardPresentationDuration > 0f) yield return new WaitForSeconds(cardPresentationDuration);
                 SlotRevealing?.Invoke(slot);
+                DuelHero.Audio.SoundEffectPlayer.Play("battle.card.reveal");
                 if (enemyCardRevealDuration > 0f) yield return new WaitForSeconds(enemyCardRevealDuration);
                 if (postRevealDelay > 0f) yield return new WaitForSeconds(postRevealDelay);
                 SlotStarted?.Invoke(slot);

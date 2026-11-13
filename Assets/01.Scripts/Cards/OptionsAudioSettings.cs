@@ -16,10 +16,27 @@ namespace DuelHero.Cards
             master = PlayerPrefs.GetFloat("Audio.Master", .75f);
             music = PlayerPrefs.GetFloat("Audio.Music", .75f);
             effects = PlayerPrefs.GetFloat("Audio.Effects", .75f);
-            AudioMixer audio = Resources.Load<AudioMixer>("DuelHeroAudio");
-            audio.SetFloat("MasterVolume", ToDecibels(master));
-            audio.SetFloat("MusicVolume", ToDecibels(music));
-            audio.SetFloat("EffectsVolume", ToDecibels(effects));
+            var bootstrap = new GameObject("Audio Settings Bootstrap");
+            bootstrap.AddComponent<AudioSettingsBootstrap>();
+        }
+
+        internal static void ApplySavedVolumes()
+        {
+            var audio = Resources.Load<AudioMixer>("DuelHeroAudio");
+            if (audio == null)
+                Debug.LogError("Could not load the DuelHeroAudio mixer.");
+            else
+            {
+                ApplyVolume(audio, "MasterVolume", master);
+                ApplyVolume(audio, "MusicVolume", music);
+                ApplyVolume(audio, "EffectsVolume", effects);
+            }
+        }
+
+        private static void ApplyVolume(AudioMixer audio, string parameter, float value)
+        {
+            if (!audio.SetFloat(parameter, ToDecibels(value)))
+                Debug.LogError("Could not apply audio mixer parameter: " + parameter);
         }
 
         private void Start()
@@ -54,5 +71,14 @@ namespace DuelHero.Cards
         private void SetMusic(float value) { music = value; mixer.SetFloat("MusicVolume", ToDecibels(value)); PlayerPrefs.SetFloat("Audio.Music", value); }
         private void SetEffects(float value) { effects = value; mixer.SetFloat("EffectsVolume", ToDecibels(value)); PlayerPrefs.SetFloat("Audio.Effects", value); }
         private static float ToDecibels(float value) { return value <= 0f ? -80f : Mathf.Max(-80f, 20f * Mathf.Log10(value)); }
+    }
+
+    internal sealed class AudioSettingsBootstrap : MonoBehaviour
+    {
+        private void Start()
+        {
+            OptionsAudioSettings.ApplySavedVolumes();
+            Destroy(gameObject);
+        }
     }
 }

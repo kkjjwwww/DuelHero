@@ -153,6 +153,7 @@ namespace DuelHero.Cards
             focused = card;
             RestoreOrder();
             foreach (var view in cards) if (view != null) Apply(view, view == focused, false);
+            DuelHero.Audio.SoundEffectPlayer.Play("battle.card.hover");
             FocusChanged?.Invoke(focused);
         }
 

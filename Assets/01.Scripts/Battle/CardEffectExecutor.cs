@@ -31,6 +31,7 @@ namespace DuelHero.Battle
             var rotation = Quaternion.LookRotation(Vector3.Cross(travel, grid.transform.up), grid.transform.up);
             var instance = Instantiate(moveDustVfx, feet + grid.transform.up * .02f,
                 rotation * moveDustVfx.transform.rotation);
+            DuelHero.Audio.SoundEffectPlayer.Play("battle.move.launch");
             Destroy(instance, .42f);
         }
         private Material thrustLineMaterial;

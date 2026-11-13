@@ -10,6 +10,10 @@ namespace DuelHero.Audio
         private SoundEffectCatalog catalog;
         private AudioMixerGroup effectsGroup;
         private readonly List<AudioSource> sources = new List<AudioSource>();
+        private const float CardHoverInterval = 0.08f;
+        private float lastCardHoverTime = float.NegativeInfinity;
+        private const float TitleButtonHoverInterval = 0.08f;
+        private float lastTitleButtonHoverTime = float.NegativeInfinity;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetInstance() => instance = null;
@@ -34,6 +38,8 @@ namespace DuelHero.Audio
         {
             var entry = catalog.Find(id);
             if (entry == null || entry.clip == null) return;
+            if (id == "battle.card.hover" && Time.unscaledTime - lastCardHoverTime < CardHoverInterval) return;
+            if (id == "title.button.hover" && Time.unscaledTime - lastTitleButtonHoverTime < TitleButtonHoverInterval) return;
 
             AudioSource source = null;
             foreach (var candidate in sources)
@@ -49,6 +55,8 @@ namespace DuelHero.Audio
             source.clip = entry.clip;
             source.volume = entry.volume;
             source.Play();
+            if (id == "battle.card.hover") lastCardHoverTime = Time.unscaledTime;
+            if (id == "title.button.hover") lastTitleButtonHoverTime = Time.unscaledTime;
         }
     }
 }

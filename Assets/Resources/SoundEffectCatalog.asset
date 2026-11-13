@@ -38,5 +38,14 @@ MonoBehaviour:
     clip: {fileID: 8300000, guid: 70df323b80e336c4196a4318262ba352, type: 3}
     volume: 1
   - id: map.node.hover
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: 69606da5c1093e64a98758cc7423d475, type: 3}
+    volume: 1
+  - id: battle.card.hover
+    clip: {fileID: 8300000, guid: 5871f20dfa81a8343a0cdac5402a1652, type: 3}
+    volume: 1
+  - id: battle.card.reveal
+    clip: {fileID: 8300000, guid: 92570111e4dbb524eb43efe426057016, type: 3}
+    volume: 1
+  - id: battle.move.launch
+    clip: {fileID: 8300000, guid: 7abfca5c61c98214494e11175cff2b67, type: 3}
     volume: 1
