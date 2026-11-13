@@ -20,6 +20,7 @@ namespace DuelHero.Cards
         private void OnEnable()
         {
             if (deckList == null) return;
+            if (allCardList != null && Application.isPlaying) allCardList.DeckPopupSoundsEnabled = true;
             deckList.ViewChanged += Refresh;
             if (allCardList != null) allCardList.OpenChanged += Refresh;
             if (centerButton != null) centerButton.onClick.AddListener(ToggleAllCards);

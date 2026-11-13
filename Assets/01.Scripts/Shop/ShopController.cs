@@ -57,6 +57,7 @@ namespace DuelHero.Shop
         private void Awake() { run = RunSessionStore.Current; nodeId = run?.PendingShopNodeId; offers = run?.ShopOffers ?? Array.Empty<ShopOffer>(); }
         private void OnEnable()
         {
+            if (ownedCardsView != null) ownedCardsView.DeckPopupSoundsEnabled = true;
             if (exitButton != null) exitButton.onClick.AddListener(Exit);
             if (ownedCardsButton != null) ownedCardsButton.onClick.AddListener(ToggleOwnedCards);
             if (ownedCardsView != null) ownedCardsView.OpenChanged += HandleDeckVisibility;
@@ -69,7 +70,7 @@ namespace DuelHero.Shop
             if (ownedCardsView != null)
             {
                 ownedCardsView.OpenChanged -= HandleDeckVisibility;
-                ownedCardsView.Close();
+                ownedCardsView.CloseSilently();
             }
             SetHoverEnabled(false);
             foreach (var display in artifactDisplays)

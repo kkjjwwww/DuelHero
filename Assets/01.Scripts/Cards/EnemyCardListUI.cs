@@ -56,6 +56,7 @@ namespace DuelHero.Cards
         private IReadOnlyList<CardInstance> ownedCards;
         private CardDatabase ownedDatabase;
         private System.Action<CardInstance> selectOwnedCard;
+        internal bool DeckPopupSoundsEnabled { get; set; }
         private bool IsPlayerList => ownedCards != null || playerSource != null;
         private int CurrentRound => roundSource != null ? roundSource.CurrentRound : 1;
         private IReadOnlyList<CardInstance> Cards => ownedCards ?? (playerSource != null ? playerSource.Cards : source.Cards);
@@ -105,7 +106,7 @@ namespace DuelHero.Cards
             if (source != null) source.CardsChanged -= OnCardsChanged;
             if (playerSource != null) playerSource.CardsChanged -= OnCardsChanged;
             if (roundSource != null) roundSource.Changed -= RefreshStates;
-            Close();
+            CloseSilently();
         }
         public void Toggle() { if (IsOpen) Close(); else Open(); }
         public void Open()
@@ -116,6 +117,8 @@ namespace DuelHero.Cards
             Synchronize();
             if (outsideCloseButton != null) outsideCloseButton.gameObject.SetActive(true);
             panel.SetActive(true);
+            if (DeckPopupSoundsEnabled && Application.isPlaying)
+                DuelHero.Audio.SoundEffectPlayer.Play("deck.popup.open");
             if (panel.transform.parent == transform) transform.SetAsLastSibling();
             panel.transform.SetAsLastSibling();
             Canvas.ForceUpdateCanvases();
@@ -125,13 +128,17 @@ namespace DuelHero.Cards
             if (scroll != null) scroll.verticalNormalizedPosition = 1f;
             OpenChanged?.Invoke();
         }
-        public void Close()
+        public void Close() => CloseInternal(true);
+        internal void CloseSilently() => CloseInternal(false);
+        private void CloseInternal(bool playSound)
         {
             bool wasOpen = IsOpen;
             selectOwnedCard = null;
             HideInspection();
             if (panel != null) panel.SetActive(false);
             if (outsideCloseButton != null) outsideCloseButton.gameObject.SetActive(false);
+            if (wasOpen && playSound && DeckPopupSoundsEnabled && Application.isPlaying)
+                DuelHero.Audio.SoundEffectPlayer.Play("deck.popup.close");
             if (wasOpen) OpenChanged?.Invoke();
         }
         private void Initialize()

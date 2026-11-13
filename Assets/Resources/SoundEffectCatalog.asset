@@ -28,3 +28,15 @@ MonoBehaviour:
   - id: title.popup.close
     clip: {fileID: 8300000, guid: 70df323b80e336c4196a4318262ba352, type: 3}
     volume: 1
+  - id: title.game.start
+    clip: {fileID: 8300000, guid: 350f20fac95fb854fad3c9c98018a91a, type: 3}
+    volume: 1
+  - id: deck.popup.open
+    clip: {fileID: 8300000, guid: 70df323b80e336c4196a4318262ba352, type: 3}
+    volume: 1
+  - id: deck.popup.close
+    clip: {fileID: 8300000, guid: 70df323b80e336c4196a4318262ba352, type: 3}
+    volume: 1
+  - id: map.node.hover
+    clip: {fileID: 0}
+    volume: 1

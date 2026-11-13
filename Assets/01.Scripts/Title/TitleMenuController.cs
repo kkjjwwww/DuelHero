@@ -36,6 +36,7 @@ namespace DuelHero.Title
                 errorLabel.text = string.Empty;
                 starting = true;
                 MapSceneFade.Load(MapScenePath, RestoreTitle, () => RunSessionStore.Restore(restored));
+                SoundEffectPlayer.Play("title.game.start");
             }
             catch (Exception error) { RestoreTitle(error); }
         }
@@ -78,7 +79,11 @@ namespace DuelHero.Title
             continueButton.interactable = File.Exists(RunCheckpoint.DefaultPath);
             errorLabel.text = string.Empty;
             starting = true;
-            try { MapSceneFade.Load(MapScenePath, RestoreTitle, RunSessionStore.Clear); }
+            try
+            {
+                MapSceneFade.Load(MapScenePath, RestoreTitle, RunSessionStore.Clear);
+                SoundEffectPlayer.Play("title.game.start");
+            }
             catch (Exception error) { RestoreTitle(error); }
         }
 

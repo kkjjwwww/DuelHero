@@ -47,6 +47,7 @@ namespace DuelHero.Map
         {
             hovered = true;
             if (state != RouteNodeState.Available) return;
+            DuelHero.Audio.SoundEffectPlayer.Play("map.node.hover");
             iconMotion?.Kill();
             iconMotion = icon.rectTransform.DOScale(EnlargedScale, .13f).SetEase(Ease.OutSine).SetUpdate(true);
         }

@@ -42,6 +42,7 @@ namespace DuelHero.Map
         {
             view.NodeClicked += HandleNodeClicked;
             view.RestartRequested += RestartRun;
+            if (ownedCardsView != null) ownedCardsView.DeckPopupSoundsEnabled = true;
             if (ownedCardsButton != null) ownedCardsButton.onClick.AddListener(ToggleOwnedCards);
             if (session != null) RefreshNodeStates();
         }
@@ -51,7 +52,7 @@ namespace DuelHero.Map
             view.NodeClicked -= HandleNodeClicked;
             view.RestartRequested -= RestartRun;
             if (ownedCardsButton != null) ownedCardsButton.onClick.RemoveListener(ToggleOwnedCards);
-            if (ownedCardsView != null) ownedCardsView.Close();
+            if (ownedCardsView != null) ownedCardsView.CloseSilently();
             if (revealRoutine != null) StopCoroutine(revealRoutine);
             revealRoutine = null;
             revealTween?.Kill();
