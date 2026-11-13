@@ -65,6 +65,7 @@ namespace DuelHero.Battle
             feet -= unit.Grid.transform.up * .06f;
             if (camera != null) feet -= camera.transform.forward * .18f;
             var instance = Instantiate(energyRestoreVfx, feet, energyRestoreVfx.transform.rotation);
+            DuelHero.Audio.SoundEffectPlayer.Play("battle.energy.restore");
             foreach (var particles in instance.GetComponentsInChildren<ParticleSystem>(true))
             {
                 particles.Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear);

@@ -49,3 +49,9 @@ MonoBehaviour:
   - id: battle.move.launch
     clip: {fileID: 8300000, guid: 7abfca5c61c98214494e11175cff2b67, type: 3}
     volume: 1
+  - id: battle.unit.damage
+    clip: {fileID: 8300000, guid: abd58fa8df1fcf740b728378d48a19f7, type: 3}
+    volume: 1
+  - id: battle.energy.restore
+    clip: {fileID: 8300000, guid: c5644fee6c395f2479600babd110c512, type: 3}
+    volume: 0.5

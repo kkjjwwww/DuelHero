@@ -93,11 +93,17 @@ namespace DuelHero.Battle
         public void EndSlot(int round)
         {
             var seen = new HashSet<UnitStats>();
+            bool damageSoundPlayed = false;
             foreach (var unit in units)
             {
                 if (unit == null || unit.stats == null || !unit.stats.IsInitialized || !seen.Add(unit.stats)) continue;
                 int before = unit.stats.GuardReduction;
                 int bleedDamage = unit.stats.TickBleed();
+                if (bleedDamage > 0 && !damageSoundPlayed && Application.isPlaying)
+                {
+                    DuelHero.Audio.SoundEffectPlayer.Play("battle.unit.damage");
+                    damageSoundPlayed = true;
+                }
                 if (bleedDamage > 0)
                     ActionResolved?.Invoke(new BattleActionResult(BattleActionKind.StatusDamage, unit.id, round,
                         value: bleedDamage, targetId: unit.id, cardId: "bleed"));
@@ -163,10 +169,16 @@ namespace DuelHero.Battle
             if (batch == null || batch.Applied) throw new InvalidOperationException("피해 결과는 두번이상 적용될 수 없음");
             batch.Applied = true;
             var results = new List<BattleActionResult>();
+            bool damageSoundPlayed = false;
             foreach (var hit in batch.Hits)
             {
                 int before = hit.Target.Health;
                 hit.Target.ApplyResolvedDamage(hit.Amount, hit.Reduced);
+                if (hit.Target.Health < before && !damageSoundPlayed && Application.isPlaying)
+                {
+                    DuelHero.Audio.SoundEffectPlayer.Play("battle.unit.damage");
+                    damageSoundPlayed = true;
+                }
                 if (hit.Stun > 0) hit.Target.ApplyStun(hit.Stun);
                 if (hit.Bleed > 0) hit.Target.ApplyBleed(hit.Bleed);
                 results.Add(new BattleActionResult(BattleActionKind.Damage, hit.ActorId, hit.Round, hit.CardId,
