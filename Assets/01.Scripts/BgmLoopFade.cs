@@ -8,6 +8,12 @@ public sealed class BgmLoopFade : MonoBehaviour
 
     private AudioSource source;
     private float baseVolume;
+    private float transitionVolume = 1f;
+
+    public void SetTransitionVolume(float value)
+    {
+        transitionVolume = Mathf.Clamp01(value);
+    }
 
     private void Awake()
     {
@@ -24,6 +30,6 @@ public sealed class BgmLoopFade : MonoBehaviour
         float remaining = (source.clip.samples - source.timeSamples) / (float)source.clip.frequency;
         float fadeIn = fadeInSeconds > 0f ? Mathf.Clamp01(position / fadeInSeconds) : 1f;
         float fadeOut = fadeOutSeconds > 0f ? Mathf.Clamp01(remaining / fadeOutSeconds) : 1f;
-        source.volume = baseVolume * Mathf.Min(fadeIn, fadeOut);
+        source.volume = baseVolume * Mathf.Min(fadeIn, fadeOut) * transitionVolume;
     }
 }

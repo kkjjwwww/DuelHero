@@ -21,6 +21,8 @@ namespace DuelHero.Title
         private Image[] fireflies;
         private FireflyCycle[] fireflyCycles;
         private float elapsed;
+        private float introElapsed;
+        private bool introFrameStarted;
         private readonly System.Collections.Generic.List<Material> windMaterials = new();
         private Vector3 heroScale;
 
@@ -117,13 +119,13 @@ namespace DuelHero.Title
 
         private void UpdateIntro()
         {
-            float zoomProgress = Mathf.Clamp01(elapsed / ZoomDuration);
+            float zoomProgress = Mathf.Clamp01(introElapsed / ZoomDuration);
             float remaining = 1f - zoomProgress;
             float zoom = 1f + 0.12f * remaining * remaining * remaining;
             artwork.localScale = artworkScale * zoom;
             layers[0].localScale = backgroundScale * zoom;
 
-            float progress = Mathf.Clamp01((elapsed - ZoomDuration) / MenuDuration);
+            float progress = Mathf.Clamp01((introElapsed - ZoomDuration) / MenuDuration);
             remaining = 1f - progress;
             float slide = remaining * remaining * remaining;
             foreach (var item in introItems)
@@ -175,7 +177,14 @@ namespace DuelHero.Title
         private void Update()
         {
             elapsed += Time.unscaledDeltaTime;
-            if (introItems.Count > 0) UpdateIntro();
+            if (introItems.Count > 0)
+            {
+                // A stalled startup frame must not skip the title reveal.
+                if (introFrameStarted)
+                    introElapsed += Mathf.Min(Time.unscaledDeltaTime, 0.05f);
+                introFrameStarted = true;
+                UpdateIntro();
+            }
             float sway = 3f * Mathf.Sin(elapsed * Tau / 16f);
             Move(0, sway);
             Move(1, sway);

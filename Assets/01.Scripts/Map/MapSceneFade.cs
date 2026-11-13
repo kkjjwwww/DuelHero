@@ -41,7 +41,8 @@ namespace DuelHero.Map
 
         private IEnumerator Run(string scenePath, Action<Exception> onFailure, Action onLoadStarted)
         {
-            yield return Fade(0f, 1f, .25f);
+            var bgms = FindObjectsByType<BgmLoopFade>(FindObjectsSortMode.None);
+            yield return Fade(0f, 1f, .25f, bgms, true);
             yield return null;
 
             AsyncOperation operation = null;
@@ -68,19 +69,25 @@ namespace DuelHero.Map
                         restCamera.PlayEntryZoom();
                 }
             }
-            yield return Fade(1f, 0f, .45f);
+            yield return Fade(1f, 0f, .45f, failure != null ? bgms : null, false);
             Destroy(gameObject);
             if (failure != null) onFailure?.Invoke(failure);
         }
 
-        private IEnumerator Fade(float from, float to, float duration)
+        private IEnumerator Fade(float from, float to, float duration, BgmLoopFade[] bgms, bool fadeOutAudio)
         {
             for (float elapsed = 0f; elapsed < duration; elapsed += Time.unscaledDeltaTime)
             {
                 overlay.alpha = Mathf.Lerp(from, to, elapsed / duration);
+                if (bgms != null)
+                    foreach (var bgm in bgms)
+                        if (bgm != null) bgm.SetTransitionVolume(fadeOutAudio ? 1f - elapsed / duration : elapsed / duration);
                 yield return null;
             }
             overlay.alpha = to;
+            if (bgms != null)
+                foreach (var bgm in bgms)
+                    if (bgm != null) bgm.SetTransitionVolume(fadeOutAudio ? 0f : 1f);
         }
     }
 }
