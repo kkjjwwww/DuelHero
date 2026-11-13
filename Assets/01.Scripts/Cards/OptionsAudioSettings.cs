@@ -10,6 +10,18 @@ namespace DuelHero.Cards
         private Slider masterSlider, musicSlider, effectsSlider;
         private static float master = .75f, music = .75f, effects = .75f;
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        private static void RestoreVolumes()
+        {
+            master = PlayerPrefs.GetFloat("Audio.Master", .75f);
+            music = PlayerPrefs.GetFloat("Audio.Music", .75f);
+            effects = PlayerPrefs.GetFloat("Audio.Effects", .75f);
+            AudioMixer audio = Resources.Load<AudioMixer>("DuelHeroAudio");
+            audio.SetFloat("MasterVolume", ToDecibels(master));
+            audio.SetFloat("MusicVolume", ToDecibels(music));
+            audio.SetFloat("EffectsVolume", ToDecibels(effects));
+        }
+
         private void Start()
         {
             Transform content = transform.Find("OptionsContent");
@@ -38,9 +50,9 @@ namespace DuelHero.Cards
             SetEffects(effects);
         }
 
-        private void SetMaster(float value) { master = value; mixer.SetFloat("MasterVolume", ToDecibels(value)); }
-        private void SetMusic(float value) { music = value; mixer.SetFloat("MusicVolume", ToDecibels(value)); }
-        private void SetEffects(float value) { effects = value; mixer.SetFloat("EffectsVolume", ToDecibels(value)); }
+        private void SetMaster(float value) { master = value; mixer.SetFloat("MasterVolume", ToDecibels(value)); PlayerPrefs.SetFloat("Audio.Master", value); }
+        private void SetMusic(float value) { music = value; mixer.SetFloat("MusicVolume", ToDecibels(value)); PlayerPrefs.SetFloat("Audio.Music", value); }
+        private void SetEffects(float value) { effects = value; mixer.SetFloat("EffectsVolume", ToDecibels(value)); PlayerPrefs.SetFloat("Audio.Effects", value); }
         private static float ToDecibels(float value) { return value <= 0f ? -80f : Mathf.Max(-80f, 20f * Mathf.Log10(value)); }
     }
 }
