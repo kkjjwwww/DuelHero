@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: CardDatabase
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Cards.CardDatabase
   sourceSpreadsheetId: 1pspfXZtUhTmSc9ZTL1iTzQDeBgvfbb_wqwCNs83EFQE
-  importedAtUtc: 2026-11-10T09:46:17.6540584Z
+  importedAtUtc: 2026-11-14T15:00:10.4771727Z
   cards:
   - id: move_up_001
     name: "\uC704 \uC774\uB3D9"
@@ -697,8 +697,8 @@ MonoBehaviour:
       value: 2
   - id: whirlwind_001
     name: "\uD718\uB450\uB974\uAE30"
-    description: "\uC790\uC2E0\uC774 \uC788\uB294 \uCE78\uACFC \uC8FC\uBCC0 8\uCE78\uC758
-      \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574 {effect1.value}\uC744 \uC900\uB2E4.\n[{cooldownTurns}\uD134]"
+    description: "\uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574
+      {effect1.value}\uC744 \uC900\uB2E4.\n[{cooldownTurns}\uD134]"
     actionType: "\uACF5\uACA9"
     rarity: "\uACE0\uAE09"
     attackStyle: 

@@ -15,6 +15,7 @@ namespace DuelHero.Audio
         private const float TitleButtonHoverInterval = 0.08f;
         private float lastTitleButtonHoverTime = float.NegativeInfinity;
         private int lastEnergyRestoreFrame = -1;
+        private int lastShieldBlockFrame = -1;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetInstance() => instance = null;
@@ -42,6 +43,7 @@ namespace DuelHero.Audio
             if (id == "battle.card.hover" && Time.unscaledTime - lastCardHoverTime < CardHoverInterval) return;
             if (id == "title.button.hover" && Time.unscaledTime - lastTitleButtonHoverTime < TitleButtonHoverInterval) return;
             if (id == "battle.energy.restore" && Time.frameCount == lastEnergyRestoreFrame) return;
+            if (id == "battle.shield.block" && Time.frameCount == lastShieldBlockFrame) return;
 
             AudioSource source = null;
             foreach (var candidate in sources)
@@ -60,6 +62,7 @@ namespace DuelHero.Audio
             if (id == "battle.card.hover") lastCardHoverTime = Time.unscaledTime;
             if (id == "title.button.hover") lastTitleButtonHoverTime = Time.unscaledTime;
             if (id == "battle.energy.restore") lastEnergyRestoreFrame = Time.frameCount;
+            if (id == "battle.shield.block") lastShieldBlockFrame = Time.frameCount;
         }
     }
 }

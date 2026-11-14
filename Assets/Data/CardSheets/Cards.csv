@@ -28,7 +28,7 @@
 [방향지정][{cooldownTurns}턴]","공격","20","direction_select;bleed","희귀","FALSE","FALSE","FALSE","1"
 "rift_charge_001","균열 돌진","[준비] 전방으로 {effect1.value}칸 돌진하고, 이동 경로의 모든 적에게 피해 {effect2.value}를 준다.
 [방향지정][{cooldownTurns}턴]","공격","30","direction_select;preparation","전설","FALSE","FALSE","FALSE","2"
-"whirlwind_001","휘두르기","자신이 있는 칸과 주변 8칸의 모든 적에게 피해 {effect1.value}을 준다.
+"whirlwind_001","휘두르기","범위 내 모든 적에게 피해 {effect1.value}을 준다.
 [{cooldownTurns}턴]","공격","25","","고급","TRUE","FALSE","FALSE","2"
 "flash_step_001","축지법","지정한 방향으로 {effect1.value}칸 이동한다.
 [방향지정][{cooldownTurns}턴]","이동","10","direction_select","일반","TRUE","FALSE","FALSE","2"

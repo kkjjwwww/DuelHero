@@ -93,7 +93,12 @@ namespace DuelHero.Battle
 
             var renderer = target.GetComponentInChildren<SpriteRenderer>();
             Vector3 position = renderer != null ? renderer.bounds.center : target.transform.position;
-            if (result.ReducedDamage > 0) SpawnVfx(blockVfx, position);
+            if (result.ReducedDamage > 0)
+            {
+                SpawnVfx(blockVfx, position);
+                if (Application.isPlaying && blockVfx != null)
+                    DuelHero.Audio.SoundEffectPlayer.Play("battle.shield.block");
+            }
             if (result.Value <= 0) return;
 
             if (renderer != null) ShakeHitSprite(renderer.transform);
