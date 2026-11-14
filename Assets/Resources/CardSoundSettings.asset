@@ -14,4 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Audio.CardSoundSettings
   cardDatabase: {fileID: 11400000, guid: b38eb9bf764792848bf05096af2f0d8d, type: 2}
   soundCatalog: {fileID: 11400000, guid: 0d73a6a73e13f8441b96153643710c57, type: 2}
-  cards: []
+  cards:
+  - cardId: slash_001
+    sounds:
+    - timing: 0
+      soundId: battle.slash_001
+      volume: 1
+      delay: 0
+    suppressMovement: 0
+    suppressDamage: 0
+    suppressShield: 0
+    suppressEnergy: 0
