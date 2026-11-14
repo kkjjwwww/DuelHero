@@ -2,13 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using DuelHero.Audio;
+using DuelHero.Cards;
 using UnityEditor;
 using UnityEngine;
 
 [CustomEditor(typeof(CardSoundSettings))]
 public sealed class CardSoundSettingsEditor : Editor
 {
-    private static readonly string[] TimingLabels = { "공격 발동", "돌진 출발", "적중" };
+    private static readonly string[] TimingLabels = { "일반 공격 발동", "돌진 출발", "적중 결과", "돌진 공격 이펙트 시작" };
 
     public override void OnInspectorGUI()
     {
@@ -59,6 +60,10 @@ public sealed class CardSoundSettingsEditor : Editor
             if (!string.IsNullOrEmpty(cardId.stringValue) && !used.Add(cardId.stringValue))
                 EditorGUILayout.HelpBox("같은 카드가 여러 번 등록되어 있습니다.", MessageType.Warning);
 
+            var card = cardData?.cards?.FirstOrDefault(c => c != null && c.id == cardId.stringValue);
+            DrawCardEffects(card);
+            var availableTimings = AvailableTimings(card);
+
             for (int j = 0; j < cues.arraySize; j++)
             {
                 var cue = cues.GetArrayElementAtIndex(j);
@@ -74,7 +79,7 @@ public sealed class CardSoundSettingsEditor : Editor
                 }
                 EditorGUILayout.EndHorizontal();
                 var timing = cue.FindPropertyRelative("timing");
-                timing.enumValueIndex = EditorGUILayout.Popup("재생 시점", timing.enumValueIndex, TimingLabels);
+                DrawTiming(timing, availableTimings, card != null);
                 var soundId = cue.FindPropertyRelative("soundId");
                 DrawSelection(soundId, "효과음", soundChoices);
                 var selected = soundData?.Find(soundId.stringValue);
@@ -88,7 +93,7 @@ public sealed class CardSoundSettingsEditor : Editor
             {
                 int index = cues.arraySize++;
                 var cue = cues.GetArrayElementAtIndex(index);
-                cue.FindPropertyRelative("timing").enumValueIndex = 0;
+                cue.FindPropertyRelative("timing").enumValueIndex = availableTimings.Count > 0 ? availableTimings[0] : 0;
                 cue.FindPropertyRelative("soundId").stringValue = "";
                 cue.FindPropertyRelative("volume").floatValue = 1f;
                 cue.FindPropertyRelative("delay").floatValue = 0f;
@@ -104,6 +109,69 @@ public sealed class CardSoundSettingsEditor : Editor
         }
         EditorGUILayout.HelpBox("현재는 설정을 편집하는 단계입니다. 전투 재생 및 연출 시간 표시는 아직 연결되지 않았습니다.", MessageType.Info);
         serializedObject.ApplyModifiedProperties();
+    }
+
+    private static List<int> AvailableTimings(CardDefinition card)
+    {
+        var result = new List<int>();
+        if (card?.effects == null) return result;
+        bool dash = card.effects.Any(e => e != null && e.IsDash && !e.IsCounter);
+        bool baseDamage = card.effects.Any(e => e != null && e.effectType == "damage" && !e.IsCounter);
+        bool counterDamage = card.effects.Any(e => e != null && e.effectType == "damage" && e.IsCounter);
+        if ((!dash && baseDamage) || counterDamage) result.Add((int)CardSoundSettings.Timing.Attack);
+        if (dash) result.Add((int)CardSoundSettings.Timing.DashLaunch);
+        if (baseDamage || counterDamage) result.Add((int)CardSoundSettings.Timing.Hit);
+        if (dash && baseDamage) result.Add((int)CardSoundSettings.Timing.DashImpact);
+        return result;
+    }
+
+    private static void DrawCardEffects(CardDefinition card)
+    {
+        if (card == null) return;
+        EditorGUILayout.LabelField("카드 효과 및 연출 기준", EditorStyles.boldLabel);
+        if (card.effects == null || card.effects.Length == 0)
+        {
+            EditorGUILayout.HelpBox("카드에 등록된 효과가 없습니다.", MessageType.Info);
+            return;
+        }
+        bool dash = card.effects.Any(e => e != null && e.IsDash && !e.IsCounter);
+        foreach (var effect in card.effects.Where(e => e != null).OrderBy(e => e.resolutionOrder))
+        {
+            string counter = effect.IsCounter ? " · 반격" : "";
+            string detail = effect.effectType switch
+            {
+                "move" => $"이동 · {(effect.IsDash ? "돌진" : effect.IsLongJump ? "긴 도약" : "일반 이동")} · {effect.value}칸",
+                "damage" => $"피해 · {effect.value}" + (effect.UsesMovementPath ? " · 이동 경로 기준" : ""),
+                "guard" => $"보호막 · {effect.value}",
+                "energyRestore" => $"에너지 회복 · {effect.value}",
+                "healthRestore" => $"체력 회복 · {effect.value}",
+                _ => effect.effectType
+            };
+            EditorGUILayout.LabelField($"{effect.resolutionOrder}. {detail}{counter}");
+            if (effect.IsDash && !effect.IsCounter)
+                EditorGUILayout.LabelField("   기준: 돌진 출발", EditorStyles.miniLabel);
+            if (effect.effectType == "damage")
+                EditorGUILayout.LabelField(dash && !effect.IsCounter
+                    ? "   기준: 돌진 공격 이펙트 시작 / 적중 결과"
+                    : "   기준: 일반 공격 발동 / 적중 결과", EditorStyles.miniLabel);
+        }
+        if (dash)
+            EditorGUILayout.HelpBox("돌진 이동과 공격 이펙트 사이에 상대 준비 연출과 일반 공격 연출이 있을 수 있습니다. 대기 시간은 상황에 따라 달라집니다.", MessageType.Info);
+    }
+
+    private static void DrawTiming(SerializedProperty timing, List<int> available, bool cardFound)
+    {
+        int current = timing.enumValueIndex;
+        int index = available.IndexOf(current);
+        var labels = new List<string> { index < 0 ? "현재 카드에서 사용할 수 없음" : "선택하세요" };
+        labels.AddRange(available.Select(i => TimingLabels[i]));
+        using (new EditorGUI.DisabledScope(available.Count == 0))
+        {
+            int next = EditorGUILayout.Popup("재생 시점", index + 1, labels.ToArray());
+            if (next > 0) timing.enumValueIndex = available[next - 1];
+        }
+        if (index < 0)
+            EditorGUILayout.HelpBox(cardFound ? "이 카드에서는 저장된 시점이 발생하지 않습니다. 설정은 보존됩니다." : "카드를 선택하면 사용할 수 있는 시점을 확인할 수 있습니다.", MessageType.Warning);
     }
 
     private static void DrawSelection(SerializedProperty property, string label, List<(string id, string label)> choices)
