@@ -56,5 +56,5 @@ MonoBehaviour:
     clip: {fileID: 8300000, guid: c5644fee6c395f2479600babd110c512, type: 3}
     volume: 0.5
   - id: battle.shield.block
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: aa2c5b7504b9e9e47988aa4cf9a1b292, type: 3}
     volume: 1
