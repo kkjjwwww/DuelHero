@@ -67,6 +67,11 @@ public sealed class CardSoundSettingsEditor : Editor
             DrawCardEffects(card);
             DrawPresentationInfo(card);
             var availableTimings = AvailableTimings(card);
+            EditorGUILayout.LabelField("공통 효과음 사용", EditorStyles.boldLabel);
+            DrawCommonSound(entry, "suppressMovement", "이동 먼지음");
+            DrawCommonSound(entry, "suppressDamage", "피격음");
+            DrawCommonSound(entry, "suppressShield", "보호막 방어음");
+            DrawCommonSound(entry, "suppressEnergy", "에너지 회복음");
 
             for (int j = 0; j < cues.arraySize; j++)
             {
@@ -110,9 +115,19 @@ public sealed class CardSoundSettingsEditor : Editor
             var entry = entries.GetArrayElementAtIndex(index);
             entry.FindPropertyRelative("cardId").stringValue = "";
             entry.FindPropertyRelative("sounds").ClearArray();
+            entry.FindPropertyRelative("suppressMovement").boolValue = false;
+            entry.FindPropertyRelative("suppressDamage").boolValue = false;
+            entry.FindPropertyRelative("suppressShield").boolValue = false;
+            entry.FindPropertyRelative("suppressEnergy").boolValue = false;
         }
         EditorGUILayout.HelpBox("전투 사운드 재생은 아직 연결되지 않았습니다. 연출 시간은 열린 전투씬의 현재 설정을 기준으로 표시합니다.", MessageType.Info);
         serializedObject.ApplyModifiedProperties();
+    }
+
+    private static void DrawCommonSound(SerializedProperty entry, string field, string label)
+    {
+        var property = entry.FindPropertyRelative(field);
+        property.boolValue = !EditorGUILayout.Toggle(label, !property.boolValue);
     }
 
     private void DrawPresentationInfo(CardDefinition card)

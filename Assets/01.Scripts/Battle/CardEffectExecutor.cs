@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using DG.Tweening;
+using DuelHero.Audio;
 using DuelHero.Cards;
 using DuelHero.Units;
 using UnityEngine;
@@ -19,8 +20,10 @@ namespace DuelHero.Battle
         [SerializeField] private GameObject riftTileVfx, riftBurstVfx;
         private readonly Dictionary<string, List<GameObject>> riftTiles = new();
         private Tween whirlwindSorting;
+        private CardSoundSettings cardSoundSettings;
+        private readonly HashSet<Coroutine> pendingCardSounds = new();
 
-        private void PlayMoveDust(GridMovement unit, Vector3 visualStart, Vector2Int direction)
+        private void PlayMoveDust(GridMovement unit, Vector3 visualStart, Vector2Int direction, string cardId)
         {
             if (!Application.isPlaying || moveDustVfx == null || !unit.isActiveAndEnabled) return;
             var grid = unit.Grid;
@@ -31,7 +34,8 @@ namespace DuelHero.Battle
             var rotation = Quaternion.LookRotation(Vector3.Cross(travel, grid.transform.up), grid.transform.up);
             var instance = Instantiate(moveDustVfx, feet + grid.transform.up * .02f,
                 rotation * moveDustVfx.transform.rotation);
-            DuelHero.Audio.SoundEffectPlayer.Play("battle.move.launch");
+            if (CardSoundSettings.UseCommonSound(cardId, CardSoundSettings.CommonSound.Movement))
+                SoundEffectPlayer.Play("battle.move.launch");
             Destroy(instance, .42f);
         }
         private Material thrustLineMaterial;
@@ -46,6 +50,7 @@ namespace DuelHero.Battle
 
         private void OnDisable()
         {
+            CancelPendingCardSounds();
             if (combatEffects != null)
             {
                 combatEffects.ActionResolved -= PlayDamageVfx;
@@ -56,7 +61,50 @@ namespace DuelHero.Battle
             whirlwindSorting?.Kill();
         }
 
-        private void PlayEnergyRestoreVfx(GridMovement unit)
+        private void PlayCardSounds(string cardId, CardSoundSettings.Timing timing)
+        {
+            if (!Application.isPlaying || !isActiveAndEnabled || string.IsNullOrEmpty(cardId)) return;
+            if (cardSoundSettings == null) cardSoundSettings = Resources.Load<CardSoundSettings>("CardSoundSettings");
+            if (cardSoundSettings?.cards == null) return;
+            foreach (var entry in cardSoundSettings.cards)
+            {
+                if (entry == null || entry.cardId != cardId || entry.sounds == null) continue;
+                foreach (var cue in entry.sounds)
+                {
+                    if (cue == null || cue.timing != timing || string.IsNullOrEmpty(cue.soundId)) continue;
+                    if (cue.delay <= 0f) SoundEffectPlayer.Play(cue.soundId, cue.volume);
+                    else
+                    {
+                        Coroutine routine = null;
+                        routine = StartCoroutine(PlayDelayedCardSound(cue.soundId, cue.volume, cue.delay, () => pendingCardSounds.Remove(routine)));
+                        pendingCardSounds.Add(routine);
+                    }
+                }
+            }
+        }
+
+        private IEnumerator PlayDelayedCardSound(string id, float volume, float delay, System.Action completed)
+        {
+            yield return new WaitForSeconds(delay);
+            SoundEffectPlayer.Play(id, volume);
+            completed();
+        }
+
+        internal void CancelPendingCardSounds()
+        {
+            foreach (var routine in pendingCardSounds) if (routine != null) StopCoroutine(routine);
+            pendingCardSounds.Clear();
+        }
+
+        internal void PlayCardHitSounds(CombatEffectResolver.DamageBatch batch)
+        {
+            if (batch == null) return;
+            foreach (var hit in batch.Hits.Where(h => !string.IsNullOrEmpty(h.CardId))
+                         .GroupBy(h => (h.ActorId, h.CardId)).Select(g => g.First()))
+                PlayCardSounds(hit.CardId, CardSoundSettings.Timing.Hit);
+        }
+
+        private void PlayEnergyRestoreVfx(GridMovement unit, string cardId)
         {
             if (!Application.isPlaying || energyRestoreVfx == null || !unit.isActiveAndEnabled) return;
             var sprite = unit.GetComponentInChildren<SpriteRenderer>();
@@ -65,7 +113,8 @@ namespace DuelHero.Battle
             feet -= unit.Grid.transform.up * .06f;
             if (camera != null) feet -= camera.transform.forward * .18f;
             var instance = Instantiate(energyRestoreVfx, feet, energyRestoreVfx.transform.rotation);
-            DuelHero.Audio.SoundEffectPlayer.Play("battle.energy.restore");
+            if (CardSoundSettings.UseCommonSound(cardId, CardSoundSettings.CommonSound.Energy))
+                SoundEffectPlayer.Play("battle.energy.restore");
             foreach (var particles in instance.GetComponentsInChildren<ParticleSystem>(true))
             {
                 particles.Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear);
@@ -96,7 +145,7 @@ namespace DuelHero.Battle
             if (result.ReducedDamage > 0)
             {
                 SpawnVfx(blockVfx, position);
-                if (Application.isPlaying && blockVfx != null)
+                if (Application.isPlaying && blockVfx != null && CardSoundSettings.UseCommonSound(result.CardId, CardSoundSettings.CommonSound.Shield))
                     DuelHero.Audio.SoundEffectPlayer.Play("battle.shield.block");
             }
             if (result.Value <= 0) return;
@@ -422,7 +471,11 @@ namespace DuelHero.Battle
             {
                 ShowAttackRange(attack, actorId, card, movementPath, counter);
                 SetCardFacing(placement, unit, card);
-                yield return attack.PlayAttack(card?.attackStyle, () => PlayWeaponVfx(attack, unit, card, counter: counter));
+                yield return attack.PlayAttack(card?.attackStyle, () =>
+                {
+                    PlayWeaponVfx(attack, unit, card, counter: counter);
+                    PlayCardSounds(card?.id, CardSoundSettings.Timing.Attack);
+                });
             }
             finally
             {
@@ -440,6 +493,7 @@ namespace DuelHero.Battle
             {
                 ShowAttackRange(attack, actorId, card, movementPath);
                 PlayWeaponVfx(attack, unit, card, movementPath);
+                PlayCardSounds(card?.id, CardSoundSettings.Timing.DashImpact);
                 yield return new WaitForSeconds(VfxLifetime);
             }
             finally { attack.HideRange(); }
@@ -496,7 +550,7 @@ namespace DuelHero.Battle
                                 // Include layout offsets when entering/leaving an occupied cell.
                                 placement?.Refresh();
                                 yield return jump.PlayJump(jump.MotionWorldPosition - before,
-                                    () => PlayMoveDust(movement, before, direction));
+                                    () => PlayMoveDust(movement, before, direction, card.id));
                                 if (!movement.isActiveAndEnabled) yield break;
                             }
                         }
@@ -504,7 +558,7 @@ namespace DuelHero.Battle
                         {
                             placement?.Refresh();
                             yield return jump.PlayJump(jump.MotionWorldPosition - jumpStart,
-                                () => PlayMoveDust(movement, jumpStart, direction));
+                                () => PlayMoveDust(movement, jumpStart, direction, card.id));
                             if (!movement.isActiveAndEnabled) yield break;
                         }
                         if (dash)
@@ -530,7 +584,8 @@ namespace DuelHero.Battle
                             yield return attack.PlayDash(attack.MotionWorldPosition - dashStart,
                                 onLaunch: () =>
                                 {
-                                    if (moved) PlayMoveDust(movement, dashStart, direction);
+                                    PlayCardSounds(card.id, CardSoundSettings.Timing.DashLaunch);
+                                    if (moved) PlayMoveDust(movement, dashStart, direction, card.id);
                                     markRift?.Invoke(0f);
                                 }, onTravel: markRift);
                             if (!attack.IsPlaying) ClearRiftTiles(actorId);
@@ -540,7 +595,7 @@ namespace DuelHero.Battle
                         combatEffects.ResolveGuard(actorId, card.id, effect, round);
                         holdFacing = true;
                         break;
-                    case "energyRestore": stats.RestoreEnergy(effect.value); break;
+                    case "energyRestore": combatEffects.RestoreCardEnergy(stats, effect.value, card.id); break;
                     case "healthRestore": stats.Heal(effect.value); break;
                 }
                 if (sprites != null && effect.value > 0)

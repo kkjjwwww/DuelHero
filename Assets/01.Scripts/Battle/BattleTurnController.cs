@@ -219,6 +219,7 @@ namespace DuelHero.Battle
                 bool enemyRiftBurst = effects.ResolveRiftImpact(enemyId, ec, damage);
                 if (playerRiftBurst || enemyRiftBurst) presentation?.PlayRiftImpactShake();
                 combatEffects.ApplyDamageBatch(damage);
+                effects.PlayCardHitSounds(damage);
                 if (HasDash(pc)) playerAttackPresentation?.Cancel();
                 if (HasDash(ec)) enemyAttackPresentation?.Cancel();
                 effects.CancelPreparationPresentation(playerId, unitVisualPlacement);
@@ -249,6 +250,7 @@ namespace DuelHero.Battle
                             damage.AttackCells.TryGetValue(enemyId, out var baseCells) ? baseCells.Concat(counterCells).Distinct() : counterCells);
                     }
                     combatEffects.ApplyDamageBatch(counters);
+                    effects.PlayCardHitSounds(counters);
                     effects.CancelPreparationPresentation(playerId, unitVisualPlacement);
                     effects.CancelPreparationPresentation(enemyId, unitVisualPlacement);
                 }
@@ -290,6 +292,7 @@ namespace DuelHero.Battle
             playerQueue.SetActiveSlot(-1);
             if (Outcome != BattleOutcome.Running)
             {
+                if (effects != null) effects.CancelPendingCardSounds();
                 playerQueue.CompleteExecution(executedSlots);
                 BattleFinished?.Invoke(Outcome);
             }
@@ -423,6 +426,7 @@ namespace DuelHero.Battle
         private void OnDisable()
         {
             StopAllCoroutines();
+            if (effects != null) effects.CancelPendingCardSounds();
             CancelUnitPresentations();
             FinishExecution();
         }

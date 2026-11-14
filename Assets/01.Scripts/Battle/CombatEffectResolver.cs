@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using DuelHero.Cards;
+using DuelHero.Audio;
 using DuelHero.Units;
 using UnityEngine;
 namespace DuelHero.Battle
@@ -18,7 +19,9 @@ namespace DuelHero.Battle
         }
         [SerializeField] private UnitBinding[] units = Array.Empty<UnitBinding>();
         public event Action<BattleActionResult> ActionResolved;
-        public event Action<GridMovement> EnergyRestored;
+        public event Action<GridMovement, string> EnergyRestored;
+        private UnitStats restoringEnergyUnit;
+        private string restoringEnergyCard;
 
         private void OnEnable()
         {
@@ -36,7 +39,16 @@ namespace DuelHero.Battle
         {
             if (restored <= 0) return;
             var unit = units.FirstOrDefault(binding => binding?.stats == stats);
-            if (unit?.movement != null) EnergyRestored?.Invoke(unit.movement);
+            if (unit?.movement != null) EnergyRestored?.Invoke(unit.movement, stats == restoringEnergyUnit ? restoringEnergyCard : null);
+        }
+        internal void RestoreCardEnergy(UnitStats stats, int amount, string cardId)
+        {
+            var previousUnit = restoringEnergyUnit;
+            var previousCard = restoringEnergyCard;
+            restoringEnergyUnit = stats;
+            restoringEnergyCard = cardId;
+            try { stats.RestoreEnergy(amount); }
+            finally { restoringEnergyUnit = previousUnit; restoringEnergyCard = previousCard; }
         }
         public bool TryGetUnit(string actorId, out GridMovement movement, out UnitStats stats)
         {
@@ -174,7 +186,8 @@ namespace DuelHero.Battle
             {
                 int before = hit.Target.Health;
                 hit.Target.ApplyResolvedDamage(hit.Amount, hit.Reduced);
-                if (hit.Target.Health < before && !damageSoundPlayed && Application.isPlaying)
+                if (hit.Target.Health < before && !damageSoundPlayed && Application.isPlaying &&
+                    CardSoundSettings.UseCommonSound(hit.CardId, CardSoundSettings.CommonSound.Damage))
                 {
                     DuelHero.Audio.SoundEffectPlayer.Play("battle.unit.damage");
                     damageSoundPlayed = true;

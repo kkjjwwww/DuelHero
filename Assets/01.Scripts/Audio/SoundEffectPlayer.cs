@@ -20,10 +20,10 @@ namespace DuelHero.Audio
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetInstance() => instance = null;
 
-        public static void Play(string id)
+        public static void Play(string id, float volume = 1f)
         {
             if (instance == null) CreatePlayer();
-            instance.PlayEffect(id);
+            instance.PlayEffect(id, volume);
         }
 
         private static void CreatePlayer()
@@ -36,7 +36,7 @@ namespace DuelHero.Audio
             instance.effectsGroup = mixer.FindMatchingGroups("Effects")[0];
         }
 
-        private void PlayEffect(string id)
+        private void PlayEffect(string id, float volume)
         {
             var entry = catalog.Find(id);
             if (entry == null || entry.clip == null) return;
@@ -57,7 +57,7 @@ namespace DuelHero.Audio
                 sources.Add(source);
             }
             source.clip = entry.clip;
-            source.volume = entry.volume;
+            source.volume = entry.volume * Mathf.Clamp01(volume);
             source.Play();
             if (id == "battle.card.hover") lastCardHoverTime = Time.unscaledTime;
             if (id == "title.button.hover") lastTitleButtonHoverTime = Time.unscaledTime;
