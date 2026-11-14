@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using DuelHero.Audio;
 using DuelHero.Cards;
+using DuelHero.Battle;
 using UnityEditor;
 using UnityEngine;
 
@@ -10,6 +11,7 @@ using UnityEngine;
 public sealed class CardSoundSettingsEditor : Editor
 {
     private static readonly string[] TimingLabels = { "일반 공격 발동", "돌진 출발", "적중 결과", "돌진 공격 이펙트 시작" };
+    private int previewActor;
 
     public override void OnInspectorGUI()
     {
@@ -18,6 +20,7 @@ public sealed class CardSoundSettingsEditor : Editor
         var catalog = serializedObject.FindProperty("soundCatalog");
         EditorGUILayout.PropertyField(database, new GUIContent("카드 데이터베이스"));
         EditorGUILayout.PropertyField(catalog, new GUIContent("효과음 목록"));
+        previewActor = EditorGUILayout.Popup("연출 시간 기준", previewActor, new[] { "플레이어", "적" });
 
         var cardData = database.objectReferenceValue as DuelHero.Cards.CardDatabase;
         var soundData = catalog.objectReferenceValue as SoundEffectCatalog;
@@ -62,6 +65,7 @@ public sealed class CardSoundSettingsEditor : Editor
 
             var card = cardData?.cards?.FirstOrDefault(c => c != null && c.id == cardId.stringValue);
             DrawCardEffects(card);
+            DrawPresentationInfo(card);
             var availableTimings = AvailableTimings(card);
 
             for (int j = 0; j < cues.arraySize; j++)
@@ -107,8 +111,74 @@ public sealed class CardSoundSettingsEditor : Editor
             entry.FindPropertyRelative("cardId").stringValue = "";
             entry.FindPropertyRelative("sounds").ClearArray();
         }
-        EditorGUILayout.HelpBox("현재는 설정을 편집하는 단계입니다. 전투 재생 및 연출 시간 표시는 아직 연결되지 않았습니다.", MessageType.Info);
+        EditorGUILayout.HelpBox("전투 사운드 재생은 아직 연결되지 않았습니다. 연출 시간은 열린 전투씬의 현재 설정을 기준으로 표시합니다.", MessageType.Info);
         serializedObject.ApplyModifiedProperties();
+    }
+
+    private void DrawPresentationInfo(CardDefinition card)
+    {
+        if (card == null) return;
+        EditorGUILayout.LabelField("연출 시간 정보", EditorStyles.boldLabel);
+        var controllers = Resources.FindObjectsOfTypeAll<BattleTurnController>()
+            .Where(c => c != null && c.gameObject.scene.IsValid() && c.gameObject.scene.isLoaded && c.gameObject.scene.name == "BattleScene")
+            .ToArray();
+        if (controllers.Length != 1)
+        {
+            EditorGUILayout.HelpBox("전투씬을 열고 전투 컨트롤러가 하나인지 확인해주세요. 연출 시간을 읽을 수 없습니다.", MessageType.Info);
+            return;
+        }
+        var controller = new SerializedObject(controllers[0]);
+        var attack = controller.FindProperty(previewActor == 0 ? "playerAttackPresentation" : "enemyAttackPresentation")?.objectReferenceValue;
+        var jump = controller.FindProperty(previewActor == 0 ? "playerJumpPresentation" : "enemyJumpPresentation")?.objectReferenceValue;
+        var effects = card.effects ?? Array.Empty<CardEffectDefinition>();
+        bool dash = effects.Any(e => e != null && e.IsDash && !e.IsCounter);
+        bool normalMove = effects.Any(e => e != null && e.effectType == "move" && !e.IsDash);
+        bool normalAttack = effects.Any(e => e != null && e.effectType == "damage" && (!dash || e.IsCounter));
+        if (normalAttack || dash)
+        {
+            if (attack == null) EditorGUILayout.HelpBox("선택한 유닛의 공격 연출이 연결되지 않았습니다.", MessageType.Warning);
+            else
+            {
+                var data = new SerializedObject(attack);
+                if (normalAttack)
+                {
+                    float windup = data.FindProperty("windupDuration").floatValue;
+                    float strike = data.FindProperty("strikeDuration").floatValue;
+                    float recovery = data.FindProperty("recoveryDuration").floatValue;
+                    EditorGUILayout.LabelField($"일반 공격: 준비 {windup:0.##}초 · 동작 {strike:0.##}초 · 복귀 {recovery:0.##}초");
+                    EditorGUILayout.LabelField($"공격 발동: 공격 모션 시작 + {windup:0.##}초", EditorStyles.miniLabel);
+                }
+                if (dash)
+                    EditorGUILayout.LabelField($"돌진 이동: 출발 후 {data.FindProperty("dashDuration").floatValue:0.##}초");
+            }
+        }
+        if (normalMove)
+        {
+            if (jump == null) EditorGUILayout.HelpBox("선택한 유닛의 도약 연출이 연결되지 않았습니다.", MessageType.Warning);
+            else
+            {
+                var data = new SerializedObject(jump);
+                EditorGUILayout.LabelField($"도약: 준비 {data.FindProperty("takeoffDuration").floatValue:0.##}초 · 공중 {data.FindProperty("flightDuration").floatValue:0.##}초 · 착지 {data.FindProperty("landingDuration").floatValue:0.##}초");
+                EditorGUILayout.LabelField("일반 이동은 칸마다, 긴 도약은 이동 전체에 한 번 적용됩니다.", EditorStyles.miniLabel);
+            }
+        }
+        if (effects.Any(e => e != null && e.effectType == "damage"))
+        {
+            string lifetime = card.attackVfx switch
+            {
+                "dash_slash" => "약 0.39초",
+                "sweep" => "약 0.78초",
+                "thrust" => "약 0.26초",
+                "whirlwind" => "약 0.45초",
+                "thorn_throw" => "약 0.45초",
+                "rift_charge" => "약 0.45초 (폭발 이펙트)",
+                _ => null
+            };
+            EditorGUILayout.LabelField($"공격 이펙트: {(string.IsNullOrEmpty(card.attackVfx) ? "미지정" : card.attackVfx)}");
+            EditorGUILayout.LabelField(lifetime == null ? "이펙트 유지 시간 정보 없음" : $"이펙트 오브젝트 유지: {lifetime}", EditorStyles.miniLabel);
+            EditorGUILayout.LabelField("실제 파티클 표시 길이는 다를 수 있습니다. 연결 상태와 조건에 따라 이펙트가 생략될 수 있습니다.", EditorStyles.wordWrappedMiniLabel);
+            EditorGUILayout.LabelField("적중 결과: 양쪽 준비 및 공격 연출 이후 (상황에 따라 변동)", EditorStyles.wordWrappedMiniLabel);
+        }
     }
 
     private static List<int> AvailableTimings(CardDefinition card)
