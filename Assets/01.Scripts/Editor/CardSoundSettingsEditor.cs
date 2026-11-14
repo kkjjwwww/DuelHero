@@ -48,9 +48,12 @@ public sealed class CardSoundSettingsEditor : Editor
             var entry = entries.GetArrayElementAtIndex(i);
             var cardId = entry.FindPropertyRelative("cardId");
             var cues = entry.FindPropertyRelative("sounds");
+            var card = cardData?.cards?.FirstOrDefault(c => c != null && c.id == cardId.stringValue);
+            bool duplicate = !string.IsNullOrEmpty(cardId.stringValue) && !used.Add(cardId.stringValue);
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField($"카드 설정 {i + 1}", EditorStyles.boldLabel);
+            string cardLabel = card != null ? card.name : string.IsNullOrEmpty(cardId.stringValue) ? "카드 미선택" : $"찾을 수 없음: {cardId.stringValue}";
+            entry.isExpanded = EditorGUILayout.Foldout(entry.isExpanded, $"{cardLabel} · 효과음 {cues.arraySize}개" + (duplicate ? " · 중복 ID" : ""), true, EditorStyles.foldoutHeader);
             if (GUILayout.Button("삭제", GUILayout.Width(55)))
             {
                 entries.DeleteArrayElementAtIndex(i);
@@ -59,11 +62,16 @@ public sealed class CardSoundSettingsEditor : Editor
                 break;
             }
             EditorGUILayout.EndHorizontal();
+            if (!entry.isExpanded)
+            {
+                EditorGUILayout.EndVertical();
+                continue;
+            }
             DrawSelection(cardId, "카드", cardChoices);
-            if (!string.IsNullOrEmpty(cardId.stringValue) && !used.Add(cardId.stringValue))
+            if (duplicate)
                 EditorGUILayout.HelpBox("같은 카드가 여러 번 등록되어 있습니다.", MessageType.Warning);
 
-            var card = cardData?.cards?.FirstOrDefault(c => c != null && c.id == cardId.stringValue);
+            card = cardData?.cards?.FirstOrDefault(c => c != null && c.id == cardId.stringValue);
             DrawCardEffects(card);
             DrawPresentationInfo(card);
             var availableTimings = AvailableTimings(card);
@@ -76,9 +84,13 @@ public sealed class CardSoundSettingsEditor : Editor
             for (int j = 0; j < cues.arraySize; j++)
             {
                 var cue = cues.GetArrayElementAtIndex(j);
+                var timing = cue.FindPropertyRelative("timing");
+                var soundId = cue.FindPropertyRelative("soundId");
                 EditorGUILayout.BeginVertical(EditorStyles.helpBox);
                 EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField($"소리 {j + 1}", EditorStyles.boldLabel);
+                string timingLabel = timing.enumValueIndex >= 0 && timing.enumValueIndex < TimingLabels.Length ? TimingLabels[timing.enumValueIndex] : "알 수 없는 시점";
+                string soundLabel = string.IsNullOrEmpty(soundId.stringValue) ? "효과음 미선택" : soundId.stringValue;
+                cue.isExpanded = EditorGUILayout.Foldout(cue.isExpanded, $"{timingLabel} · {soundLabel}", true, EditorStyles.foldoutHeader);
                 if (GUILayout.Button("삭제", GUILayout.Width(55)))
                 {
                     cues.DeleteArrayElementAtIndex(j);
@@ -87,9 +99,12 @@ public sealed class CardSoundSettingsEditor : Editor
                     break;
                 }
                 EditorGUILayout.EndHorizontal();
-                var timing = cue.FindPropertyRelative("timing");
+                if (!cue.isExpanded)
+                {
+                    EditorGUILayout.EndVertical();
+                    continue;
+                }
                 DrawTiming(timing, availableTimings, card != null);
-                var soundId = cue.FindPropertyRelative("soundId");
                 DrawSelection(soundId, "효과음", soundChoices);
                 var selected = soundData?.Find(soundId.stringValue);
                 if (selected != null && selected.clip == null)
@@ -102,6 +117,7 @@ public sealed class CardSoundSettingsEditor : Editor
             {
                 int index = cues.arraySize++;
                 var cue = cues.GetArrayElementAtIndex(index);
+                cue.isExpanded = true;
                 cue.FindPropertyRelative("timing").enumValueIndex = availableTimings.Count > 0 ? availableTimings[0] : 0;
                 cue.FindPropertyRelative("soundId").stringValue = "";
                 cue.FindPropertyRelative("volume").floatValue = 1f;
@@ -113,6 +129,7 @@ public sealed class CardSoundSettingsEditor : Editor
         {
             int index = entries.arraySize++;
             var entry = entries.GetArrayElementAtIndex(index);
+            entry.isExpanded = true;
             entry.FindPropertyRelative("cardId").stringValue = "";
             entry.FindPropertyRelative("sounds").ClearArray();
             entry.FindPropertyRelative("suppressMovement").boolValue = false;
@@ -120,7 +137,7 @@ public sealed class CardSoundSettingsEditor : Editor
             entry.FindPropertyRelative("suppressShield").boolValue = false;
             entry.FindPropertyRelative("suppressEnergy").boolValue = false;
         }
-        EditorGUILayout.HelpBox("전투 사운드 재생은 아직 연결되지 않았습니다. 연출 시간은 열린 전투씬의 현재 설정을 기준으로 표시합니다.", MessageType.Info);
+        EditorGUILayout.HelpBox("연출 시간은 열린 전투씬의 현재 설정을 기준으로 표시합니다.", MessageType.Info);
         serializedObject.ApplyModifiedProperties();
     }
 
