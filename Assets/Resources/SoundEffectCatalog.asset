@@ -85,3 +85,9 @@ MonoBehaviour:
   - id: health.restore
     clip: {fileID: 8300000, guid: d4dcd4521b678274aa65dd85de8e9838, type: 3}
     volume: 1
+  - id: battle.result.victory
+    clip: {fileID: 8300000, guid: f9be6cb36a55c0042a5f4d32adc0010d, type: 3}
+    volume: 0.1
+  - id: battle.result.defeat
+    clip: {fileID: 8300000, guid: cd2d1daf8b2395a49a3fdf98869019e3, type: 3}
+    volume: 0.5

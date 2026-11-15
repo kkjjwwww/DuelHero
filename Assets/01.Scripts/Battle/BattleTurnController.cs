@@ -293,6 +293,10 @@ namespace DuelHero.Battle
             {
                 if (effects != null) effects.CancelPendingCardSounds();
                 playerQueue.CompleteExecution(executedSlots);
+                if (Application.isPlaying && Outcome == BattleOutcome.Victory)
+                    DuelHero.Audio.SoundEffectPlayer.Play("battle.result.victory");
+                else if (Application.isPlaying && Outcome == BattleOutcome.Defeat)
+                    DuelHero.Audio.SoundEffectPlayer.Play("battle.result.defeat");
                 BattleFinished?.Invoke(Outcome);
             }
             PhaseChanged?.Invoke();
