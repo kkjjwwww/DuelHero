@@ -302,6 +302,33 @@ namespace DuelHero.Battle
 #if UNITY_EDITOR
         public EnemyActionPlanProvider EnemyPlanForDebug => enemyPlanSource as EnemyActionPlanProvider;
 
+        public UnitInitializer EnemyInitializerForDebug => combatEffects != null && combatEffects.TryGetUnit(enemyId, out _, out var enemy)
+            ? enemy.GetComponent<UnitInitializer>() : null;
+
+        public bool CanSelectEnemyForDebug(string id) => EnemyInitializerForDebug != null && EnemyPlanForDebug != null &&
+            EnemyPlanForDebug.CanUseProfileForDebug(EnemyInitializerForDebug.DebugEnemyProfile(id));
+
+        public bool TryChangeEnemyForDebug(string id, out string error)
+        {
+            error = null;
+            var initializer = EnemyInitializerForDebug;
+            var provider = EnemyPlanForDebug;
+            if (!CanEditForDebug || initializer == null || provider == null)
+            { error = "현재 적을 변경할 수 없습니다."; return false; }
+            if (!provider.CanUseProfileForDebug(initializer.DebugEnemyProfile(id)))
+            { error = "적 프로필의 카드 데이터가 올바르지 않습니다."; return false; }
+            if (!initializer.SetEnemyForDebug(id))
+            { error = "적 프로필 또는 능력치를 초기화하지 못했습니다."; return false; }
+            try
+            {
+                provider.ResetEnemyForDebug();
+                if (!PrepareEnemyPlan()) { error = LastError; return false; }
+                PhaseChanged?.Invoke();
+                return true;
+            }
+            catch (Exception exception) { error = exception.Message; return false; }
+        }
+
         public void ReserveEnemyCardForDebug(int slot, CardInstance card, Vector2Int direction)
         {
             var provider = EnemyPlanForDebug;

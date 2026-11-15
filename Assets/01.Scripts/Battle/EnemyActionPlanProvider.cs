@@ -111,6 +111,24 @@ namespace DuelHero.Battle
         }
 
 #if UNITY_EDITOR
+        internal bool CanUseProfileForDebug(DuelHero.Data.EnemyEncounterProfile profile)
+        {
+            return database != null && database.cards != null && profile?.fixedCards != null &&
+                profile.bonusCandidates != null && profile.bonusCandidates.Length > 0 &&
+                profile.fixedCards.Concat(profile.bonusCandidates).All(id =>
+                    !string.IsNullOrEmpty(id) && database.cards.Any(card => card != null && card.id == id));
+        }
+
+        internal void ResetEnemyForDebug()
+        {
+            cards = null;
+            activePlan = null;
+            activeExecution = null;
+            selector = null;
+            InitializeCards();
+            CardsChanged?.Invoke();
+        }
+
         internal void SetPlanForDebug(int round, int slot, CardInstance card, Vector2Int direction)
         {
             if (activePlan == null || activeRound != round || slot < 0 || slot >= activePlan.Length ||

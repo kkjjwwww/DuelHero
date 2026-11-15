@@ -88,6 +88,12 @@ namespace DuelHero.Units
             Health = next; Changed?.Invoke();
         }
 #if UNITY_EDITOR
+        internal void ResetForEnemyDebug()
+        {
+            IsInitialized = false;
+            Stun = Bleed = 0;
+            guard.Reset(Array.Empty<GuardEffectSnapshot>());
+        }
         public void SetHealthForDebug(int value)
         {
             Validate(0);

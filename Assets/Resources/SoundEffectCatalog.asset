@@ -79,3 +79,6 @@ MonoBehaviour:
   - id: sword_clash.10
     clip: {fileID: 8300000, guid: 7a65896fa46aea840954b4235f2bff6a, type: 3}
     volume: 1
+  - id: break_stone
+    clip: {fileID: 8300000, guid: a18228aaf2a19b64ca1e5d22a65cae98, type: 3}
+    volume: 1

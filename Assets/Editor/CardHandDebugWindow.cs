@@ -28,6 +28,8 @@ namespace DuelHero.EditorTools
         private Vector2 scrollPosition;
         private int enemySlot, enemyCard, enemyDirection;
         private string enemyReservationResult;
+        private int enemyKind;
+        private string enemyChangeResult;
 
         [MenuItem("Duel Hero/Debug/Card Hand and Stats")]
         private static void Open() => GetWindow<CardHandDebugWindow>("전투 디버그");
@@ -71,12 +73,30 @@ namespace DuelHero.EditorTools
             }
             EditorGUILayout.Space(12);
             DrawDebuffDebug(queue, turn);
+            DrawEnemyChange(turn);
             DrawEnemyReservation(turn);
             EditorGUILayout.Space(12);
             DrawCards(deck, queue, deckList, editable);
             EditorGUILayout.Space(12);
             DrawStats(queue.UnitStats, editable);
             if (!editable) EditorGUILayout.HelpBox("행동 실행 및 복원 중에는 조작할 수 없습니다.", MessageType.Info);
+        }
+
+        private void DrawEnemyChange(BattleTurnController turn)
+        {
+            var initializer = turn != null ? turn.EnemyInitializerForDebug : null;
+            var choices = initializer?.DebugEnemyChoices.Where(choice => turn.CanSelectEnemyForDebug(choice.id)).ToArray();
+            if (choices == null || choices.Length == 0) return;
+            EditorGUILayout.Space(12);
+            EditorGUILayout.LabelField("적 종류 변경", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("현재 적", initializer.EncounterName ?? "알 수 없음");
+            enemyKind = EditorGUILayout.Popup("변경할 적", Mathf.Clamp(enemyKind, 0, choices.Length - 1),
+                choices.Select(choice => $"{choice.name} ({choice.id})").ToArray());
+            using (new EditorGUI.DisabledScope(!turn.CanEditForDebug))
+                if (GUILayout.Button("적 교체"))
+                    enemyChangeResult = turn.TryChangeEnemyForDebug(choices[enemyKind].id, out var error) ? "적을 교체했습니다." : error;
+            if (!string.IsNullOrEmpty(enemyChangeResult)) EditorGUILayout.HelpBox(enemyChangeResult, MessageType.Info);
+            EditorGUILayout.LabelField("적의 능력치·상태·행동 예약이 초기화됩니다.", EditorStyles.wordWrappedMiniLabel);
         }
 
         private void DrawEnemyReservation(BattleTurnController turn)

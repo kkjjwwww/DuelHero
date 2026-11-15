@@ -63,5 +63,27 @@ namespace DuelHero.Units
 
         private static int ScaleStat(int value, decimal percent) =>
             (int)Math.Min(int.MaxValue, Math.Round(value * percent / 100m, MidpointRounding.AwayFromZero));
+
+#if UNITY_EDITOR
+        public UnitDefinition[] DebugEnemyChoices => dataKind != UnitDataKind.Enemy || database == null || encounterProfiles == null
+            ? Array.Empty<UnitDefinition>()
+            : Array.FindAll(database.enemies, item => item != null && encounterProfiles.FindByUnitId(item.id) != null);
+        public EnemyEncounterProfile DebugEnemyProfile(string id) => encounterProfiles?.FindByUnitId(id);
+
+        internal bool SetEnemyForDebug(string id)
+        {
+            if (dataKind != UnitDataKind.Enemy || stats == null || encounterProfiles == null || database == null) return false;
+            var profile = encounterProfiles.FindByUnitId(id);
+            var definition = Array.Find(database.enemies, item => item != null && item.id == id);
+            if (profile == null || definition == null || definition.maxHealth <= 0 || definition.startingHealth < 0 ||
+                definition.startingHealth > definition.maxHealth || definition.maxEnergy < 0 || definition.startingEnergy < 0 ||
+                definition.startingEnergy > definition.maxEnergy) return false;
+            encounter = profile;
+            stats.ResetForEnemyDebug();
+            if (!TryInitialize()) return false;
+            GetComponent<UnitSpritePresenter>()?.ResetPose();
+            return true;
+        }
+#endif
     }
 }
