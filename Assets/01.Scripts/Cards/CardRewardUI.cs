@@ -10,6 +10,9 @@ namespace DuelHero.Cards
         [SerializeField] private RectTransform content;
         [SerializeField] private Text message;
         [SerializeField] private CardView cardPrefab;
+        [SerializeField] private Image screenBackground;
+        [SerializeField] private Button actionButton;
+        [SerializeField] private Text actionLabel, goldLabel;
         [SerializeField, Range(0f, 1f), InspectorName("보상 배경 불투명도")]
         private float backgroundOpacity = .88f;
         private readonly List<CardView> views = new();
@@ -17,9 +20,6 @@ namespace DuelHero.Cards
         private CardRangePreview rangePreview;
         private bool showing;
         private bool inputEnabled;
-        private Image screenBackground;
-        private Button actionButton;
-        private Text actionLabel, goldLabel;
         public bool IsShowing => showing;
         public event Action<string> CardSelected;
         public event Action ActionRequested;
@@ -29,7 +29,11 @@ namespace DuelHero.Cards
             if (showing) return;
             showing = true;
             var canvas = GetComponentInParent<Canvas>().rootCanvas;
-            BuildOverlay(canvas);
+            screenBackground.gameObject.SetActive(true);
+            screenBackground.transform.SetAsLastSibling();
+            ApplyBackgroundOpacity();
+            actionButton.onClick.RemoveListener(RequestAction);
+            actionButton.onClick.AddListener(RequestAction);
             content.gameObject.SetActive(true);
             goldLabel.text = "획득 예정 골드  +" + gold;
             actionLabel.text = cards.Count == 0 ? "계속" : "건너뛰기";
@@ -92,51 +96,11 @@ namespace DuelHero.Cards
             actionButton.interactable = !transitioning;
         }
 
-        private void BuildOverlay(Canvas canvas)
-        {
-            if (screenBackground != null) return;
-            var overlay = new GameObject("CardRewardOverlay", typeof(RectTransform), typeof(Image));
-            var rect = (RectTransform)overlay.transform;
-            rect.SetParent(canvas.transform, false);
-            rect.anchorMin = Vector2.zero;
-            rect.anchorMax = Vector2.one;
-            rect.offsetMin = rect.offsetMax = Vector2.zero;
-            screenBackground = overlay.GetComponent<Image>();
-            screenBackground.color = Color.black;
-            ApplyBackgroundOpacity();
-            content.SetParent(rect, false);
-
-            CreateLabel(rect, "승리", new Vector2(0, 225), 32);
-            goldLabel = CreateLabel(rect, "", new Vector2(0, -177), 23);
-            var action = new GameObject("RewardAction", typeof(RectTransform), typeof(Image), typeof(Button));
-            var actionRect = (RectTransform)action.transform;
-            actionRect.SetParent(rect, false);
-            actionRect.sizeDelta = new Vector2(220, 46);
-            actionRect.anchoredPosition = new Vector2(0, -225);
-            action.GetComponent<Image>().color = new Color(.25f, .25f, .25f);
-            actionButton = action.GetComponent<Button>();
-            actionButton.onClick.AddListener(() => ActionRequested?.Invoke());
-            actionLabel = CreateLabel(actionRect, "", Vector2.zero, 22);
-        }
-
-        private Text CreateLabel(RectTransform parent, string value, Vector2 position, int size)
-        {
-            var label = new GameObject("Label", typeof(RectTransform), typeof(Text)).GetComponent<Text>();
-            label.transform.SetParent(parent, false);
-            label.rectTransform.sizeDelta = new Vector2(650, 44);
-            label.rectTransform.anchoredPosition = position;
-            label.font = message.font;
-            label.fontSize = size;
-            label.alignment = TextAnchor.MiddleCenter;
-            label.color = message.color;
-            label.text = value;
-            label.raycastTarget = false;
-            return label;
-        }
+        private void RequestAction() => ActionRequested?.Invoke();
 
         private void OnDestroy()
         {
-            if (screenBackground != null) Destroy(screenBackground.gameObject);
+            if (actionButton != null) actionButton.onClick.RemoveListener(RequestAction);
             if (tooltip != null) Destroy(tooltip.gameObject);
         }
         private void ApplyBackgroundOpacity()

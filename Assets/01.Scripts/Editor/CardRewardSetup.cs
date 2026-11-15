@@ -39,7 +39,8 @@ internal static class CardRewardSetup
             var panel = (RectTransform)title.transform.parent;
             var reward = result.GetComponent<CardRewardUI>();
             if (reward == null) reward = result.gameObject.AddComponent<CardRewardUI>();
-            var content = panel.Find("RewardCards") as RectTransform;
+            var content = new SerializedObject(reward).FindProperty("content").objectReferenceValue as RectTransform;
+            if (content == null) content = panel.Find("RewardCards") as RectTransform;
             if (content == null)
             {
                 content = new GameObject("RewardCards", typeof(RectTransform)).GetComponent<RectTransform>();
@@ -60,7 +61,8 @@ internal static class CardRewardSetup
             SetReference(reward, "content", content);
             SetReference(reward, "message", content.GetComponentInChildren<Text>(true));
             SetReference(reward, "cardPrefab", AssetDatabase.LoadAssetAtPath<CardView>("Assets/02.Prefabs/CardView.prefab"));
-            content.gameObject.SetActive(false);
+            if (new SerializedObject(reward).FindProperty("screenBackground").objectReferenceValue == null)
+                content.gameObject.SetActive(false);
             var controller = Find<BattleRunController>(scene);
             SetReference(controller, "rewardSettings", settings);
             SetReference(controller, "rewardView", reward);
