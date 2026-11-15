@@ -141,6 +141,7 @@ namespace DuelHero.Cards
             IsRevealing = true;
             cardCanvasGroup.blocksRaycasts = false;
             flip = DOTween.Sequence();
+            flip.OnStart(() => DuelHero.Audio.SoundEffectPlayer.Play("battle.card.reveal"));
             var visibleFace = Visibility == EnemyCardVisibility.TypeOnly ? frontFace : backFace;
             flip.Append(visibleFace.transform.DOScaleX(0f, duration * .5f).SetEase(Ease.InQuad));
             flip.AppendCallback(() =>

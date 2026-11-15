@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Audio.SoundEffectCatalog
   entries:
   - id: card.reserve
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: 69606da5c1093e64a98758cc7423d475, type: 3}
     volume: 1
   - id: card.cancel
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: 5871f20dfa81a8343a0cdac5402a1652, type: 3}
     volume: 1
   - id: title.button.hover
     clip: {fileID: 8300000, guid: 052912a3deb6b894e9d77ccd78cf0778, type: 3}
@@ -41,7 +41,7 @@ MonoBehaviour:
     clip: {fileID: 8300000, guid: 69606da5c1093e64a98758cc7423d475, type: 3}
     volume: 1
   - id: battle.card.hover
-    clip: {fileID: 8300000, guid: 5871f20dfa81a8343a0cdac5402a1652, type: 3}
+    clip: {fileID: 8300000, guid: 92570111e4dbb524eb43efe426057016, type: 3}
     volume: 1
   - id: battle.card.reveal
     clip: {fileID: 8300000, guid: 92570111e4dbb524eb43efe426057016, type: 3}
