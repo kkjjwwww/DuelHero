@@ -124,13 +124,22 @@ public static class CardSheetImporter
                 attackStyle = r.TryGetValue("attackStyle", out var style) ? style.Trim() : existing?.attackStyle ?? "",
                 attackVfx = r.TryGetValue("attackVfx", out var attackVfx) ? attackVfx.Trim() : existing?.attackVfx ?? "",
                 hitVfx = r.TryGetValue("hitVfx", out var hitVfx) ? hitVfx.Trim() : existing?.hitVfx ?? "",
-                actionType = Required(r, "actionType"), rarity = Required(r, "rarity"), energyCost = Number(r, "energyCost"),
+                actionType = Required(r, "actionType"), rarity = Required(r, "rarity"),
+                energyCost = r["energyCost"] == "?" ? 0 : Number(r, "energyCost"),
+                spendsAllEnergy = r.TryGetValue("energyCostRule", out var rule) && rule == "allRemaining",
                 cooldownTurns = r.TryGetValue("cooldownTurns", out var cooldown) && !string.IsNullOrWhiteSpace(cooldown)
                     ? Number(r, "cooldownTurns") : 1,
                 keywordIds = r["keywordIds"].Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToArray(),
                 isObtainable = Boolean(r, "isObtainable"), isBasicAction = Boolean(r, "isBasicAction"), isStarterCard = Boolean(r, "isStarterCard")
             };
         }).ToArray();
+        foreach (var row in cardRows)
+        {
+            row.TryGetValue("energyCostRule", out var rule);
+            if ((row["energyCost"] == "?" && rule != "allRemaining") ||
+                (row["energyCost"] != "?" && !string.IsNullOrEmpty(rule)))
+                throw new FormatException($"{row["id"]}: invalid variable energyCost rule");
+        }
         var keywords = keywordRows.Select(r => new KeywordDefinition
         {
             id = Required(r, "id"), name = Required(r, "name"), description = Required(r, "description"),
@@ -187,9 +196,9 @@ public static class CardSheetImporter
                 Math.Abs((long)effect.rangeOffsets[0].x) + Math.Abs((long)effect.rangeOffsets[0].y) != 1))
                 throw new FormatException($"{effect.id}: move requires one cardinal unit offset");
             if (!new[] { "자신", "적" }.Contains(effect.targetType)) throw new FormatException($"{effect.id}: invalid targetType");
-            if (effect.effectType == "applyStatus" && (effect.value <= 0 || effect.durationSlots != 0 || effect.targetType != "적" ||
-                !statuses.Any(s => s.id == effect.statusId) || !effects.Any(hit => hit.cardId == effect.cardId && hit.id == effect.triggerEffectId &&
-                    hit.effectType == "damage" && hit.resolutionOrder < effect.resolutionOrder && hit.IsCounter == effect.IsCounter)))
+            if (effect.effectType == "applyStatus" && (effect.value <= 0 || effect.durationSlots != 0 || !statuses.Any(s => s.id == effect.statusId) ||
+                (effect.IsSelfStun ? !string.IsNullOrEmpty(effect.triggerEffectId) : effect.targetType != "적" || !effects.Any(hit => hit.cardId == effect.cardId && hit.id == effect.triggerEffectId &&
+                    hit.effectType == "damage" && hit.resolutionOrder < effect.resolutionOrder && hit.IsCounter == effect.IsCounter))))
                 throw new FormatException($"{effect.id}: invalid status or hit-effect reference");
         }
         foreach (var card in cards)

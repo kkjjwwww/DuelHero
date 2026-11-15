@@ -103,3 +103,6 @@ MonoBehaviour:
   - id: shop.enter
     clip: {fileID: 8300000, guid: 8b0f3aa077a39d242b20ffa516cb9d03, type: 3}
     volume: 1
+  - id: battle.execute.unavailable
+    clip: {fileID: 8300000, guid: 21b8586adc141a04289bfa60c98bb635, type: 3}
+    volume: 1

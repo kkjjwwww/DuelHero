@@ -25,7 +25,7 @@ namespace DuelHero.Cards
             return new CardDefinition
             {
                 id = card.id, name = card.name, description = card.description, actionType = card.actionType, attackStyle = card.attackStyle,
-                rarity = card.rarity, energyCost = card.energyCost, keywordIds = card.keywordIds, cooldownTurns = card.cooldownTurns,
+                rarity = card.rarity, energyCost = card.energyCost, spendsAllEnergy = card.spendsAllEnergy, keywordIds = card.keywordIds, cooldownTurns = card.cooldownTurns,
                 isObtainable = card.isObtainable, isBasicAction = card.isBasicAction, isStarterCard = card.isStarterCard,
                 attackVfx = card.attackVfx, hitVfx = card.hitVfx,
                 keywordParameters = card.keywordParameters, executionDirection = direction,

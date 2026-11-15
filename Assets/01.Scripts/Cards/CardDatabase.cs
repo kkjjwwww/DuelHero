@@ -13,6 +13,7 @@ namespace DuelHero.Cards
         public string statusId, triggerEffectId;
         public string triggerTiming;
         public string movementStyle, rangeBasis;
+        public bool IsSelfStun => effectType == "applyStatus" && targetType == "자신" && statusId == "stun" && !IsCounter;
         public bool IsDash => effectType == "move" && movementStyle == "dash";
         public bool IsLongJump => effectType == "move" && movementStyle == "longJump";
         public bool UsesMovementPath => rangeBasis == "movementPath";
@@ -37,6 +38,10 @@ namespace DuelHero.Cards
         public string attackVfx, hitVfx;
         [NonSerialized] public Vector2Int executionDirection;
         public int energyCost;
+        public bool spendsAllEnergy;
+        public int EnergyCostAt(int available) => spendsAllEnergy ? available : energyCost;
+        public string EnergyCostLabel => spendsAllEnergy ? "?" : energyCost.ToString();
+        public int SelfStun => effects?.Where(e => e.IsSelfStun).Sum(e => e.value) ?? 0;
         public int cooldownTurns = 1;
         public int EffectiveCooldownTurns => isBasicAction ? 0 : cooldownTurns;
         public string[] keywordIds;
@@ -105,7 +110,18 @@ namespace DuelHero.Cards
         public int AvailableFromRound { get; private set; } = 1;
         public CardInstance(CardDefinition definition) => Definition = definition;
         public int RemainingCooldown(int round) => Definition.isBasicAction ? 0 : Mathf.Max(0, AvailableFromRound - round);
-        public int RemainingPreparation(int round) => Mathf.Max(0, Definition.KeywordParameter("preparation") - (round - 1));
+        public int RemainingPreparation(int round)
+        {
+#if UNITY_EDITOR
+            if (preparationSkippedForDebug) return 0;
+#endif
+            return Mathf.Max(0, Definition.KeywordParameter("preparation") - (round - 1));
+        }
+#if UNITY_EDITOR
+        private bool preparationSkippedForDebug;
+        public void SkipPreparationForDebug() => preparationSkippedForDebug = true;
+        public void ResetCooldownForDebug() => AvailableFromRound = 1;
+#endif
         public int RemainingAvailabilityDelay(int round) => Mathf.Max(RemainingPreparation(round), RemainingCooldown(round));
         public bool IsExhausted { get; private set; }
         public bool CanReserve(int round) => !IsExhausted && ReservedSlot < 0 && RemainingAvailabilityDelay(round) == 0;

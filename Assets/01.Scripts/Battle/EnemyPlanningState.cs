@@ -15,6 +15,7 @@ namespace DuelHero.Battle
         internal int TargetHealth { get; private set; }
         internal int TotalEffectiveDamage { get; private set; }
         private int targetBleed;
+        internal int SelfStunRemaining { get; private set; }
         internal readonly List<Vector2Int> MovementPath = new();
         private GuardState actorGuard, targetGuard;
         internal int GuardAmount => actorGuard.Reduction;
@@ -24,8 +25,9 @@ namespace DuelHero.Battle
         { Position = position; Energy = energy; MaxEnergy = maxEnergy; Map = map; }
         private void Apply(EnemyPreparedAction action)
         {
-            if (action.EnergyCost < 0 || action.EnergyCost > Energy) throw new InvalidOperationException("적 AI 카드 비용이 부족합니다.");
-            Energy -= action.EnergyCost;
+            int cost = action.EnergyCostAt(Energy);
+            if (cost < 0 || cost > Energy) throw new InvalidOperationException("적 AI 카드 비용이 부족합니다.");
+            Energy -= cost;
             Position = action.MoveFrom(Position, Map, action.HasPathDamage ? MovementPath : null);
             for (int i = 0; i < action.Effects.Length; i++)
             {
@@ -40,6 +42,7 @@ namespace DuelHero.Battle
             MaxEnergy = context.State.MaxEnergy; Map = context.State.Map;
             TargetHealth = context.TargetUnit.Health; TotalEffectiveDamage = 0;
             targetBleed = context.TargetUnit.Bleed;
+            SelfStunRemaining = context.Actor.Stun;
             actorGuard ??= new GuardState(); targetGuard ??= new GuardState();
             actorGuard.Reset(context.Actor.GuardEffects); targetGuard.Reset(context.TargetUnit.GuardEffects);
         }
@@ -49,6 +52,7 @@ namespace DuelHero.Battle
             Position = source.Position; Energy = source.Energy; MaxEnergy = source.MaxEnergy; Map = source.Map;
             TargetHealth = source.TargetHealth; TotalEffectiveDamage = source.TotalEffectiveDamage;
             targetBleed = source.targetBleed;
+            SelfStunRemaining = source.SelfStunRemaining;
         }
 
         // Value-only candidate preview. With the currently supported effects, all damage targets
@@ -56,12 +60,13 @@ namespace DuelHero.Battle
         // current-slot HP loss; only the chosen action advances the shield layers.
         internal int PreviewAction(EnemyDecisionContext context, EnemyPreparedAction action, EnemyPlanningState source)
         {
+            int cost = action.EnergyCostAt(Energy);
             Apply(action);
             long guard = source.GuardAmount;
             for (int i = 0; i < action.Effects.Length; i++)
                 if (action.Effects[i].effectType == "guard" && !action.Effects[i].IsCounter) guard += action.Effects[i].value;
             PreviewGuard = (int)Math.Min(int.MaxValue, guard);
-            int raw = action.RawDamage(Position, context.Target, targetBleed, MovementPath);
+            int raw = action.RawDamage(Position, context.Target, targetBleed, MovementPath, cost);
             int damage = Math.Min(TargetHealth, Math.Max(0, raw - source.targetGuard.Reduction));
             TargetHealth -= damage; TotalEffectiveDamage += damage;
             targetBleed += action.AppliedBleed(Position, context.Target, MovementPath);
@@ -73,11 +78,19 @@ namespace DuelHero.Battle
         // a value type: search does not allocate a per-slot record or mutate the input context.
         internal EnemyActionSimulation Step(EnemyDecisionContext context, EnemyPlannedAction action, int slot)
         {
+            if (SelfStunRemaining > 0)
+            {
+                SelfStunRemaining--;
+                if (!StunCard.IsStun(action.Card.Definition))
+                    action = new EnemyPlannedAction(new CardInstance(StunCard.Definition), Vector2Int.right);
+            }
             var prepared = context.GetPreparedAction(action);
             var positionBefore = Position;
             int energyBefore = Energy, guardBefore = actorGuard.Reduction;
             int healthBefore = TargetHealth, targetGuardBefore = targetGuard.Reduction;
+            int cost = prepared.EnergyCostAt(Energy);
             Apply(prepared);
+            SelfStunRemaining += prepared.SelfStun;
             for (int i = 0; i < prepared.Effects.Length; i++)
             {
                 var effect = prepared.Effects[i];
@@ -88,7 +101,7 @@ namespace DuelHero.Battle
             {
                 var effect = prepared.Effects[i];
                 if (effect.effectType != "damage" || effect.IsCounter || !prepared.Hits(effect, Position, context.Target, MovementPath)) continue;
-                int value = effect.value + (effect.statusId == "bleed" ? targetBleed * effect.statusMultiplier : 0);
+                int value = prepared.BaseDamage(effect, cost) + (effect.statusId == "bleed" ? targetBleed * effect.statusMultiplier : 0);
                 raw += value;
                 int damage = targetGuard.ReduceDamage(value);
                 absorbed += value - damage;
@@ -102,7 +115,7 @@ namespace DuelHero.Battle
             int guardDuring = actorGuard.Reduction;
             actorGuard.EndSlot(); targetGuard.EndSlot(); TotalEffectiveDamage += effective - bleedDamage;
             return new EnemyActionSimulation(slot, action, positionBefore, Position,
-                energyBefore, energyBefore - prepared.EnergyCost, Energy,
+                energyBefore, energyBefore - cost, Energy,
                 raw, absorbed, effective, healthBefore, TargetHealth, guardBefore, guardDuring, actorGuard.Reduction,
                 targetGuardBefore, targetGuard.Reduction);
         }

@@ -22,8 +22,10 @@ namespace DuelHero.Battle
             var selected = new HashSet<CardInstance>();
             var result = new CardDefinition[3];
             int energy = stats.Energy;
+            int stun = stats.Stun;
             for (int slot = 0; slot < 3; slot++)
             {
+                if (stun > 0) { stun--; result[slot] = StunCard.Definition; continue; }
                 string id = slot < cardIds.Length ? cardIds[slot] : null;
                 if (string.IsNullOrEmpty(id)) continue;
                 if (!instances.TryGetValue(id, out var instance))
@@ -35,7 +37,8 @@ namespace DuelHero.Battle
                 if (!instance.CanReserve(round) || selected.Contains(instance) || energy < instance.Definition.energyCost) continue;
                 selected.Add(instance);
                 activePlan[slot] = instance; result[slot] = CardDirectionRules.ForExecution(instance.Definition, Vector2Int.left);
-                energy -= instance.Definition.energyCost;
+                energy -= instance.Definition.EnergyCostAt(energy);
+                stun = instance.Definition.SelfStun;
                 foreach (var effect in instance.Definition.effects.OrderBy(e => e.resolutionOrder))
                     if (effect.effectType == "energyRestore" && effect.targetType == "자신")
                         energy += Math.Min(effect.value, stats.MaxEnergy - energy);

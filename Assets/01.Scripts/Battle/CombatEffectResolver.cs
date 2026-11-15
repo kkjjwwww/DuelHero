@@ -61,11 +61,12 @@ namespace DuelHero.Battle
             public readonly string ActorId, CardId;
             public readonly CardEffectDefinition Effect;
             public readonly CardDefinition Card;
+            public readonly int? DamageOverride;
             public readonly IReadOnlyList<Vector2Int> MovementPath;
             public AttackRequest(string actorId, string cardId, CardEffectDefinition effect)
             { ActorId = actorId; CardId = cardId; Effect = effect; }
-            public AttackRequest(string actorId, CardDefinition card, CardEffectDefinition effect, IReadOnlyList<Vector2Int> movementPath = null)
-                : this(actorId, card.id, effect) { Card = card; MovementPath = movementPath; }
+            public AttackRequest(string actorId, CardDefinition card, CardEffectDefinition effect, IReadOnlyList<Vector2Int> movementPath = null, int? damageOverride = null)
+                : this(actorId, card.id, effect) { Card = card; MovementPath = movementPath; DamageOverride = damageOverride; }
         }
         public sealed class DamageBatch
         {
@@ -160,11 +161,12 @@ namespace DuelHero.Battle
                         target.stats.Health <= 0 || !range.Contains(target.movement.GridPosition) || !hit.Add(target.stats)) continue;
 
                     if (!remainingGuard.TryGetValue(target.stats, out int shield)) shield = target.stats.GuardReduction;
-                    int raw = checked(effect.value + (effect.statusId == "bleed" ? target.stats.Bleed * effect.statusMultiplier : 0));
+                    int baseDamage = attack.DamageOverride ?? effect.value;
+                    int raw = checked(baseDamage + (effect.statusId == "bleed" ? target.stats.Bleed * effect.statusMultiplier : 0));
                     int amount = DamageAfterGuard(raw, shield);
                     remainingGuard[target.stats] = shield - (raw - amount);
                     batch.Hits.Add(new PendingDamage { Target = target.stats, Amount = amount, Reduced = raw - amount, HitVfx = attack.Card?.hitVfx,
-                        DamageWithoutBleed = DamageAfterGuard(effect.value, shield),
+                        DamageWithoutBleed = DamageAfterGuard(baseDamage, shield),
                         ActorId = attack.ActorId, CardId = attack.CardId, TargetId = target.id, Round = round,
                         From = actor.movement.GridPosition, To = target.movement.GridPosition,
                         Stun = attack.Card?.effects.Where(e => e.effectType == "applyStatus" && e.statusId == "stun" &&

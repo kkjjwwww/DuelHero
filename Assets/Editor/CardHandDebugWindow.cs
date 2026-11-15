@@ -77,9 +77,37 @@ namespace DuelHero.EditorTools
             DrawEnemyReservation(turn);
             EditorGUILayout.Space(12);
             DrawCards(deck, queue, deckList, editable);
+            DrawCardTimers(deck, queue.CurrentRound, editable && turn != null && turn.CanEditForDebug);
             EditorGUILayout.Space(12);
             DrawStats(queue.UnitStats, editable);
             if (!editable) EditorGUILayout.HelpBox("행동 실행 및 복원 중에는 조작할 수 없습니다.", MessageType.Info);
+        }
+
+        private void DrawCardTimers(PlayerDeck deck, int round, bool editable)
+        {
+            EditorGUILayout.Space(12);
+            EditorGUILayout.LabelField("보유 카드 대기시간", EditorStyles.boldLabel);
+            for (int i = 0; i < deck.Cards.Count; i++)
+            {
+                var card = deck.Cards[i];
+                if (card.IsExhausted) continue;
+                int preparation = card.RemainingPreparation(round);
+                int cooldown = card.RemainingCooldown(round);
+                using var row = new EditorGUILayout.HorizontalScope();
+                EditorGUILayout.LabelField($"{i + 1}. {card.Definition.name}");
+                using (new EditorGUI.DisabledScope(!editable || preparation == 0))
+                    if (GUILayout.Button($"준비 건너뛰기 ({preparation}턴)"))
+                    {
+                        card.SkipPreparationForDebug();
+                        deck.NotifyStateChanged();
+                    }
+                using (new EditorGUI.DisabledScope(!editable || cooldown == 0))
+                    if (GUILayout.Button($"쿨다운 초기화 ({cooldown}턴)"))
+                    {
+                        card.ResetCooldownForDebug();
+                        deck.NotifyStateChanged();
+                    }
+            }
         }
 
         private void DrawEnemyChange(BattleTurnController turn)

@@ -106,7 +106,7 @@ namespace DuelHero.Cards
             var artwork = cardIllustrations.FirstOrDefault(entry => entry.cardId == card.id);
             SetIllustration(isEnemy ? artwork.enemySprite : artwork.sprite);
             nameLabel.text = card.name;
-            energyLabel.text = card.energyCost.ToString();
+            energyLabel.text = card.EnergyCostLabel;
             energyLabel.transform.parent.gameObject.SetActive(!StunCard.IsStun(card));
             string body = card.ResolvedDescription(FormatEffectValue, turns => $"[{CooldownLinkId}]");
             HashSet<string> ids = new HashSet<string>(card.keywordIds ?? Array.Empty<string>());
@@ -131,6 +131,7 @@ namespace DuelHero.Cards
                     description = "<color=#FFFFFF>이 카드를 사용하면 다음 " +
                         $"<color=#999999>{card.EffectiveCooldownTurns}</color>턴 동안 재사용 할 수 없다.</color>"
                 };
+            if (preparationTurns > 0) body = body.Replace($"[준비{preparationTurns}]", "[준비]");
             descriptionLabel.text = KeywordToken.Replace(body, match =>
                 linkedKeywords.TryGetValue(match.Groups[1].Value, out var keyword)
                     ? keyword.id == CooldownLinkId

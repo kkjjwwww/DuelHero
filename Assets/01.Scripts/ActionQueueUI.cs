@@ -36,6 +36,7 @@ public class ActionQueueUI : MonoBehaviour
     private CardReservationOutline nextTurnOutline;
     private CanvasGroup nextTurnOutlineGroup;
     private Text executeButtonLabel;
+    private DuelHero.Cards.DisabledExecuteSound disabledExecuteSound;
     private readonly List<UnityEngine.Events.UnityAction> cancelListeners = new();
     private readonly List<Button> reservationButtons = new();
     public bool UsesCardReservations => reservationQueue != null;
@@ -46,6 +47,12 @@ public class ActionQueueUI : MonoBehaviour
     }
     private void OnEnable()
     {
+        if (executeButton != null)
+        {
+            disabledExecuteSound = executeButton.GetComponent<DuelHero.Cards.DisabledExecuteSound>();
+            if (disabledExecuteSound == null) disabledExecuteSound = executeButton.gameObject.AddComponent<DuelHero.Cards.DisabledExecuteSound>();
+            disabledExecuteSound.enabled = true;
+        }
         if (executeButton != null) executeButton.interactable = false;
         if (reservationQueue == null) return;
         reservationQueue.Changed += RefreshCards;
@@ -66,6 +73,7 @@ public class ActionQueueUI : MonoBehaviour
     }
     private void OnDisable()
     {
+        if (disabledExecuteSound != null) disabledExecuteSound.enabled = false;
         HideSlotInspection();
         if (keywordTooltip != null) keywordTooltip.Hide();
         if (reservationQueue != null) reservationQueue.Changed -= RefreshCards;

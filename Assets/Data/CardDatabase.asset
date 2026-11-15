@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: CardDatabase
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Cards.CardDatabase
   sourceSpreadsheetId: 1pspfXZtUhTmSc9ZTL1iTzQDeBgvfbb_wqwCNs83EFQE
-  importedAtUtc: 2026-11-14T15:00:10.4771727Z
+  importedAtUtc: 2026-11-15T16:49:58.4886704Z
   cards:
   - id: move_up_001
     name: "\uC704 \uC774\uB3D9"
@@ -24,6 +24,7 @@ MonoBehaviour:
     attackVfx: 
     hitVfx: 
     energyCost: 0
+    spendsAllEnergy: 0
     cooldownTurns: 0
     keywordIds: []
     isObtainable: 0
@@ -55,6 +56,7 @@ MonoBehaviour:
     attackVfx: 
     hitVfx: 
     energyCost: 0
+    spendsAllEnergy: 0
     cooldownTurns: 0
     keywordIds: []
     isObtainable: 0
@@ -86,6 +88,7 @@ MonoBehaviour:
     attackVfx: 
     hitVfx: 
     energyCost: 0
+    spendsAllEnergy: 0
     cooldownTurns: 0
     keywordIds: []
     isObtainable: 0
@@ -117,6 +120,7 @@ MonoBehaviour:
     attackVfx: 
     hitVfx: 
     energyCost: 0
+    spendsAllEnergy: 0
     cooldownTurns: 0
     keywordIds: []
     isObtainable: 0
@@ -149,6 +153,7 @@ MonoBehaviour:
     attackVfx: 
     hitVfx: 
     energyCost: 0
+    spendsAllEnergy: 0
     cooldownTurns: 0
     keywordIds: []
     isObtainable: 0
@@ -180,6 +185,7 @@ MonoBehaviour:
     attackVfx: 
     hitVfx: 
     energyCost: 0
+    spendsAllEnergy: 0
     cooldownTurns: 0
     keywordIds: []
     isObtainable: 0
@@ -212,6 +218,7 @@ MonoBehaviour:
     attackVfx: 
     hitVfx: 
     energyCost: 10
+    spendsAllEnergy: 0
     cooldownTurns: 1
     keywordIds:
     - direction_select
@@ -246,6 +253,7 @@ MonoBehaviour:
     attackVfx: thrust
     hitVfx: 
     energyCost: 15
+    spendsAllEnergy: 0
     cooldownTurns: 1
     keywordIds:
     - direction_select
@@ -281,6 +289,7 @@ MonoBehaviour:
     attackVfx: sweep
     hitVfx: 
     energyCost: 20
+    spendsAllEnergy: 0
     cooldownTurns: 1
     keywordIds:
     - direction_select
@@ -317,6 +326,7 @@ MonoBehaviour:
     attackVfx: 
     hitVfx: head_crush
     energyCost: 20
+    spendsAllEnergy: 0
     cooldownTurns: 2
     keywordIds:
     - direction_select
@@ -366,6 +376,7 @@ MonoBehaviour:
     attackVfx: 
     hitVfx: 
     energyCost: 15
+    spendsAllEnergy: 0
     cooldownTurns: 1
     keywordIds:
     - direction_select
@@ -416,6 +427,7 @@ MonoBehaviour:
     attackVfx: 
     hitVfx: 
     energyCost: 20
+    spendsAllEnergy: 0
     cooldownTurns: 2
     keywordIds:
     - direction_select
@@ -468,6 +480,7 @@ MonoBehaviour:
     attackVfx: 
     hitVfx: tear_wound
     energyCost: 25
+    spendsAllEnergy: 0
     cooldownTurns: 2
     keywordIds:
     - direction_select
@@ -504,6 +517,7 @@ MonoBehaviour:
     attackVfx: dash_slash
     hitVfx: 
     energyCost: 25
+    spendsAllEnergy: 0
     cooldownTurns: 2
     keywordIds:
     - direction_select
@@ -554,6 +568,7 @@ MonoBehaviour:
     attackVfx: 
     hitVfx: 
     energyCost: 20
+    spendsAllEnergy: 0
     cooldownTurns: 2
     keywordIds:
     - direction_select
@@ -602,6 +617,7 @@ MonoBehaviour:
     attackVfx: thorn_throw
     hitVfx: thorn_impact
     energyCost: 20
+    spendsAllEnergy: 0
     cooldownTurns: 1
     keywordIds:
     - direction_select
@@ -652,6 +668,7 @@ MonoBehaviour:
     attackVfx: rift_charge
     hitVfx: 
     energyCost: 30
+    spendsAllEnergy: 0
     cooldownTurns: 2
     keywordIds:
     - direction_select
@@ -705,6 +722,7 @@ MonoBehaviour:
     attackVfx: whirlwind
     hitVfx: 
     energyCost: 25
+    spendsAllEnergy: 0
     cooldownTurns: 2
     keywordIds: []
     isObtainable: 1
@@ -745,6 +763,7 @@ MonoBehaviour:
     attackVfx: 
     hitVfx: 
     energyCost: 10
+    spendsAllEnergy: 0
     cooldownTurns: 2
     keywordIds:
     - direction_select
@@ -777,6 +796,7 @@ MonoBehaviour:
     attackVfx: 
     hitVfx: 
     energyCost: 0
+    spendsAllEnergy: 0
     cooldownTurns: 1
     keywordIds:
     - exhaust
@@ -810,6 +830,7 @@ MonoBehaviour:
     attackVfx: 
     hitVfx: 
     energyCost: 10
+    spendsAllEnergy: 0
     cooldownTurns: 1
     keywordIds: []
     isObtainable: 1
@@ -832,6 +853,68 @@ MonoBehaviour:
       rangeOffsets:
       - {x: 0, y: 0}
     keywordParameters: []
+  - id: energy_release_001
+    name: "\uC5D0\uB108\uC9C0 \uBC29\uCD9C"
+    description: "[\uC900\uBE443][\uC18C\uBA78] \uB0A8\uC740 \uC5D0\uB108\uC9C0\uB97C
+      \uBAA8\uB450 \uC18C\uBAA8\uD55C\uB2E4. \uC18C\uBAA8\uD55C \uC5D0\uB108\uC9C0\uB9CC\uD07C
+      \uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574\uB97C \uC785\uD78C\uB2E4.
+      \uC790\uC2E0\uC5D0\uAC8C [\uAE30\uC808]\uC744 2 \uBD80\uC5EC\uD55C\uB2E4."
+    actionType: "\uACF5\uACA9"
+    rarity: "\uC804\uC124"
+    attackStyle: 
+    attackVfx: 
+    hitVfx: 
+    energyCost: 0
+    spendsAllEnergy: 1
+    cooldownTurns: 0
+    keywordIds:
+    - preparation
+    - exhaust
+    - stun
+    isObtainable: 1
+    isBasicAction: 0
+    isStarterCard: 0
+    effects:
+    - id: energy_release_001_damage
+      cardId: energy_release_001
+      effectType: damage
+      targetType: "\uC801"
+      statusId: 
+      triggerEffectId: 
+      triggerTiming: action
+      movementStyle: 
+      rangeBasis: 
+      statusMultiplier: 0
+      resolutionOrder: 1
+      value: 0
+      durationSlots: 0
+      rangeOffsets:
+      - {x: -1, y: -1}
+      - {x: 0, y: -1}
+      - {x: 1, y: -1}
+      - {x: -1, y: 0}
+      - {x: 0, y: 0}
+      - {x: 1, y: 0}
+      - {x: -1, y: 1}
+      - {x: 0, y: 1}
+      - {x: 1, y: 1}
+    - id: energy_release_001_self_stun
+      cardId: energy_release_001
+      effectType: applyStatus
+      targetType: "\uC790\uC2E0"
+      statusId: stun
+      triggerEffectId: 
+      triggerTiming: action
+      movementStyle: 
+      rangeBasis: 
+      statusMultiplier: 0
+      resolutionOrder: 2
+      value: 2
+      durationSlots: 0
+      rangeOffsets: []
+    keywordParameters:
+    - keywordId: preparation
+      value: 3
   keywords:
   - id: direction_select
     name: "\uBC29\uD5A5\uC9C0\uC815"

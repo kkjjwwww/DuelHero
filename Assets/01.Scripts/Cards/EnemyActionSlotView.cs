@@ -57,7 +57,7 @@ namespace DuelHero.Cards
             Visibility = EnemyCardVisibility.Hidden;
             IsExecuting = IsCompleted = false;
             nameLabel.text = card?.name ?? "대기";
-            costLabel.text = card == null ? "" : $"에너지 {card.energyCost}";
+            costLabel.text = card == null ? "" : $"에너지 {card.EnergyCostLabel}";
             effectLabel.text = card?.ResolvedDescription() ?? "";
             BindCardFront();
             RefreshAppearance();

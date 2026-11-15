@@ -66,7 +66,7 @@ namespace DuelHero.Battle
             EnemyActionScore prefix = default;
             for (int slot = 0; slot < plan.Length; slot++)
             {
-                if (slot < context.Actor.Stun)
+                if (state.SelfStunRemaining > 0)
                 {
                     plan[slot] = new EnemyPlannedAction(new CardInstance(StunCard.Definition), Vector2Int.right);
                     prefix = AddForcedRisk(context, prefix);
@@ -98,7 +98,7 @@ namespace DuelHero.Battle
                         if (prepared.HasMovement && preview.Position == state.Position &&
                             Array.TrueForAll(prepared.Effects, effect => effect.effectType == "move"))
                             continue;
-                        float burden = attackBurden + (prepared.HasDamage ? evaluator.AttackCostPenalty(prepared.EnergyCost, state.Energy) * style.Preparation : 0);
+                        float burden = attackBurden + (prepared.HasDamage ? evaluator.AttackCostPenalty(prepared.EnergyCostAt(state.Energy), state.Energy) * style.Preparation : 0);
                         plan[slot] = action;
                         bool revisited = false;
                         for (int i = 0; i <= slot; i++)

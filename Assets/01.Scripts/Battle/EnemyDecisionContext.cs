@@ -55,7 +55,7 @@ namespace DuelHero.Battle
                             {
                                 var cell = effect.UsesMovementPath ? attackPath[o] : action.AttackCell(origin, effect.rangeOffsets[o]);
                                 if (!state.Map.CanEnter(cell)) continue;
-                                int damage = action.RawDamage(origin, cell, actor.Bleed, attackPath);
+                                int damage = action.RawDamage(origin, cell, actor.Bleed, attackPath, action.EnergyCostAt(targetUnit.Energy));
                                 if (damage > RiskAt(cell)) risks[cell] = damage;
                             }
                         }

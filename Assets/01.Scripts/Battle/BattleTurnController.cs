@@ -178,7 +178,9 @@ namespace DuelHero.Battle
                 bool enemyStunned = enemyStats.ConsumeStunSlot();
                 var pc = playerStunned ? StunCard.Definition : playerCards[slot];
                 var ec = enemyStunned ? StunCard.Definition : enemyCards[slot];
-                if (playerStats.Energy < (pc?.energyCost ?? 0) || enemyStats.Energy < (ec?.energyCost ?? 0))
+                int playerCost = pc?.EnergyCostAt(playerStats.Energy) ?? 0;
+                int enemyCost = ec?.EnergyCostAt(enemyStats.Energy) ?? 0;
+                if (playerStats.Energy < playerCost || enemyStats.Energy < enemyCost)
                 { LastError = "실행 중 에너지가 부족해졌습니다."; FinishExecution(); yield break; }
                 SlotPresenting?.Invoke(slot);
                 if (cardPresentationDuration > 0f) yield return new WaitForSeconds(cardPresentationDuration);
@@ -186,7 +188,7 @@ namespace DuelHero.Battle
                 if (enemyCardRevealDuration > 0f) yield return new WaitForSeconds(enemyCardRevealDuration);
                 if (postRevealDelay > 0f) yield return new WaitForSeconds(postRevealDelay);
                 SlotStarted?.Invoke(slot);
-                playerStats.TrySpendEnergy(pc?.energyCost ?? 0); enemyStats.TrySpendEnergy(ec?.energyCost ?? 0);
+                playerStats.TrySpendEnergy(playerCost); enemyStats.TrySpendEnergy(enemyCost);
                 if (pc != null && !StunCard.IsStun(pc)) Publish(BattleActionKind.CardExecuted, playerId, pc.id);
                 if (ec != null && !StunCard.IsStun(ec)) Publish(BattleActionKind.CardExecuted, enemyId, ec.id);
                 var playerPath = new List<Vector2Int> { playerMovement.GridPosition };
@@ -197,8 +199,8 @@ namespace DuelHero.Battle
                     enemyJumpPresentation, unitVisualPlacement, attack: enemyAttackPresentation, movementPath: enemyPath);
 
                 var attacks = new List<CombatEffectResolver.AttackRequest>();
-                AddAttacks(attacks, playerId, pc, movementPath: playerPath);
-                AddAttacks(attacks, enemyId, ec, movementPath: enemyPath);
+                AddAttacks(attacks, playerId, pc, movementPath: playerPath, spentEnergy: playerCost);
+                AddAttacks(attacks, enemyId, ec, movementPath: enemyPath, spentEnergy: enemyCost);
 
                 // Each actor returns to idle before the next actor starts. Damage remains simultaneous.
                 if (playerAttackPresentation != null && !HasDash(pc) && attacks.Any(a => a.ActorId == playerId))
@@ -253,6 +255,8 @@ namespace DuelHero.Battle
                     effects.CancelPreparationPresentation(playerId, unitVisualPlacement);
                     effects.CancelPreparationPresentation(enemyId, unitVisualPlacement);
                 }
+                if (pc?.SelfStun > 0) playerStats.ApplyStun(pc.SelfStun);
+                if (ec?.SelfStun > 0) enemyStats.ApplyStun(ec.SelfStun);
                 playerQueue.BlockFutureSlots(slot + 1, playerStats.Stun);
                 for (int future = slot + 1; future < Math.Min(3, slot + 1 + enemyStats.Stun); future++)
                 {
@@ -429,12 +433,12 @@ namespace DuelHero.Battle
         private static bool CanCounter(string actor, CardDefinition card, UnitStats stats, CombatEffectResolver.DamageBatch directDamage) =>
             stats.Health > 0 && card != null && card.effects.Any(effect => effect.IsCounter) && directDamage.WasHit(actor);
 
-        private static void AddAttacks(List<CombatEffectResolver.AttackRequest> requests, string actor, CardDefinition card, bool counter = false, IReadOnlyList<Vector2Int> movementPath = null)
+        private static void AddAttacks(List<CombatEffectResolver.AttackRequest> requests, string actor, CardDefinition card, bool counter = false, IReadOnlyList<Vector2Int> movementPath = null, int spentEnergy = 0)
         {
             if (card == null) return;
             foreach (var effect in card.effects.OrderBy(e => e.resolutionOrder))
             {
-                if (effect.effectType == "damage" && effect.IsCounter == counter) requests.Add(new CombatEffectResolver.AttackRequest(actor, card, effect, movementPath));
+                if (effect.effectType == "damage" && effect.IsCounter == counter) requests.Add(new CombatEffectResolver.AttackRequest(actor, card, effect, movementPath, card.spendsAllEnergy ? spentEnergy : (int?)null));
 
             }
         }

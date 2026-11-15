@@ -19,16 +19,20 @@ namespace DuelHero.Cards
             reason = null;
             if (currentEnergy < 0 || maxEnergy < currentEnergy) { reason = "에너지 상태가 올바르지 않습니다."; return false; }
             int energy = currentEnergy;
+            int stun = 0;
             for (int i = 0; i < cards.Count; i++)
             {
                 var card = cards[i].Definition;
+                if (stun > 0) { stun--; continue; }
+                int cost = card.EnergyCostAt(energy);
                 if (card.energyCost < 0) { reason = "카드 비용이 올바르지 않습니다."; return false; }
-                if (!TryPayCost(energy, card.energyCost, out int remaining))
+                if (!TryPayCost(energy, cost, out int remaining))
                 {
-                    reason = $"슬롯 {i + 1}: 에너지 부족 ({energy}/{card.energyCost})";
+                    reason = $"슬롯 {i + 1}: 에너지 부족 ({energy}/{cost})";
                     return false;
                 }
                 energy = remaining;
+                stun = card.SelfStun;
                 if (card.effects == null) continue;
                 foreach (var effect in card.effects.OrderBy(e => e.resolutionOrder))
                 {

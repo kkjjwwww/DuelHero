@@ -28,3 +28,6 @@
 "flash_step_001_effect_01","flash_step_001","1","move","2","0","(1,0)","자신","","","action","0","longJump","",""
 "qi_breathing_001_effect_01","qi_breathing_001","1","energyRestore","40","0","(0,0)","자신","","","action","0","","",""
 "shield_deploy_001_effect_01","shield_deploy_001","1","guard","20","1","(0,0)","자신","","","action","0","","",""
+"energy_release_001_damage","energy_release_001","1","damage","0","0","(-1,-1);(0,-1);(1,-1);(-1,0);(0,0);(1,0);(-1,1);(0,1);(1,1)","적","","","action","","","",""
+"energy_release_001_self_stun","energy_release_001","2","applyStatus","2","0","","자신","stun","","action","","","",""
+"energy_release_001_preparation","energy_release_001","","keywordParameter","3","","","","","","","","","","preparation"

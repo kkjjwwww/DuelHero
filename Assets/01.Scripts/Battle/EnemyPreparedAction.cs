@@ -11,7 +11,9 @@ namespace DuelHero.Battle
         private readonly Vector2Int direction;
         private CardDefinition executionCard;
         public CardDefinition ExecutionCard => executionCard ??= CardDirectionRules.ForExecution(definition, direction);
-        public int EnergyCost => definition.energyCost;
+        public int EnergyCostAt(int energy) => definition.EnergyCostAt(energy);
+        internal int SelfStun => definition.SelfStun;
+        internal int BaseDamage(CardEffectDefinition effect, int spentEnergy) => definition.spendsAllEnergy ? spentEnergy : effect.value;
         // Source coordinates are shared across directions; only the final execution card
         // materializes rotated effect arrays. Prediction rotates range checks without allocations.
         internal readonly CardEffectDefinition[] Effects;
@@ -82,7 +84,7 @@ namespace DuelHero.Battle
             return false;
         }
 
-        internal int RawDamage(Vector2Int origin, Vector2Int target, int bleed = 0, IReadOnlyList<Vector2Int> path = null)
+        internal int RawDamage(Vector2Int origin, Vector2Int target, int bleed = 0, IReadOnlyList<Vector2Int> path = null, int spentEnergy = 0)
         {
             int damage = 0;
             if (!HasDamage) return damage;
@@ -90,7 +92,7 @@ namespace DuelHero.Battle
             {
                 var effect = Effects[i];
                 if (effect.effectType == "damage" && !effect.IsCounter && Hits(effect, origin, target, path))
-                    damage += effect.value + (effect.statusId == "bleed" ? bleed * effect.statusMultiplier : 0);
+                    damage += BaseDamage(effect, spentEnergy) + (effect.statusId == "bleed" ? bleed * effect.statusMultiplier : 0);
             }
             return damage;
         }

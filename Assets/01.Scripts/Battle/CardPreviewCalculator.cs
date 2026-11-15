@@ -88,6 +88,7 @@ namespace DuelHero.Battle
             var plannedGuard = new GuardState();
             int guardGain = 0;
             bool blocked = false;
+            int stun = 0;
             for (int slot = 0; slot < requests.Count; slot++)
             {
                 var request = requests[slot];
@@ -97,12 +98,16 @@ namespace DuelHero.Battle
                 int before = energy, afterCost = energy;
                 var path = new List<Vector2Int> { start };
                 var attacks = new HashSet<Vector2Int>();
-                var status = blocked ? CardPreviewStatus.BlockedByEarlierCard : CardPreviewStatus.Ready;
-                if (!blocked && !CardEnergyRules.TryPayCost(energy, card.energyCost, out afterCost))
+                bool stunned = stun > 0;
+                if (stunned) stun--;
+                int cost = stunned ? 0 : card.EnergyCostAt(energy);
+                var status = blocked || stunned ? CardPreviewStatus.BlockedByEarlierCard : CardPreviewStatus.Ready;
+                if (status == CardPreviewStatus.Ready && !CardEnergyRules.TryPayCost(energy, cost, out afterCost))
                 { status = CardPreviewStatus.InsufficientEnergy; blocked = true; }
                 if (status == CardPreviewStatus.Ready)
                 {
                     energy = afterCost;
+                    stun = card.SelfStun;
                     // Matches BattleTurnController: all preparation, then damage from the final position.
                     foreach (var effect in card.effects.Where(e => !e.IsCounter).OrderBy(e => e.resolutionOrder))
                     {
@@ -128,7 +133,7 @@ namespace DuelHero.Battle
                 // Show the peak planned shield during a slot, not the expired value at turn end.
                 guardGain = Math.Max(guardGain, plannedGuard.Reduction);
                 results.Add(new CardPreviewResult(card.id, slot, status, start, position, path, attacks,
-                    before, afterCost, energy, card.energyCost, initial.MaxEnergy, guardGain));
+                    before, afterCost, energy, cost, initial.MaxEnergy, guardGain));
                 plannedGuard.EndSlot();
             }
             return results.AsReadOnly();

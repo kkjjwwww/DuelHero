@@ -1,4 +1,4 @@
-"id","name","description","actionType","energyCost","keywordIds","rarity","isObtainable","isBasicAction","isStarterCard","cooldownTurns"
+"id","name","description","actionType","energyCost","keywordIds","rarity","isObtainable","isBasicAction","isStarterCard","cooldownTurns","energyCostRule"
 "move_up_001","위 이동","위로 {effect1.value}칸 이동한다.","이동","0","","일반","FALSE","TRUE","TRUE","0"
 "move_down_001","아래 이동","아래로 {effect1.value}칸 이동한다.","이동","0","","일반","FALSE","TRUE","TRUE","0"
 "move_left_001","왼쪽 이동","왼쪽으로 {effect1.value}칸 이동한다.","이동","0","","일반","FALSE","TRUE","TRUE","0"
@@ -36,3 +36,4 @@
 [소멸][{cooldownTurns}턴]","회복","0","exhaust","일반","TRUE","FALSE","FALSE","1"
 "shield_deploy_001","방패전개","{effect1.durationSlots}개 슬롯 동안 보호막을 {effect1.value} 얻는다.
 [{cooldownTurns}턴]","방어","10","","일반","TRUE","FALSE","FALSE","1"
+"energy_release_001","에너지 방출","[준비3][소멸] 남은 에너지를 모두 소모한다. 소모한 에너지만큼 범위 내 모든 적에게 피해를 입힌다. 자신에게 [기절]을 2 부여한다.","공격","?","preparation;exhaust;stun","전설","TRUE","FALSE","FALSE","0","allRemaining"
