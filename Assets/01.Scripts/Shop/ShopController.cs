@@ -82,6 +82,7 @@ namespace DuelHero.Shop
         }
         private void Start()
         {
+            DuelHero.Audio.SoundEffectPlayer.Play("shop.enter");
             var canvas = GetComponentInParent<Canvas>().rootCanvas;
             if (artifactOutlineMaterial != null)
                 canvas.additionalShaderChannels |= AdditionalCanvasShaderChannels.TexCoord1;
@@ -151,6 +152,14 @@ namespace DuelHero.Shop
                 scale.gameObject.SetActive(true);
                 hoverEffects.Add(scale);
                 card.SetClickAction(() => Buy(index));
+                var unavailableClick = card.gameObject.AddComponent<ShopUnavailableCardClick>();
+                unavailableClick.IsUnavailable = () => index >= 0 && index < offers.Count && offers[index].Sold;
+                unavailableClick.Clicked = () =>
+                {
+                    if (!transitioning && !completed && !IsDeckOpen && IsCurrent &&
+                        run.PendingShopNodeId == nodeId && index >= 0 && index < offers.Count && offers[index].Sold)
+                        DuelHero.Audio.SoundEffectPlayer.Play("shop.card.unavailable");
+                };
                 var hover = card.gameObject.GetComponent<CardHoverInfo>() ?? card.gameObject.AddComponent<CardHoverInfo>();
                 hover.ShowInfo = () =>
                 {
@@ -220,6 +229,14 @@ namespace DuelHero.Shop
             var button = root.GetComponent<Button>();
             button.targetGraphic = icon;
             button.onClick.AddListener(() => BuyArtifact(artifact));
+            var unavailableClick = root.AddComponent<ShopUnavailableCardClick>();
+            unavailableClick.IsUnavailable = () => !button.IsInteractable();
+            unavailableClick.Clicked = () =>
+            {
+                if (!transitioning && !completed && !IsDeckOpen && IsCurrent &&
+                    run.PendingShopNodeId == nodeId && !button.IsInteractable())
+                    DuelHero.Audio.SoundEffectPlayer.Play("shop.card.unavailable");
+            };
             var hover = root.AddComponent<DelayedTooltipTrigger>();
             string description = artifact.description;
             if (artifact.effectKey == ArtifactDefinition.Heal)
@@ -317,7 +334,11 @@ namespace DuelHero.Shop
             if (transitioning || completed || IsDeckOpen || !IsCurrent || run.PendingShopNodeId != nodeId) return false;
             if (index < 0 || index >= offers.Count || database == null || !database.cards.Any(c => c.id == offers[index].CardId)) return false;
             if (!run.TryBuyShopOffer(nodeId, index))
-            { message.text = "골드가 부족하거나 구매할 수 없는 상품입니다."; Refresh(); return false; }
+            {
+                DuelHero.Audio.SoundEffectPlayer.Play("shop.card.unavailable");
+                message.text = "골드가 부족하거나 구매할 수 없는 상품입니다."; Refresh(); return false;
+            }
+            DuelHero.Audio.SoundEffectPlayer.Play("shop.card.purchase");
             tooltip.Hide(); message.text = "카드를 덱에 추가했습니다."; LastError = null; Refresh(); return true;
         }
         private void Refresh()

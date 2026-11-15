@@ -94,3 +94,12 @@ MonoBehaviour:
   - id: shop.card.hover
     clip: {fileID: 8300000, guid: 92570111e4dbb524eb43efe426057016, type: 3}
     volume: 1
+  - id: shop.card.purchase
+    clip: {fileID: 8300000, guid: 9a29c3213dcec8d4f93d694de8af30bb, type: 3}
+    volume: 1
+  - id: shop.card.unavailable
+    clip: {fileID: 8300000, guid: 21b8586adc141a04289bfa60c98bb635, type: 3}
+    volume: 0.7
+  - id: shop.enter
+    clip: {fileID: 8300000, guid: 8b0f3aa077a39d242b20ffa516cb9d03, type: 3}
+    volume: 1
