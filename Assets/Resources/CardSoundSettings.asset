@@ -130,9 +130,13 @@ MonoBehaviour:
   - cardId: rift_charge_001
     sounds:
     - timing: 1
-      soundId: 
+      soundId: battle.sweep_001
       volume: 1
       delay: 0
+    - timing: 3
+      soundId: break_stone
+      volume: 1
+      delay: 0.5
     suppressMovement: 0
     suppressDamage: 0
     suppressShield: 0
