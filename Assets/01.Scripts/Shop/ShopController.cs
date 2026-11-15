@@ -280,7 +280,9 @@ namespace DuelHero.Shop
         {
             if (transitioning || completed || IsDeckOpen || !IsCurrent) return;
             if (artifact.effectKey == ArtifactDefinition.RefreshShop && !CanRefreshStock) return;
+            int healthBeforePurchase = run.PlayerHealth;
             if (!run.TryBuyShopArtifact(nodeId, artifact, database.cards, shopConfig)) return;
+            if (run.PlayerHealth > healthBeforePurchase) DuelHero.Audio.SoundEffectPlayer.Play("health.restore");
             if (artifact.effectKey == ArtifactDefinition.RefreshShop)
             {
                 foreach (var card in cardViews)

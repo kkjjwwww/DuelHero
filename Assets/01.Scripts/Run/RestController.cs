@@ -98,6 +98,7 @@ namespace DuelHero.Run
             if (!CanChoose || deckPopup.IsOpen || confirmation.activeSelf || !CanReturn()) return;
             int before = run.PlayerHealth;
             if (!run.TryHealAtRest(nodeId, config.restHealAmount)) return;
+            if (run.PlayerHealth > before) DuelHero.Audio.SoundEffectPlayer.Play("health.restore");
             if (healthBar == null) { FinishVisit(); return; }
             completed = true;
             recoveryMotion = healthBar.AnimateRecovery(before, run.PlayerHealth, run.PlayerMaxHealth).OnComplete(() =>

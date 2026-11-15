@@ -86,6 +86,7 @@ namespace DuelHero.Units
             int next = Health + Math.Min(amount, MaxHealth - Health);
             if (next == Health) return;
             Health = next; Changed?.Invoke();
+            if (Application.isPlaying) DuelHero.Audio.SoundEffectPlayer.Play("health.restore");
         }
 #if UNITY_EDITOR
         internal void ResetForEnemyDebug()

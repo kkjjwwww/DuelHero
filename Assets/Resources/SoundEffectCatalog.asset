@@ -82,3 +82,6 @@ MonoBehaviour:
   - id: break_stone
     clip: {fileID: 8300000, guid: a18228aaf2a19b64ca1e5d22a65cae98, type: 3}
     volume: 1
+  - id: health.restore
+    clip: {fileID: 8300000, guid: d4dcd4521b678274aa65dd85de8e9838, type: 3}
+    volume: 1
