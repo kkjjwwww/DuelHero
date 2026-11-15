@@ -61,3 +61,9 @@ MonoBehaviour:
   - id: battle.slash_001
     clip: {fileID: 8300000, guid: e397a2e28e7e971429770c13401dc134, type: 3}
     volume: 1
+  - id: battle.thrust_001
+    clip: {fileID: 8300000, guid: b816f05a857ab0a448afc05da58960a0, type: 3}
+    volume: 1
+  - id: battle.sweep_001
+    clip: {fileID: 8300000, guid: ff011ff1cb83e60498291ff834f35856, type: 3}
+    volume: 1
