@@ -73,3 +73,9 @@ MonoBehaviour:
   - id: battle.shield_up
     clip: {fileID: 8300000, guid: ba76cfecb104d0548b33dc835251619a, type: 3}
     volume: 1
+  - id: sword_clash.1
+    clip: {fileID: 8300000, guid: 028871f908137494a81ca3179415ca4e, type: 3}
+    volume: 0.7
+  - id: sword_clash.10
+    clip: {fileID: 8300000, guid: 7a65896fa46aea840954b4235f2bff6a, type: 3}
+    volume: 1
