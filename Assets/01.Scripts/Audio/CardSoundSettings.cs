@@ -7,7 +7,7 @@ namespace DuelHero.Audio
     [CreateAssetMenu(menuName = "Duel Hero/Audio/Card Sound Settings")]
     public sealed class CardSoundSettings : ScriptableObject
     {
-        public enum Timing { Attack, DashLaunch, Hit, DashImpact }
+        public enum Timing { Attack, DashLaunch, Hit, DashImpact, GuardPose }
         public enum CommonSound { Movement, Damage, Shield, Energy }
 
         [Serializable]

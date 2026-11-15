@@ -153,8 +153,15 @@ namespace DuelHero.Battle
             if (renderer != null) ShakeHitSprite(renderer.transform);
             if (result.HitVfx == "tear_wound" && tearWoundVfx != null)
             {
-                var effect = PlayTechniqueVfx(tearWoundVfx, position, tearWoundVfx.transform.rotation);
-                if (result.BleedBonusDamage > 0) effect.transform.Find("BleedBonus")?.gameObject.SetActive(true);
+                SpawnVfx(hitVfx, position);
+                var bonus = tearWoundVfx.transform.Find("BleedBonus");
+                if (result.BleedBonusDamage > 0 && bonus != null)
+                {
+                    var effect = Instantiate(bonus.gameObject, position, tearWoundVfx.transform.rotation * bonus.localRotation);
+                    effect.transform.localScale = Vector3.Scale(tearWoundVfx.transform.localScale, bonus.localScale);
+                    effect.SetActive(true);
+                    Destroy(effect, .45f);
+                }
                 return;
             }
             if (result.HitVfx == "thorn_impact" && thornImpactVfx != null)
@@ -196,7 +203,8 @@ namespace DuelHero.Battle
                 "dash_slash" => dashVfx,
                 _ => null
             };
-            if (!thrust && prefab == null && card.attackVfx != "whirlwind" && card.attackVfx != "thorn_throw") return;
+            bool tearWound = card.hitVfx == "tear_wound" && tearWoundVfx != null;
+            if (!thrust && prefab == null && !tearWound && card.attackVfx != "whirlwind" && card.attackVfx != "thorn_throw") return;
 
             var sprite = unit.GetComponentInChildren<SpriteRenderer>();
             var direction = card.executionDirection;
@@ -219,6 +227,21 @@ namespace DuelHero.Battle
             }
             var weaponHeight = Vector3.Project(anchor - origin, unit.Grid.transform.up);
             var position = attack.MotionWorldPosition + weaponHeight + step * .85f;
+            if (tearWound)
+            {
+                var rotation = FaceTravel(step, unit.Grid.transform.up) * tearWoundVfx.transform.rotation;
+                var effect = Instantiate(tearWoundVfx, position, rotation);
+                foreach (var tearParticles in effect.GetComponentsInChildren<ParticleSystem>(true))
+                {
+                    tearParticles.Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear);
+                    var settings = tearParticles.main;
+                    settings.simulationSpeed *= .4f;
+                }
+                foreach (var tearParticles in effect.GetComponentsInChildren<ParticleSystem>(false))
+                    tearParticles.Play(false);
+                Destroy(effect, 1.5f);
+                return;
+            }
             if (thrust)
             {
                 PlayThrustLine(position + unit.Grid.transform.up * .08f, step, sprite, direction == Vector2Int.up);
@@ -600,7 +623,8 @@ namespace DuelHero.Battle
                 }
                 if (sprites != null && effect.value > 0)
                 {
-                    if (effect.effectType == "guard") yield return sprites.PlaySupportPose(UnitPose.Block, true);
+                    if (effect.effectType == "guard")
+                        yield return sprites.PlaySupportPose(UnitPose.Block, true, () => PlayCardSounds(card.id, CardSoundSettings.Timing.GuardPose));
                     else if (effect.effectType == "healthRestore" || effect.effectType == "energyRestore")
                         yield return sprites.PlaySupportPose(UnitPose.Heal);
                     if (!movement.isActiveAndEnabled) yield break;

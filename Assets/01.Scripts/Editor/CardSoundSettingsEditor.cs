@@ -10,7 +10,7 @@ using UnityEngine;
 [CustomEditor(typeof(CardSoundSettings))]
 public sealed class CardSoundSettingsEditor : Editor
 {
-    private static readonly string[] TimingLabels = { "일반 공격 발동", "돌진 출발", "적중 결과", "돌진 공격 이펙트 시작" };
+    private static readonly string[] TimingLabels = { "일반 공격 발동", "돌진 출발", "적중 결과", "돌진 공격 이펙트 시작", "방어 자세 시작" };
     private int previewActor;
 
     public override void OnInspectorGUI()
@@ -224,6 +224,7 @@ public sealed class CardSoundSettingsEditor : Editor
         if (dash) result.Add((int)CardSoundSettings.Timing.DashLaunch);
         if (baseDamage || counterDamage) result.Add((int)CardSoundSettings.Timing.Hit);
         if (dash && baseDamage) result.Add((int)CardSoundSettings.Timing.DashImpact);
+        if (card.effects.Any(e => e != null && e.effectType == "guard" && e.value > 0)) result.Add((int)CardSoundSettings.Timing.GuardPose);
         return result;
     }
 
@@ -250,6 +251,8 @@ public sealed class CardSoundSettingsEditor : Editor
                 _ => effect.effectType
             };
             EditorGUILayout.LabelField($"{effect.resolutionOrder}. {detail}{counter}");
+            if (effect.effectType == "guard" && effect.value > 0)
+                EditorGUILayout.LabelField("   기준: 방어 자세 시작", EditorStyles.miniLabel);
             if (effect.IsDash && !effect.IsCounter)
                 EditorGUILayout.LabelField("   기준: 돌진 출발", EditorStyles.miniLabel);
             if (effect.effectType == "damage")

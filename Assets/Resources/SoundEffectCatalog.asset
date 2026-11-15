@@ -67,3 +67,9 @@ MonoBehaviour:
   - id: battle.sweep_001
     clip: {fileID: 8300000, guid: ff011ff1cb83e60498291ff834f35856, type: 3}
     volume: 1
+  - id: battle.tear_wound_001
+    clip: {fileID: 8300000, guid: 4300a1d0cfdba7b4085f5909cb0fd47f, type: 3}
+    volume: 1
+  - id: battle.shield_up
+    clip: {fileID: 8300000, guid: ba76cfecb104d0548b33dc835251619a, type: 3}
+    volume: 1
