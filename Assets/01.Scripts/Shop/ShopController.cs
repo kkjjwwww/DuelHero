@@ -156,6 +156,7 @@ namespace DuelHero.Shop
                 {
                     if (transitioning || completed || IsDeckOpen) return;
                     scale.OnPointerEnter(null);
+                    if (scale.isActiveAndEnabled) DuelHero.Audio.SoundEffectPlayer.Play("shop.card.hover");
                     rangePreview.Show(card, shopCamera);
                 };
                 hover.HideInfo = () =>

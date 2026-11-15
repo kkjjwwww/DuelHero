@@ -91,3 +91,6 @@ MonoBehaviour:
   - id: battle.result.defeat
     clip: {fileID: 8300000, guid: cd2d1daf8b2395a49a3fdf98869019e3, type: 3}
     volume: 0.5
+  - id: shop.card.hover
+    clip: {fileID: 8300000, guid: 92570111e4dbb524eb43efe426057016, type: 3}
+    volume: 1

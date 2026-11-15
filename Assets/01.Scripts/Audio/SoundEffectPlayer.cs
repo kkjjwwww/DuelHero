@@ -12,6 +12,7 @@ namespace DuelHero.Audio
         private readonly List<AudioSource> sources = new List<AudioSource>();
         private const float CardHoverInterval = 0.08f;
         private float lastCardHoverTime = float.NegativeInfinity;
+        private float lastShopCardHoverTime = float.NegativeInfinity;
         private const float TitleButtonHoverInterval = 0.08f;
         private float lastTitleButtonHoverTime = float.NegativeInfinity;
         private int lastEnergyRestoreFrame = -1;
@@ -42,6 +43,7 @@ namespace DuelHero.Audio
             var entry = catalog.Find(id);
             if (entry == null || entry.clip == null) return;
             if (id == "battle.card.hover" && Time.unscaledTime - lastCardHoverTime < CardHoverInterval) return;
+            if (id == "shop.card.hover" && Time.unscaledTime - lastShopCardHoverTime < CardHoverInterval) return;
             if (id == "title.button.hover" && Time.unscaledTime - lastTitleButtonHoverTime < TitleButtonHoverInterval) return;
             if (id == "battle.energy.restore" && Time.frameCount == lastEnergyRestoreFrame) return;
             if (id == "battle.shield.block" && Time.frameCount == lastShieldBlockFrame) return;
@@ -62,6 +64,7 @@ namespace DuelHero.Audio
             source.volume = entry.volume * Mathf.Clamp01(volume);
             source.Play();
             if (id == "battle.card.hover") lastCardHoverTime = Time.unscaledTime;
+            if (id == "shop.card.hover") lastShopCardHoverTime = Time.unscaledTime;
             if (id == "title.button.hover") lastTitleButtonHoverTime = Time.unscaledTime;
             if (id == "battle.energy.restore") lastEnergyRestoreFrame = Time.frameCount;
             if (id == "battle.shield.block") lastShieldBlockFrame = Time.frameCount;
