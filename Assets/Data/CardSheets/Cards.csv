@@ -29,7 +29,7 @@
 "rift_charge_001","균열 돌진","[준비] 전방으로 {effect1.value}칸 돌진하고, 이동 경로의 모든 적에게 피해 {effect2.value}를 준다.
 [방향지정][{cooldownTurns}턴]","공격","30","direction_select;preparation","전설","FALSE","FALSE","FALSE","2",""
 "whirlwind_001","휘두르기","범위 내 모든 적에게 피해 {effect1.value}을 준다.
-[{cooldownTurns}턴]","공격","25","","고급","TRUE","FALSE","FALSE","2",""
+[{cooldownTurns}턴]","공격","25","","고급","TRUE","FALSE","FALSE","1",""
 "flash_step_001","축지법","지정한 방향으로 {effect1.value}칸 이동한다.
 [방향지정][{cooldownTurns}턴]","이동","10","direction_select","일반","TRUE","FALSE","FALSE","2",""
 "qi_breathing_001","운기조식","에너지를 {effect1.value} 회복한다.

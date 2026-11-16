@@ -343,13 +343,6 @@ namespace DuelHero.Battle
                     effects.CancelPreparationPresentation(playerId, unitVisualPlacement);
                     effects.CancelPreparationPresentation(enemyId, unitVisualPlacement);
                 }
-                if (pc?.SelfForesight > 0)
-                {
-                    int pending = playerStats.PendingForesight;
-                    playerStats.ApplyForesight(pc.SelfForesight);
-                    if (pc.id == "future_sight_001" && playerStats.PendingForesight > pending)
-                        effects.PlayForesightGain(playerMovement);
-                }
                 if (pc?.SelfStun > 0) playerStats.ApplyStun(pc.SelfStun);
                 if (ec?.SelfStun > 0) enemyStats.ApplyStun(ec.SelfStun);
                 playerQueue.BlockFutureSlots(slot + 1, playerStats.Stun);

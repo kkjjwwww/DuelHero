@@ -2607,6 +2607,7 @@ MonoBehaviour:
   jumpGround: {fileID: 21300000, guid: 04eacdc2a8ad47cab951a48262ee01c8, type: 3}
   jumpAir: {fileID: 21300000, guid: 49bacdf8539043eb826d3abd561a34b0, type: 3}
   supportPoseDuration: 0.52
+  idleBreathAmount: 0.02
 --- !u!114 &185798878
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9284,7 +9285,6 @@ MonoBehaviour:
   energyReleaseBurstVfx: {fileID: 6216339919389851293, guid: 1831780259559f84290f6e2a789cd6d2, type: 3}
   energyReleaseGroundVfx: {fileID: 4984824894364517515, guid: d1f9959d4b157d949b354bd05bcd5a0a, type: 3}
   energyReleaseHitVfx: {fileID: 5111495584109495077, guid: 1c8c42c98fa91b44abebc0b5ebb31be3, type: 3}
-  foresightGainVfx: {fileID: 2693094929603671876, guid: d20eb5f1679545dba2accb7a920db795, type: 3}
   energyReleaseRiseDuration: 1.5
   energyReleaseLandingDuration: 0.25
   energyReleaseCenterHeight: 0.4
@@ -9293,6 +9293,9 @@ MonoBehaviour:
   energyReleaseZoom: 1.2
   energyReleaseShakeStrength: 0.5
   energyReleaseShakeDuration: 0.5
+  foresightGainVfx: {fileID: 2693094929603671876, guid: d20eb5f1679545dba2accb7a920db795, type: 3}
+  foresightGainScale: 2
+  foresightGainHeight: 1
 --- !u!114 &910000003
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -22744,6 +22747,7 @@ MonoBehaviour:
   jumpGround: {fileID: 0}
   jumpAir: {fileID: 0}
   supportPoseDuration: 0.4
+  idleBreathAmount: 0.02
 --- !u!1 &2025441890
 GameObject:
   m_ObjectHideFlags: 0

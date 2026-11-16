@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: UnitDatabase
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Data.UnitDatabase
   sourceSpreadsheetId: 1pspfXZtUhTmSc9ZTL1iTzQDeBgvfbb_wqwCNs83EFQE
-  importedAtUtc: 2026-11-16T04:55:14.5672884Z
+  importedAtUtc: 2026-11-16T06:12:41.5014651Z
   players:
   - id: player_dummy_001
     name: "\uD50C\uB808\uC774\uC5B4"
@@ -42,7 +42,7 @@ MonoBehaviour:
     maxEnergy: 100
   - id: enemy_rift_knight_001
     name: "\uADE0\uC5F4 \uAE30\uC0AC"
-    startingHealth: 140
-    maxHealth: 140
+    startingHealth: 100
+    maxHealth: 100
     startingEnergy: 100
     maxEnergy: 100

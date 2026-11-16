@@ -90,13 +90,13 @@ namespace DuelHero.Cards
             if (currentOutsideList) index--;
             if (index < 0 || index >= resolutions.Count) return;
             var size = resolutions[index];
-            Screen.SetResolution(size.x, size.y, Screen.fullScreen ? FullScreenMode.ExclusiveFullScreen : FullScreenMode.Windowed);
+            Screen.SetResolution(size.x, size.y, Screen.fullScreen ? FullScreenMode.FullScreenWindow : FullScreenMode.Windowed);
             StartCoroutine(SyncAfterApply());
         }
 
         private void ApplyMode(int index)
         {
-            Screen.SetResolution(Screen.width, Screen.height, index == 1 ? FullScreenMode.ExclusiveFullScreen : FullScreenMode.Windowed);
+            Screen.SetResolution(Screen.width, Screen.height, index == 1 ? FullScreenMode.FullScreenWindow : FullScreenMode.Windowed);
             StartCoroutine(SyncAfterApply());
         }
 

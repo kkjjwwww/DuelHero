@@ -10,7 +10,7 @@ using UnityEngine;
 [CustomEditor(typeof(CardSoundSettings))]
 public sealed class CardSoundSettingsEditor : Editor
 {
-    private static readonly string[] TimingLabels = { "일반 공격 발동", "돌진 출발", "적중 결과", "돌진 공격 이펙트 시작", "방어 자세 시작" };
+    private static readonly string[] TimingLabels = { "일반 공격 발동", "돌진 출발", "적중 결과", "돌진 공격 이펙트 시작", "방어 자세 시작", "예지 부여 이펙트 시작", "에너지 충전 시작", "에너지 폭발 시작" };
     private int previewActor;
 
     public override void OnInspectorGUI()
@@ -165,7 +165,26 @@ public sealed class CardSoundSettingsEditor : Editor
         var effects = card.effects ?? Array.Empty<CardEffectDefinition>();
         bool dash = effects.Any(e => e != null && e.IsDash && !e.IsCounter);
         bool normalMove = effects.Any(e => e != null && e.effectType == "move" && !e.IsDash);
-        bool normalAttack = effects.Any(e => e != null && e.effectType == "damage" && (!dash || e.IsCounter));
+        bool energyRelease = card.id == "energy_release_001";
+        bool normalAttack = !energyRelease && effects.Any(e => e != null && e.effectType == "damage" && (!dash || e.IsCounter));
+        if (energyRelease)
+        {
+            var executor = controller.FindProperty("effects")?.objectReferenceValue;
+            if (executor == null) EditorGUILayout.HelpBox("에너지 방출 연출 실행기가 연결되지 않았습니다.", MessageType.Warning);
+            else
+            {
+                var data = new SerializedObject(executor);
+                float rise = Mathf.Max(.01f, data.FindProperty("energyReleaseRiseDuration").floatValue);
+                float hold = Mathf.Max(0f, data.FindProperty("energyReleaseAirHoldDuration").floatValue);
+                float land = Mathf.Max(.01f, data.FindProperty("energyReleaseLandingDuration").floatValue);
+                EditorGUILayout.LabelField($"충전·상승 {rise:0.##}초 · 공중 유지 {hold:0.##}초 · 착지 {land:0.##}초");
+                EditorGUILayout.LabelField($"폭발: 충전 시작 + {rise:0.##}초 · 오브젝트 유지 {CardEffectExecutor.EnergyReleaseBurstLifetime:0.##}초", EditorStyles.wordWrappedMiniLabel);
+                EditorGUILayout.LabelField($"바닥 이펙트 유지 {CardEffectExecutor.TechniqueVfxLifetime:0.##}초 · 적중은 착지 및 이펙트 대기 후", EditorStyles.wordWrappedMiniLabel);
+                if (jump == null) EditorGUILayout.HelpBox("선택한 유닛의 상승 연출이 연결되지 않았습니다. 충전 시점이 발생하지 않습니다.", MessageType.Warning);
+                if (data.FindProperty("energyReleaseChargeVfx").objectReferenceValue == null || data.FindProperty("energyReleaseBurstVfx").objectReferenceValue == null)
+                    EditorGUILayout.HelpBox("충전 또는 폭발 프리팹이 연결되지 않아 해당 이펙트 사운드가 발생하지 않을 수 있습니다.", MessageType.Warning);
+            }
+        }
         if (normalAttack || dash)
         {
             if (attack == null) EditorGUILayout.HelpBox("선택한 유닛의 공격 연출이 연결되지 않았습니다.", MessageType.Warning);
@@ -194,7 +213,7 @@ public sealed class CardSoundSettingsEditor : Editor
                 EditorGUILayout.LabelField("일반 이동은 칸마다, 긴 도약은 이동 전체에 한 번 적용됩니다.", EditorStyles.miniLabel);
             }
         }
-        if (effects.Any(e => e != null && e.effectType == "damage"))
+        if (!energyRelease && effects.Any(e => e != null && e.effectType == "damage"))
         {
             string lifetime = card.attackVfx switch
             {
@@ -220,11 +239,15 @@ public sealed class CardSoundSettingsEditor : Editor
         bool dash = card.effects.Any(e => e != null && e.IsDash && !e.IsCounter);
         bool baseDamage = card.effects.Any(e => e != null && e.effectType == "damage" && !e.IsCounter);
         bool counterDamage = card.effects.Any(e => e != null && e.effectType == "damage" && e.IsCounter);
-        if ((!dash && baseDamage) || counterDamage) result.Add((int)CardSoundSettings.Timing.Attack);
+        bool energyRelease = card.id == "energy_release_001";
+        if (!energyRelease && ((!dash && baseDamage) || counterDamage)) result.Add((int)CardSoundSettings.Timing.Attack);
         if (dash) result.Add((int)CardSoundSettings.Timing.DashLaunch);
         if (baseDamage || counterDamage) result.Add((int)CardSoundSettings.Timing.Hit);
         if (dash && baseDamage) result.Add((int)CardSoundSettings.Timing.DashImpact);
         if (card.effects.Any(e => e != null && e.effectType == "guard" && e.value > 0)) result.Add((int)CardSoundSettings.Timing.GuardPose);
+        if (card.id == "future_sight_001" && card.effects.Any(e => e != null && e.IsSelfForesight && e.value > 0))
+            result.Add((int)CardSoundSettings.Timing.ForesightGain);
+        if (energyRelease) { result.Add((int)CardSoundSettings.Timing.EnergyCharge); result.Add((int)CardSoundSettings.Timing.EnergyBurst); }
         return result;
     }
 
@@ -253,9 +276,13 @@ public sealed class CardSoundSettingsEditor : Editor
             EditorGUILayout.LabelField($"{effect.resolutionOrder}. {detail}{counter}");
             if (effect.effectType == "guard" && effect.value > 0)
                 EditorGUILayout.LabelField("   기준: 방어 자세 시작", EditorStyles.miniLabel);
+            if (card.id == "future_sight_001" && effect.IsSelfForesight && effect.value > 0)
+                EditorGUILayout.LabelField("   기준: 예지 부여 이펙트 시작", EditorStyles.miniLabel);
             if (effect.IsDash && !effect.IsCounter)
                 EditorGUILayout.LabelField("   기준: 돌진 출발", EditorStyles.miniLabel);
-            if (effect.effectType == "damage")
+            if (effect.effectType == "damage" && card.id == "energy_release_001")
+                EditorGUILayout.LabelField("   기준: 에너지 충전 시작 / 에너지 폭발 시작 / 적중 결과", EditorStyles.wordWrappedMiniLabel);
+            else if (effect.effectType == "damage")
                 EditorGUILayout.LabelField(dash && !effect.IsCounter
                     ? "   기준: 돌진 공격 이펙트 시작 / 적중 결과"
                     : "   기준: 일반 공격 발동 / 적중 결과", EditorStyles.miniLabel);

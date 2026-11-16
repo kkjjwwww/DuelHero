@@ -1,4 +1,5 @@
 using DuelHero.Audio;
+using DuelHero.Cards;
 using DuelHero.Map;
 using DuelHero.Run;
 using System;
@@ -16,6 +17,9 @@ namespace DuelHero.Title
         [SerializeField] private Sprite noticePanel;
         [SerializeField] private Sprite popupButton;
         [SerializeField] private Sprite disabledPopupButton;
+        [SerializeField] private EnemyCardListUI catalogPrefab;
+        [SerializeField] private CardDatabase catalogDatabase;
+        private EnemyCardListUI catalog;
         private bool starting;
         private GameObject confirmation;
 
@@ -23,6 +27,15 @@ namespace DuelHero.Title
         {
             continueButton.interactable = File.Exists(RunCheckpoint.DefaultPath);
             errorLabel.text = string.Empty;
+        }
+
+        public void OpenCardCatalog()
+        {
+            if (starting || catalogPrefab == null || catalogDatabase == null) return;
+            if (catalog == null) catalog = Instantiate(catalogPrefab, transform, false);
+            if (catalog.IsOpen) return;
+            catalog.TitleCatalogSoundsEnabled = true;
+            catalog.OpenCatalog(catalogDatabase);
         }
 
         public void ContinueGame()

@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 namespace DuelHero.Cards
 {
-    // Reads owned instances only; selected actions are never exposed here.
+    // Displays card lists without exposing reserved actions.
     public sealed class EnemyCardListUI : MonoBehaviour
     {
         [SerializeField] private EnemyActionPlanProvider source;
@@ -55,8 +55,11 @@ namespace DuelHero.Cards
         public event System.Action OpenChanged;
         private IReadOnlyList<CardInstance> ownedCards;
         private CardDatabase ownedDatabase;
+        private string listTitle;
+        private bool isCatalog;
         private System.Action<CardInstance> selectOwnedCard;
         internal bool DeckPopupSoundsEnabled { get; set; }
+        internal bool TitleCatalogSoundsEnabled { get; set; }
         private bool IsPlayerList => ownedCards != null || playerSource != null;
         private int CurrentRound => roundSource != null ? roundSource.CurrentRound : 1;
         private IReadOnlyList<CardInstance> Cards => ownedCards ?? (playerSource != null ? playerSource.Cards : source.Cards);
@@ -79,11 +82,25 @@ namespace DuelHero.Cards
 
         public void OpenOwnedCards(CardDatabase database, IReadOnlyList<CardInstance> cards,
             System.Action<CardInstance> onSelected)
+            => OpenCardList(database, cards, onSelected, null);
+
+        public void OpenCatalog(CardDatabase database)
+        {
+            if (database == null || database.cards == null) return;
+            var cards = database.cards.Where(card => card != null)
+                .Select(card => new CardInstance(card)).ToArray();
+            OpenCardList(database, cards, null, "카드 도감", isCatalog: true);
+        }
+
+        private void OpenCardList(CardDatabase database, IReadOnlyList<CardInstance> cards,
+            System.Action<CardInstance> onSelected, string customTitle, bool isCatalog = false)
         {
             if (database == null || cards == null) return;
             Close();
             ownedDatabase = database;
             ownedCards = cards;
+            listTitle = customTitle;
+            this.isCatalog = isCatalog;
             selectOwnedCard = onSelected;
             Open();
         }
@@ -117,8 +134,11 @@ namespace DuelHero.Cards
             Synchronize();
             if (outsideCloseButton != null) outsideCloseButton.gameObject.SetActive(true);
             panel.SetActive(true);
-            if (DeckPopupSoundsEnabled && Application.isPlaying)
-                DuelHero.Audio.SoundEffectPlayer.Play("deck.popup.open");
+            if (Application.isPlaying)
+            {
+                if (TitleCatalogSoundsEnabled) DuelHero.Audio.SoundEffectPlayer.Play("title.popup.open");
+                else if (DeckPopupSoundsEnabled) DuelHero.Audio.SoundEffectPlayer.Play("deck.popup.open");
+            }
             if (panel.transform.parent == transform) transform.SetAsLastSibling();
             panel.transform.SetAsLastSibling();
             Canvas.ForceUpdateCanvases();
@@ -137,8 +157,11 @@ namespace DuelHero.Cards
             HideInspection();
             if (panel != null) panel.SetActive(false);
             if (outsideCloseButton != null) outsideCloseButton.gameObject.SetActive(false);
-            if (wasOpen && playSound && DeckPopupSoundsEnabled && Application.isPlaying)
-                DuelHero.Audio.SoundEffectPlayer.Play("deck.popup.close");
+            if (wasOpen && playSound && Application.isPlaying)
+            {
+                if (TitleCatalogSoundsEnabled) DuelHero.Audio.SoundEffectPlayer.Play("title.popup.close");
+                else if (DeckPopupSoundsEnabled) DuelHero.Audio.SoundEffectPlayer.Play("deck.popup.close");
+            }
             if (wasOpen) OpenChanged?.Invoke();
         }
         private void Initialize()
@@ -219,7 +242,7 @@ namespace DuelHero.Cards
                 entry.Container.gameObject.SetActive(true);
                 entries.Add(card, entry); changed = true;
             }
-            if (titleLabel != null) titleLabel.text = (IsPlayerList ? "내 보유 카드 · " : "적 보유 카드 · ") + cards.Count + "장";
+            if (titleLabel != null) titleLabel.text = (listTitle ?? (IsPlayerList ? "내 보유 카드" : "적 보유 카드")) + " · " + cards.Count + "장";
             if (changed) ArrangeCategories();
             RefreshStates();
         }
@@ -241,7 +264,7 @@ namespace DuelHero.Cards
             {
                 if (IsOpen && entry.Card != null)
                     inspection.Show(entry.Container, cardPrefab, entry.Card.Definition, Database, font,
-                        entry.Card.RemainingAvailabilityDelay(CurrentRound),
+                        DisplayCooldown(entry.Card),
                         click: selectOwnedCard == null ? null : () => SelectOwnedCard(entry),
                         scale: hoverScale, duration: hoverDuration,
                         scroll: eventData => { if (scroll != null) scroll.OnScroll(eventData); }, isEnemy: !IsPlayerList);
@@ -296,11 +319,14 @@ namespace DuelHero.Cards
             int index = System.Array.IndexOf(CategoryOrder, category);
             return index < 0 ? CategoryOrder.Length : index;
         }
+        private int DisplayCooldown(CardInstance card)
+            => isCatalog ? 0 : card.RemainingAvailabilityDelay(CurrentRound);
+
         private void RefreshStates()
         {
             foreach (var entry in entries.Values)
             {
-                int cooldown = entry.Card.RemainingAvailabilityDelay(CurrentRound);
+                int cooldown = DisplayCooldown(entry.Card);
                 if (entry.Cooldown == cooldown) continue;
                 entry.Cooldown = cooldown;
                 entry.View.SetState(string.Empty, cooldown, true);

@@ -103,6 +103,8 @@ namespace DuelHero.Title
             artworkScale = artwork.localScale;
             backgroundScale = layers[0].localScale;
             AddIntroItem((RectTransform)transform.Find("Logo Placeholder"));
+            if (transform.Find("Title Menu Buttons") is RectTransform menuButtons)
+                AddIntroItem(menuButtons);
             foreach (Transform child in transform)
                 if (child.TryGetComponent<Button>(out _))
                     AddIntroItem((RectTransform)child);

@@ -318,7 +318,8 @@ namespace DuelHero.Battle
         private static Quaternion FaceTravel(Vector3 travel, Vector3 up) =>
             Quaternion.LookRotation(Vector3.Cross(travel, up), up);
 
-        private const float TechniqueVfxLifetime = .45f;
+        public const float TechniqueVfxLifetime = .45f;
+        public const float EnergyReleaseBurstLifetime = 1f;
 
         private GameObject PlayTechniqueVfx(GameObject prefab, Vector3 position, Quaternion rotation)
         {
@@ -394,15 +395,19 @@ namespace DuelHero.Battle
         }
 
         [SerializeField] private GameObject foresightGainVfx;
+        [SerializeField, Min(.01f)] private float foresightGainScale = 1f;
+        [SerializeField] private float foresightGainHeight = .8f;
 
-        internal void PlayForesightGain(GridMovement unit)
+        private void PlayForesightGain(GridMovement unit, string cardId)
         {
             if (foresightGainVfx == null) return;
             var caster = unit.GetComponentInChildren<SpriteRenderer>();
             if (caster == null) return;
             var bounds = caster.bounds;
-            var position = bounds.center + Vector3.up * (bounds.extents.y * .8f);
+            var position = bounds.center + Vector3.up * (bounds.extents.y * foresightGainHeight);
             var instance = Instantiate(foresightGainVfx, position, foresightGainVfx.transform.rotation, caster.transform);
+            PlayCardSounds(cardId, CardSoundSettings.Timing.ForesightGain);
+            instance.transform.localScale *= foresightGainScale;
             foreach (var renderer in instance.GetComponentsInChildren<ParticleSystemRenderer>(true))
             {
                 renderer.sortingLayerID = caster.sortingLayerID;
@@ -413,9 +418,14 @@ namespace DuelHero.Battle
 
         internal static bool IsEnergyRelease(CardDefinition card) => card?.id == "energy_release_001";
 
-        internal Tween BeginEnergyRelease(UnitJumpPresentation jump) =>
-            jump?.BeginEnergyRelease(energyReleaseChargeVfx, EnergyReleaseRiseDuration,
+        internal Tween BeginEnergyRelease(UnitJumpPresentation jump)
+        {
+            var rise = jump?.BeginEnergyRelease(energyReleaseChargeVfx, EnergyReleaseRiseDuration,
                 energyReleaseCenterHeight, Mathf.Max(0f, energyReleaseLiftHeight));
+            if (rise != null && energyReleaseChargeVfx != null)
+                PlayCardSounds("energy_release_001", CardSoundSettings.Timing.EnergyCharge);
+            return rise;
+        }
 
         internal Tween LandEnergyRelease(UnitJumpPresentation jump) =>
             jump?.LandEnergyRelease(EnergyReleaseLandingDuration);
@@ -431,11 +441,12 @@ namespace DuelHero.Battle
             if (!combatEffects.TryGetUnit(actorId, out var unit, out _)) return 0f;
 
             Vector3 ground = unit.Grid.CellToWorld(unit.GridPosition);
-            const float burstLifetime = 1f;
+            const float burstLifetime = EnergyReleaseBurstLifetime;
             if (energyReleaseBurstVfx != null)
             {
                 Vector3 center = GetEnergyReleaseCenter(unit, jump);
                 var burst = Instantiate(energyReleaseBurstVfx, center, energyReleaseBurstVfx.transform.rotation);
+                PlayCardSounds("energy_release_001", CardSoundSettings.Timing.EnergyBurst);
                 var caster = unit.GetComponentInChildren<SpriteRenderer>();
                 if (caster != null)
                 {
@@ -709,14 +720,29 @@ namespace DuelHero.Battle
                     case "energyRestore": combatEffects.RestoreCardEnergy(stats, effect.value, card.id); break;
                     case "healthRestore": stats.Heal(effect.value); break;
                 }
-                if (sprites != null && effect.value > 0)
+                if (effect.IsSelfForesight)
+                {
+                    bool applied = false;
+                    void ApplyForesight()
+                    {
+                        int pending = stats.PendingForesight;
+                        stats.ApplyForesight(effect.value);
+                        applied = true;
+                        if (animateSupport && card.id == "future_sight_001" && stats.PendingForesight > pending)
+                            PlayForesightGain(movement, card.id);
+                    }
+
+                    if (sprites != null)
+                        yield return sprites.PlaySupportPose(UnitPose.Heal, onStarted: ApplyForesight, duration: 0.8f);
+                    if (!applied) ApplyForesight();
+                    if (sprites != null && !movement.isActiveAndEnabled) yield break;
+                }
+                else if (sprites != null && effect.value > 0)
                 {
                     if (effect.effectType == "guard")
                         yield return sprites.PlaySupportPose(UnitPose.Block, true, () => PlayCardSounds(card.id, CardSoundSettings.Timing.GuardPose));
                     else if (effect.effectType == "healthRestore" || effect.effectType == "energyRestore")
                         yield return sprites.PlaySupportPose(UnitPose.Heal);
-                    else if (effect.IsSelfForesight)
-                        yield return sprites.PlaySupportPose(UnitPose.Heal, duration: 0.8f);
                     if (!movement.isActiveAndEnabled) yield break;
                 }
             }

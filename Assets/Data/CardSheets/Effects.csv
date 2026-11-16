@@ -10,7 +10,7 @@
 "sweep_001_effect_01","sweep_001","1","damage","10","0","(0,0);(1,1);(1,0);(1,-1)","적","","","","","","",""
 "head_break_001_effect_01","head_break_001","1","damage","3","0","(0,0);(1,0)","적","","","","","","",""
 "head_break_001_effect_02","head_break_001","2","applyStatus","1","0","","적","stun","head_break_001_effect_01","","","","",""
-"bleed_attack_001_effect_01","bleed_attack_001","1","damage","4","0","(0,0);(1,0)","적","","","action","0","","",""
+"bleed_attack_001_effect_01","bleed_attack_001","1","damage","8","0","(0,0);(1,0)","적","","","action","0","","",""
 "bleed_attack_001_effect_02","bleed_attack_001","2","applyStatus","3","0","","적","bleed","bleed_attack_001_effect_01","action","0","","",""
 "riposte_stance_001_effect_01","riposte_stance_001","1","guard","10","1","(0,0)","자신","","","action","0","","",""
 "riposte_stance_001_effect_02","riposte_stance_001","2","damage","8","0","(0,0);(1,0)","적","","","counter","0","","",""

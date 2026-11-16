@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: ShopConfig
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Data.ShopConfig
   sourceSpreadsheetId: 1pspfXZtUhTmSc9ZTL1iTzQDeBgvfbb_wqwCNs83EFQE
-  importedAtUtc: 2026-11-16T04:55:14.5867733Z
+  importedAtUtc: 2026-11-16T06:12:41.5029978Z
   cardOfferCount: 3
   commonCardPrice: 30
   uncommonCardPrice: 50

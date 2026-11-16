@@ -42,7 +42,6 @@ namespace DuelHero.Cards
         public bool spendsAllEnergy;
         public int EnergyCostAt(int available) => spendsAllEnergy ? available : energyCost;
         public string EnergyCostLabel => spendsAllEnergy ? "?" : energyCost.ToString();
-        public int SelfForesight => effects?.Where(e => e.IsSelfForesight).Sum(e => e.value) ?? 0;
         public int SelfStun => effects?.Where(e => e.IsSelfStun).Sum(e => e.value) ?? 0;
         public int cooldownTurns = 1;
         public int EffectiveCooldownTurns => isBasicAction ? 0 : cooldownTurns;

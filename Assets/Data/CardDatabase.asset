@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: CardDatabase
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Cards.CardDatabase
   sourceSpreadsheetId: 1pspfXZtUhTmSc9ZTL1iTzQDeBgvfbb_wqwCNs83EFQE
-  importedAtUtc: 2026-11-16T04:55:14.5502623Z
+  importedAtUtc: 2026-11-16T06:12:41.4989463Z
   cards:
   - id: move_up_001
     name: "\uC704 \uC774\uB3D9"
@@ -396,7 +396,7 @@ MonoBehaviour:
       rangeBasis: 
       statusMultiplier: 0
       resolutionOrder: 1
-      value: 4
+      value: 8
       durationSlots: 0
       rangeOffsets:
       - {x: 0, y: 0}
@@ -723,7 +723,7 @@ MonoBehaviour:
     hitVfx: 
     energyCost: 25
     spendsAllEnergy: 0
-    cooldownTurns: 2
+    cooldownTurns: 1
     keywordIds: []
     isObtainable: 1
     isBasicAction: 0

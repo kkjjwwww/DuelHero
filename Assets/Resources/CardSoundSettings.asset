@@ -161,3 +161,37 @@ MonoBehaviour:
     suppressDamage: 0
     suppressShield: 0
     suppressEnergy: 0
+  - cardId: opening_thrust_001
+    sounds:
+    - timing: 0
+      soundId: battle.thrust_001
+      volume: 1
+      delay: 0
+    suppressMovement: 0
+    suppressDamage: 0
+    suppressShield: 0
+    suppressEnergy: 0
+  - cardId: future_sight_001
+    sounds:
+    - timing: 5
+      soundId: notification
+      volume: 1
+      delay: 0
+    suppressMovement: 0
+    suppressDamage: 0
+    suppressShield: 0
+    suppressEnergy: 0
+  - cardId: energy_release_001
+    sounds:
+    - timing: 6
+      soundId: charge_start
+      volume: 1
+      delay: 0
+    - timing: 7
+      soundId: energy_bomb
+      volume: 1
+      delay: 0
+    suppressMovement: 0
+    suppressDamage: 0
+    suppressShield: 0
+    suppressEnergy: 0

@@ -106,3 +106,12 @@ MonoBehaviour:
   - id: battle.execute.unavailable
     clip: {fileID: 8300000, guid: 21b8586adc141a04289bfa60c98bb635, type: 3}
     volume: 1
+  - id: notification
+    clip: {fileID: 8300000, guid: d3effa6d9fa6e6342ab4195da59bdc21, type: 3}
+    volume: 1
+  - id: energy_bomb
+    clip: {fileID: 8300000, guid: 0aaf76a1f69eeda468d4e9100b4d60f5, type: 3}
+    volume: 1
+  - id: charge_start
+    clip: {fileID: 8300000, guid: e1a10a60622392c4bb2f9778328a2c37, type: 3}
+    volume: 1
