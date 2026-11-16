@@ -449,7 +449,7 @@ namespace DuelHero.Battle
             var line = effect.AddComponent<LineRenderer>();
             line.sharedMaterial = thrustLineMaterial;
             line.positionCount = 2;
-            float scale = openingThrust ? 1.5f : 1f;
+            float scale = openingThrust ? 2.5f : 1f;
             step *= scale;
             line.startWidth = .045f * scale;
             line.endWidth = .012f * scale;

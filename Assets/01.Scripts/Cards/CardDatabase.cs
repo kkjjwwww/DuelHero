@@ -70,8 +70,8 @@ namespace DuelHero.Cards
                     throw new InvalidOperationException($"{id}: invalid description placeholder {match.Value}");
                 var effect = effects[index];
                 if (match.Groups[2].Value == "durationSlots") return effect.durationSlots.ToString();
-                if (match.Groups[2].Value == "statusMultiplier") return effect.statusMultiplier.ToString();
-                return formatValue != null ? formatValue(effect, effect.value) : effect.value.ToString();
+                int value = match.Groups[2].Value == "statusMultiplier" ? effect.statusMultiplier : effect.value;
+                return formatValue != null ? formatValue(effect, value) : value.ToString();
             });
         }
 
