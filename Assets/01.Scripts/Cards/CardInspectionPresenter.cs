@@ -43,7 +43,7 @@ namespace DuelHero.Cards
         }
 
         public void Show(RectTransform source, CardView prefab, CardDefinition card, CardDatabase data,
-            Font font, int cooldown = 0, Action click = null, float scale = 1.55f, float duration = .15f,
+            int cooldown = 0, Action click = null, float scale = 1.55f, float duration = .15f,
             Action<PointerEventData> scroll = null, Action hidden = null, bool typeOnly = false, bool aboveSource = false, bool isEnemy = false)
         {
             if (source == null || prefab == null || card == null || data == null) return;
@@ -59,7 +59,6 @@ namespace DuelHero.Cards
                 sourcePrefab = prefab;
                 view = Instantiate(prefab, transform, false);
                 view.name = "CardInspection";
-                view.SetFont(font);
                 view.SetClickAction(() =>
                 {
                     if (onClick == null) return;

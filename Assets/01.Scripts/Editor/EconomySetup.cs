@@ -1,3 +1,4 @@
+using TMPro;
 using System;
 using System.Linq;
 using DuelHero.Battle;
@@ -20,7 +21,7 @@ public static class EconomySetup
     {
         var so = new SerializedObject(target); so.FindProperty(field).objectReferenceValue = value; so.ApplyModifiedPropertiesWithoutUndo();
     }
-    private static Font Font => AssetDatabase.LoadAssetAtPath<Font>("Assets/Resources/Fonts/BusanDandiM.ttf");
+    private static TMP_FontAsset Font => AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/Art/UI/Fonts/BusanDandiM SDF.asset");
     private static T Find<T>(Scene scene) where T : Component => scene.GetRootGameObjects().SelectMany(g => g.GetComponentsInChildren<T>(true)).Single();
     private static RectTransform Rect(string name, Transform parent, Vector2 size, Vector2 position)
     {
@@ -28,10 +29,10 @@ public static class EconomySetup
         var rect = (RectTransform)go.transform; rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(.5f, .5f);
         rect.sizeDelta = size; rect.anchoredPosition = position; return rect;
     }
-    private static Text Label(string name, Transform parent, string text, Vector2 size, Vector2 position, int fontSize)
+    private static TextMeshProUGUI Label(string name, Transform parent, string text, Vector2 size, Vector2 position, int fontSize)
     {
-        var rect = Rect(name, parent, size, position); var label = rect.gameObject.AddComponent<Text>();
-        label.font = Font; label.fontSize = fontSize; label.text = text; label.alignment = TextAnchor.MiddleCenter; label.color = new Color(.96f, .87f, .65f); label.raycastTarget = false; return label;
+        var rect = Rect(name, parent, size, position); var label = rect.gameObject.AddComponent<TextMeshProUGUI>();
+        label.font = Font; label.fontSize = fontSize; label.text = text; label.alignment = TextAlignmentOptions.Center; label.color = new Color(.96f, .87f, .65f); label.raycastTarget = false; return label;
     }
     private static void Edit(string path, Action<Scene> action)
     {
@@ -52,7 +53,7 @@ public static class EconomySetup
             Set(controller, "shopConfig", AssetDatabase.LoadAssetAtPath<ShopConfig>(EconomyConfigSheetImporter.AssetPath("ShopConfig")));
             var canvas = Find<Canvas>(scene);
             var existing = canvas.transform.Find("GoldLabel");
-            var label = existing != null ? existing.GetComponent<Text>() : Label("GoldLabel", canvas.transform, "골드  30", new Vector2(250, 50), new Vector2(700, 460), 26);
+            var label = existing != null ? existing.GetComponent<TextMeshProUGUI>() : Label("GoldLabel", canvas.transform, "골드  30", new Vector2(250, 50), new Vector2(700, 460), 26);
             Set(controller, "goldLabel", label);
         });
         Edit("Assets/00.Scenes/BattleScene.unity", scene => {
@@ -60,7 +61,7 @@ public static class EconomySetup
             var view = Find<BattleResultUI>(scene); var so = new SerializedObject(view);
             var panel = (CanvasGroup)so.FindProperty("panel").objectReferenceValue;
             var existing = panel.transform.Find("GoldRewardLabel");
-            var label = existing != null ? existing.GetComponent<Text>() : Label("GoldRewardLabel", panel.transform, "", new Vector2(650, 36), new Vector2(0, -177), 23);
+            var label = existing != null ? existing.GetComponent<TextMeshProUGUI>() : Label("GoldRewardLabel", panel.transform, "", new Vector2(650, 36), new Vector2(0, -177), 23);
             label.gameObject.SetActive(false); Set(view, "goldRewardLabel", label);
         });
         if (AssetDatabase.LoadAssetAtPath<SceneAsset>(ShopScenePath) == null) BuildShop();

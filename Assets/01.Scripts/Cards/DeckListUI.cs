@@ -45,7 +45,6 @@ namespace DuelHero.Cards
         private bool animateCategoryChange;
         public bool IsTransitioning { get; private set; }
         public bool IsInputLocked { get; private set; }
-        private Font font;
         private CanvasGroup panelVisibility;
         private CardFanLayout fanLayout;
         private CachedCard hoveredCard;
@@ -131,7 +130,6 @@ namespace DuelHero.Cards
             foreach (var entry in cachedCards.Values)
             {
                 if (entry.View == null) continue;
-                entry.View.SetFont(GetFont());
                 entry.View.Bind(entry.Instance.Definition, playerDeck.Database.keywords);
                 ConfigureCardSize(entry.View);
             }
@@ -240,7 +238,6 @@ namespace DuelHero.Cards
             {
                 entry = new CachedCard { View = Instantiate(cardPrefab, content, false) };
                 ConfigureCardSize(entry.View);
-                entry.View.SetFont(GetFont());
                 ConfigureCallbacks(entry);
             }
             entry.Instance = instance;
@@ -389,11 +386,6 @@ namespace DuelHero.Cards
             outgoingCards.Clear();
         }
 
-        private Font GetFont()
-        {
-            if (font == null) font = DuelHero.UI.GameFonts.UI;
-            return font;
-        }
 
         private void ConfigureCardSize(CardView view)
         {

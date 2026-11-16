@@ -28,7 +28,6 @@ public class ActionQueueUI : MonoBehaviour
     private CardInstance[] boundCards;
     private bool[] slotExecuted;
     private Tween[] slotExecutionTweens;
-    private Font cardFont;
     private KeywordTooltip keywordTooltip;
     private CardInspectionPresenter inspection;
     private CardRangePreview rangePreview;
@@ -183,8 +182,6 @@ public class ActionQueueUI : MonoBehaviour
             view.name = stunned ? "StunnedCard" : "ReservedCard";
             view.transform.SetAsFirstSibling();
             slotCards[index] = view;
-            if (cardFont == null) cardFont = DuelHero.UI.GameFonts.UI;
-            view.SetFont(cardFont);
             int slot = index;
             view.SetClickAction(() => CancelFromUI(slot));
             view.SetKeywordHoverActions((keyword, position) =>
@@ -203,7 +200,7 @@ public class ActionQueueUI : MonoBehaviour
                     if (!CanInspect) return;
                     if (inspection == null) inspection = CardInspectionPresenter.GetOrCreate(GetComponentInParent<Canvas>().rootCanvas);
                     inspection.Show((RectTransform)source.transform, stunCardPrefab != null ? stunCardPrefab : StunCard.Prefab ?? cardPrefab,
-                        StunCard.Definition, cardDatabase, cardFont, aboveSource: true);
+                        StunCard.Definition, cardDatabase, aboveSource: true);
                 };
             }
             else

@@ -39,7 +39,6 @@ namespace DuelHero.Cards
             goldLabel.text = "획득 예정 골드  +" + gold;
             actionLabel.text = cards.Count == 0 ? "계속" : "건너뛰기";
             message.text = cards.Count == 0 ? "획득 가능한 카드가 없습니다." : "카드를 클릭하면 획득하고 맵으로 돌아갑니다.";
-            Font font = DuelHero.UI.GameFonts.UI;
             tooltip = KeywordTooltip.Create(GetComponentInParent<Canvas>().rootCanvas);
             rangePreview = CardRangePreview.GetOrCreate(GetComponentInParent<Canvas>().rootCanvas);
             for (int i = 0; i < cards.Count; i++)
@@ -52,7 +51,6 @@ namespace DuelHero.Cards
                 rect.sizeDelta = new Vector2(132, 132 * 88f / 63f);
                 rect.localScale = Vector3.one * 1.65f;
                 rect.anchoredPosition = new Vector2((i - (cards.Count - 1) * .5f) * 260f, 5);
-                card.SetFont(font);
                 card.Bind(definition, database.keywords);
                 card.SetFrontVisible(true);
                 card.SetState(string.Empty, 0, true);

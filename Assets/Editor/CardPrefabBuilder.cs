@@ -30,7 +30,7 @@ namespace DuelHero.Editor
             Sprite special = LoadSprite("TypeBadgeSpecial.png");
             Sprite move = LoadSprite("TypeBadgeMove.png");
 
-            Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            var font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/Art/UI/Fonts/BusanDandiM SDF.asset");
             GameObject root = NewUI("CardView");
             RectTransform rootRect = (RectTransform)root.transform;
             rootRect.sizeDelta = new Vector2(132f, 132f * 88f / 63f);
@@ -69,11 +69,11 @@ namespace DuelHero.Editor
             reservationOutline.color = Color.white;
             reservationOutline.raycastTarget = false;
             reservationOutline.enabled = false;
-            Text reservationSlot = AddText("ReservationSlot", frontRoot.transform, string.Empty, font, 16, TextAnchor.MiddleCenter);
+            TextMeshProUGUI reservationSlot = AddText("ReservationSlot", frontRoot.transform, string.Empty, font, 16, TextAlignmentOptions.Center);
             reservationSlot.color = Color.white;
-            reservationSlot.fontStyle = FontStyle.Bold;
-            reservationSlot.horizontalOverflow = HorizontalWrapMode.Overflow;
-            reservationSlot.verticalOverflow = VerticalWrapMode.Overflow;
+            reservationSlot.fontStyle = FontStyles.Bold;
+            reservationSlot.textWrappingMode = TextWrappingModes.NoWrap;
+            reservationSlot.overflowMode = TextOverflowModes.Overflow;
             SetRect(reservationSlot.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(-12f, 4f), new Vector2(12f, 24f));
             reservationSlot.gameObject.SetActive(false);
 
@@ -143,8 +143,8 @@ namespace DuelHero.Editor
             Set(hitSettings, "energyBadge", energyBadge);
             Set(hitSettings, "typeBadge", typeBadge);
             hitSettings.ApplyModifiedPropertiesWithoutUndo();
-            Text cooldown = AddText("Cooldown", typeBadge.transform, "1", font, 28, TextAnchor.MiddleCenter);
-            cooldown.fontStyle = FontStyle.Bold;
+            TextMeshProUGUI cooldown = AddText("Cooldown", typeBadge.transform, "1", font, 28, TextAlignmentOptions.Center);
+            cooldown.fontStyle = FontStyles.Bold;
             cooldown.color = new Color(1f, 0.12f, 0.08f, 1f);
             cooldown.gameObject.SetActive(false);
             Stretch(cooldown.rectTransform);
@@ -292,17 +292,17 @@ namespace DuelHero.Editor
             return image;
         }
 
-        private static Text AddText(string name, Transform parent, string value, Font font, int size, TextAnchor alignment)
+        private static TextMeshProUGUI AddText(string name, Transform parent, string value, TMP_FontAsset font, int size, TextAlignmentOptions alignment)
         {
-            Text text = NewUI(name, parent).AddComponent<Text>();
+            var text = NewUI(name, parent).AddComponent<TextMeshProUGUI>();
             text.text = value;
             text.font = font;
             text.fontSize = size;
             text.color = TextColor;
             text.alignment = alignment;
             text.raycastTarget = false;
-            text.horizontalOverflow = HorizontalWrapMode.Wrap;
-            text.verticalOverflow = VerticalWrapMode.Truncate;
+            text.textWrappingMode = TextWrappingModes.Normal;
+            text.overflowMode = TextOverflowModes.Truncate;
             return text;
         }
 

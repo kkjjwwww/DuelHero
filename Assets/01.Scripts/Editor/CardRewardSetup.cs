@@ -1,3 +1,4 @@
+using TMPro;
 using System;
 using System.Linq;
 using DuelHero.Battle;
@@ -35,7 +36,7 @@ internal static class CardRewardSetup
             SetReference(Find<PlayerDeck>(scene), "database", database);
             var result = Find<BattleResultUI>(scene);
             var serialized = new SerializedObject(result);
-            var title = (Text)serialized.FindProperty("resultLabel").objectReferenceValue;
+            var title = (TextMeshProUGUI)serialized.FindProperty("resultLabel").objectReferenceValue;
             var panel = (RectTransform)title.transform.parent;
             var reward = result.GetComponent<CardRewardUI>();
             if (reward == null) reward = result.gameObject.AddComponent<CardRewardUI>();
@@ -47,19 +48,19 @@ internal static class CardRewardSetup
                 content.SetParent(panel, false);
                 content.anchorMin = content.anchorMax = content.pivot = new Vector2(.5f, .5f);
                 content.sizeDelta = new Vector2(820, 400);
-                var message = new GameObject("Message", typeof(RectTransform), typeof(Text)).GetComponent<Text>();
+                var message = new GameObject("Message", typeof(RectTransform), typeof(TextMeshProUGUI)).GetComponent<TextMeshProUGUI>();
                 message.transform.SetParent(content, false);
                 message.font = title.font;
                 message.fontSize = 18;
                 message.color = new Color(.94f, .89f, .77f);
-                message.alignment = TextAnchor.MiddleCenter;
+                message.alignment = TextAlignmentOptions.Center;
                 message.raycastTarget = false;
                 message.rectTransform.anchorMin = message.rectTransform.anchorMax = new Vector2(.5f, .5f);
                 message.rectTransform.sizeDelta = new Vector2(800, 32);
                 message.rectTransform.anchoredPosition = new Vector2(0, 182);
             }
             SetReference(reward, "content", content);
-            SetReference(reward, "message", content.GetComponentInChildren<Text>(true));
+            SetReference(reward, "message", content.GetComponentInChildren<TextMeshProUGUI>(true));
             SetReference(reward, "cardPrefab", AssetDatabase.LoadAssetAtPath<CardView>("Assets/02.Prefabs/CardView.prefab"));
             if (new SerializedObject(reward).FindProperty("screenBackground").objectReferenceValue == null)
                 content.gameObject.SetActive(false);

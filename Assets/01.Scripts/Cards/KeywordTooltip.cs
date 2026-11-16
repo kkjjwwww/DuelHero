@@ -1,12 +1,12 @@
 using UnityEngine;
-using UnityEngine.UI;
+using TMPro;
 
 namespace DuelHero.Cards
 {
     public sealed class KeywordTooltip : MonoBehaviour
     {
         [SerializeField] private RectTransform panel;
-        [SerializeField] private Text label;
+        [SerializeField] private TextMeshProUGUI label;
         [SerializeField] private bool fitWidth;
         [SerializeField, Min(1f)] private float minWidth = 48f;
         [SerializeField, Min(1f)] private float maxWidth = 280f;
@@ -31,7 +31,7 @@ namespace DuelHero.Cards
             label.text = text;
             Vector2 padding = label.rectTransform.offsetMin - label.rectTransform.offsetMax;
             float width = fitWidth ? Mathf.Clamp(label.preferredWidth + padding.x, minWidth, maxWidth) : maxWidth;
-            panel.sizeDelta = new Vector2(width, padding.y + label.cachedTextGeneratorForLayout.GetPreferredHeight(label.text, label.GetGenerationSettings(new Vector2(width - padding.x, 0f))) / label.pixelsPerUnit);
+            panel.sizeDelta = new Vector2(width, padding.y + label.GetPreferredValues(text, Mathf.Max(1f, width - padding.x), Mathf.Infinity).y);
             gameObject.SetActive(true); transform.SetAsLastSibling(); Move(screenPosition);
         }
         public void Move(Vector2 screenPosition)

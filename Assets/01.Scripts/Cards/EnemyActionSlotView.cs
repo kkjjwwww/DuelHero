@@ -30,7 +30,6 @@ namespace DuelHero.Cards
         [SerializeField] private CardDatabase cardDatabase;
         private CardView frontCard;
         private KeywordTooltip keywordTooltip;
-        private Font cardFont;
         private CardDefinition card;
         private Sequence flip;
         private Tween executionTween;
@@ -90,8 +89,6 @@ namespace DuelHero.Cards
             {
                 frontCard = Instantiate(stunned ? stunCardPrefab != null ? stunCardPrefab : StunCard.Prefab ?? cardPrefab : cardPrefab, frontFace.transform, false);
                 frontCard.name = stunned ? "StunnedCard" : "EnemyCardFront";
-                var font = cardFont = DuelHero.UI.GameFonts.UI;
-                frontCard.SetFont(font);
                 frontCard.SetClickAction(OpenCardList);
                 var hover = frontCard.GetComponent<CardHoverInfo>() ?? frontCard.gameObject.AddComponent<CardHoverInfo>();
                 hover.ShowInfo = ShowInspection;
@@ -275,7 +272,7 @@ namespace DuelHero.Cards
                 card == null || cardPrefab == null || cardDatabase == null) return;
             if (inspection == null) inspection = CardInspectionPresenter.GetOrCreate(GetComponentInParent<Canvas>().rootCanvas);
             inspection.Show(InspectionAnchor, stunned ? stunCardPrefab != null ? stunCardPrefab : StunCard.Prefab ?? cardPrefab : cardPrefab,
-                card, cardDatabase, cardFont,
+                card, cardDatabase,
                 click: typeOnly || stunned ? null : OpenCardList, scale: resultHoverScale, duration: resultHoverDuration,
                 hidden: typeOnly || stunned ? null : hideResultPreview, typeOnly: typeOnly, isEnemy: true);
             if (!typeOnly && !stunned) showResultPreview?.Invoke();

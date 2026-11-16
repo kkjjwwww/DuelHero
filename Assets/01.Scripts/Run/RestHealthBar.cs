@@ -10,7 +10,7 @@ namespace DuelHero.Run
     {
         [SerializeField] private Image healthFill;
         [SerializeField] private Image frameFlash;
-        [SerializeField] private Text healthNumber;
+        [SerializeField] private TMPro.TextMeshProUGUI healthNumber;
         private Color restFillColor;
 
         private void Awake() => restFillColor = healthFill.color;

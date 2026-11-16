@@ -31,9 +31,9 @@ namespace DuelHero.Cards
         [SerializeField] private TextMeshProUGUI energyLabel;
         [SerializeField] private TextMeshProUGUI descriptionLabel;
         [SerializeField] private Image typeBadge;
-        [SerializeField] private Text cooldownLabel;
+        [SerializeField] private TextMeshProUGUI cooldownLabel;
         [SerializeField] private CardReservationOutline reservationOutline;
-        [SerializeField] private Text reservationSlotLabel;
+        [SerializeField] private TextMeshProUGUI reservationSlotLabel;
 
         [Header("Back / State")]
         [SerializeField] private GameObject backRoot;
@@ -237,17 +237,6 @@ namespace DuelHero.Cards
             illustration.color = sprite != null ? Color.white : new Color(0.12f, 0.14f, 0.18f, 1f);
         }
 
-        public void SetFont(Font font)
-        {
-            if (font == null) return;
-            foreach (Text label in GetComponentsInChildren<Text>(true))
-            {
-                // Numeric badges keep the prefab font and its vertical metrics.
-                if (label == cooldownLabel || label == reservationSlotLabel) continue;
-                label.font = font;
-            }
-        }
-
         public void SetClickAction(UnityAction action)
         {
             button.onClick.RemoveAllListeners();
@@ -270,8 +259,7 @@ namespace DuelHero.Cards
         {
             if (normalTextColors.Count > 0) return;
             normalDescriptionColor = descriptionLabel.color;
-            foreach (Text label in GetComponentsInChildren<Text>(true))
-                if (label != cooldownLabel) normalTextColors[label] = label.color;
+            if (reservationSlotLabel != null) normalTextColors[reservationSlotLabel] = reservationSlotLabel.color;
             normalTextColors[nameLabel] = nameLabel.color;
             normalTextColors[energyLabel] = energyLabel.color;
         }

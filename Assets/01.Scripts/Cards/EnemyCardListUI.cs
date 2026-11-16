@@ -20,7 +20,6 @@ namespace DuelHero.Cards
         [SerializeField] private RectTransform content;
         [SerializeField] private TextMeshProUGUI titleLabel;
         [SerializeField] private TextMeshProUGUI detailLabel;
-        [SerializeField] private Font font;
         [SerializeField] private CardView cardPrefab;
         [Header("Category Layout")]
         [SerializeField, Min(.1f)] private float cardScale = 1f;
@@ -168,7 +167,6 @@ namespace DuelHero.Cards
         private void Initialize()
         {
             if (initialized) return;
-            if (font == null) font = DuelHero.UI.GameFonts.UI;
             inspection = CardInspectionPresenter.GetOrCreate(GetComponentInParent<Canvas>().rootCanvas);
             if (detailLabel != null) detailLabel.gameObject.SetActive(false);
             var vertical = content.GetComponent<VerticalLayoutGroup>() ?? content.gameObject.AddComponent<VerticalLayoutGroup>();
@@ -254,7 +252,6 @@ namespace DuelHero.Cards
             entry.Container.SetParent(poolRoot, false);
             entry.View = Instantiate(cardPrefab, entry.Container, false);
             entry.View.name = "Card";
-            entry.View.SetFont(font);
             entry.View.SetClickAction(() => SelectOwnedCard(entry));
             var rect = (RectTransform)entry.View.transform;
             rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(.5f, .5f);
@@ -264,7 +261,7 @@ namespace DuelHero.Cards
             hover.ShowInfo = () =>
             {
                 if (IsOpen && entry.Card != null)
-                    inspection.Show(entry.Container, cardPrefab, entry.Card.Definition, Database, font,
+                    inspection.Show(entry.Container, cardPrefab, entry.Card.Definition, Database,
                         DisplayCooldown(entry.Card),
                         click: selectOwnedCard == null ? null : () => SelectOwnedCard(entry),
                         scale: hoverScale, duration: hoverDuration,

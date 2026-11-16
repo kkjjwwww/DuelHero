@@ -142,7 +142,6 @@ namespace DuelHero.Shop
             rect.sizeDelta = size;
             rect.localScale = Vector3.one * (onStand ? 1f : 1.65f);
             rect.anchoredPosition3D = onStand ? Vector3.zero : new Vector3(0, 35, 0);
-            card.SetFont(GameFonts.UI);
             if (definition != null)
             {
                 card.Bind(definition, database.keywords); card.SetFrontVisible(true); card.SetState(string.Empty, 0, true);
