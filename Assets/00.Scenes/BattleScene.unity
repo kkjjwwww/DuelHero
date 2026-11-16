@@ -9284,6 +9284,7 @@ MonoBehaviour:
   energyReleaseBurstVfx: {fileID: 6216339919389851293, guid: 1831780259559f84290f6e2a789cd6d2, type: 3}
   energyReleaseGroundVfx: {fileID: 4984824894364517515, guid: d1f9959d4b157d949b354bd05bcd5a0a, type: 3}
   energyReleaseHitVfx: {fileID: 5111495584109495077, guid: 1c8c42c98fa91b44abebc0b5ebb31be3, type: 3}
+  foresightGainVfx: {fileID: 2693094929603671876, guid: d20eb5f1679545dba2accb7a920db795, type: 3}
   energyReleaseRiseDuration: 1.5
   energyReleaseLandingDuration: 0.25
   energyReleaseCenterHeight: 0.4
@@ -18391,6 +18392,8 @@ MonoBehaviour:
   - {fileID: 2029849952}
   - {fileID: 1127434675}
   cardList: {fileID: 459612292}
+  foresightRevealVfx: {fileID: 5966813116914007551, guid: bce7c11cad494b5e8dc835d0caecd7ba, type: 3}
+  foresightRevealScale: 0.5
 --- !u!1 &1679149031
 GameObject:
   m_ObjectHideFlags: 0

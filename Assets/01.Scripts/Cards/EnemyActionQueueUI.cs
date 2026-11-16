@@ -9,7 +9,11 @@ namespace DuelHero.Cards
         [SerializeField] private BattleTurnController source;
         [SerializeField] private EnemyActionSlotView[] slots;
         [SerializeField] private EnemyCardListUI cardList;
+        [SerializeField] private GameObject foresightRevealVfx;
+        [SerializeField, Min(0.01f)] private float foresightRevealScale = 0.5f;
         private BattlePreviewPresenter preview;
+        private int lastFlashRound = -1;
+        private readonly HashSet<int> flashedSlots = new();
 
         private void OnEnable()
         {
@@ -52,7 +56,11 @@ namespace DuelHero.Cards
                 !StunCard.IsStun(plan[source.PreparedEnemyRevealSlotIndex]))
                 slots[source.PreparedEnemyRevealSlotIndex].ShowTypeOnly();
             for (int i = 0; i < slots.Length; i++)
-                if (source != null && plan != null && i < plan.Count && source.IsForesightSlot(i)) RevealSlot(i);
+                if (source != null && plan != null && i < plan.Count && source.IsForesightSlot(i))
+                {
+                    RevealSlot(i);
+                    if (source.CanInspectSlots && !source.ResultsAvailable) PlayForesightReveal(i);
+                }
             RefreshInspection();
         }
         private void RefreshStun()
@@ -93,6 +101,23 @@ namespace DuelHero.Cards
         {
             if (IsValid(index)) slots[index].Reveal();
         }
+        private void PlayForesightReveal(int index)
+        {
+            if (foresightRevealVfx == null || !IsValid(index)) return;
+            if (lastFlashRound != source.ForesightRound)
+            {
+                lastFlashRound = source.ForesightRound;
+                flashedSlots.Clear();
+            }
+            if (!flashedSlots.Add(index)) return;
+
+            var rect = (RectTransform)slots[index].transform;
+            var instance = Instantiate(foresightRevealVfx, rect, false);
+            instance.transform.localPosition = rect.rect.center;
+            instance.transform.localScale *= rect.rect.width * foresightRevealScale;
+            Destroy(instance, 1f);
+        }
+
         private bool IsValid(int index) => index >= 0 && index < slots.Length && slots[index] != null;
     }
 }

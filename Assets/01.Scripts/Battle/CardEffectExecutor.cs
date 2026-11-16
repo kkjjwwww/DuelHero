@@ -318,10 +318,12 @@ namespace DuelHero.Battle
         private static Quaternion FaceTravel(Vector3 travel, Vector3 up) =>
             Quaternion.LookRotation(Vector3.Cross(travel, up), up);
 
+        private const float TechniqueVfxLifetime = .45f;
+
         private GameObject PlayTechniqueVfx(GameObject prefab, Vector3 position, Quaternion rotation)
         {
             var instance = Instantiate(prefab, position, rotation);
-            Destroy(instance, .45f);
+            Destroy(instance, TechniqueVfxLifetime);
             return instance;
         }
 
@@ -391,6 +393,24 @@ namespace DuelHero.Battle
             riftTiles.Remove(actorId);
         }
 
+        [SerializeField] private GameObject foresightGainVfx;
+
+        internal void PlayForesightGain(GridMovement unit)
+        {
+            if (foresightGainVfx == null) return;
+            var caster = unit.GetComponentInChildren<SpriteRenderer>();
+            if (caster == null) return;
+            var bounds = caster.bounds;
+            var position = bounds.center + Vector3.up * (bounds.extents.y * .8f);
+            var instance = Instantiate(foresightGainVfx, position, foresightGainVfx.transform.rotation, caster.transform);
+            foreach (var renderer in instance.GetComponentsInChildren<ParticleSystemRenderer>(true))
+            {
+                renderer.sortingLayerID = caster.sortingLayerID;
+                renderer.sortingOrder = caster.sortingOrder + 1;
+            }
+            Destroy(instance, 1f);
+        }
+
         internal static bool IsEnergyRelease(CardDefinition card) => card?.id == "energy_release_001";
 
         internal Tween BeginEnergyRelease(UnitJumpPresentation jump) =>
@@ -405,20 +425,31 @@ namespace DuelHero.Battle
                 : (jump != null ? jump.MotionWorldPosition : unit.Grid.CellToWorld(unit.GridPosition)) +
                     Vector3.up * energyReleaseCenterHeight;
 
-        internal void ResolveEnergyRelease(string actorId, UnitJumpPresentation jump, CombatEffectResolver.DamageBatch batch)
+        internal float PlayEnergyReleaseBurst(string actorId, UnitJumpPresentation jump)
         {
             jump?.ClearEnergyCharge();
-            if (!batch.AttackCells.ContainsKey(actorId) ||
-                !combatEffects.TryGetUnit(actorId, out var unit, out _)) return;
+            if (!combatEffects.TryGetUnit(actorId, out var unit, out _)) return 0f;
 
             Vector3 ground = unit.Grid.CellToWorld(unit.GridPosition);
+            const float burstLifetime = 1f;
             if (energyReleaseBurstVfx != null)
             {
                 Vector3 center = GetEnergyReleaseCenter(unit, jump);
-                Destroy(Instantiate(energyReleaseBurstVfx, center, energyReleaseBurstVfx.transform.rotation), 1f);
+                var burst = Instantiate(energyReleaseBurstVfx, center, energyReleaseBurstVfx.transform.rotation);
+                var caster = unit.GetComponentInChildren<SpriteRenderer>();
+                if (caster != null)
+                {
+                    foreach (var particles in burst.GetComponentsInChildren<ParticleSystemRenderer>(true))
+                    {
+                        particles.sortingLayerID = caster.sortingLayerID;
+                        particles.sortingOrder = caster.sortingOrder + 1;
+                    }
+                }
+                Destroy(burst, burstLifetime);
             }
             if (energyReleaseGroundVfx != null)
                 PlayTechniqueVfx(energyReleaseGroundVfx, ground, energyReleaseGroundVfx.transform.rotation);
+            return energyReleaseBurstVfx != null ? burstLifetime : energyReleaseGroundVfx != null ? TechniqueVfxLifetime : 0f;
         }
 
         public bool ResolveRiftImpact(string actorId, CardDefinition card, CombatEffectResolver.DamageBatch batch)

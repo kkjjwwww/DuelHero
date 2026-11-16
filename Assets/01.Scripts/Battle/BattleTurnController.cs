@@ -60,6 +60,7 @@ namespace DuelHero.Battle
         private int foresightRound = -1;
         private readonly HashSet<int> foresightSlots = new();
 
+        internal int ForesightRound => foresightRound;
         public bool IsForesightSlot(int slot) => foresightSlots.Contains(slot);
 
         public bool TryGetForesightPreview(int slot, out ExecutedCardPreview preview, out GridMovement unit)
@@ -275,19 +276,14 @@ namespace DuelHero.Battle
                 if (playerRise != null) yield return playerRise.WaitForCompletion();
                 if (enemyRise != null && enemyRise.IsActive()) yield return enemyRise.WaitForCompletion();
 
-                var damage = combatEffects.CalculateDamageBatch(attacks, round, stunnedThisSlot);
-                enemyExecutions[slot] = new ExecutedCardPreview(enemyPath,
-                    damage.AttackCells.TryGetValue(enemyId, out var cells) ? cells : Array.Empty<Vector2Int>());
-                bool playerRiftBurst = effects.ResolveRiftImpact(playerId, pc, damage);
-                bool enemyRiftBurst = effects.ResolveRiftImpact(enemyId, ec, damage);
-                if (playerRiftBurst || enemyRiftBurst) presentation?.PlayRiftImpactShake();
-                if (playerReleases) effects.ResolveEnergyRelease(playerId, playerJumpPresentation, damage);
-                if (enemyReleases) effects.ResolveEnergyRelease(enemyId, enemyJumpPresentation, damage);
-                combatEffects.ApplyDamageBatch(damage);
-                effects.PlayCardHitSounds(damage);
+                float releaseStart = Time.time;
+                float releaseDuration = Mathf.Max(
+                    playerReleases ? effects.PlayEnergyReleaseBurst(playerId, playerJumpPresentation) : 0f,
+                    enemyReleases ? effects.PlayEnergyReleaseBurst(enemyId, enemyJumpPresentation) : 0f);
                 if (playerReleases || enemyReleases)
                 {
                     presentation?.PlayEnergyImpactShake(effects.EnergyReleaseShakeStrength, effects.EnergyReleaseShakeDuration);
+                    releaseDuration = Mathf.Max(releaseDuration, effects.EnergyReleaseShakeDuration);
                     if (playerRise != null || enemyRise != null)
                     {
                         float hold = effects.EnergyReleaseAirHoldDuration;
@@ -299,6 +295,20 @@ namespace DuelHero.Battle
                 var enemyLanding = enemyReleases ? effects.LandEnergyRelease(enemyJumpPresentation) : null;
                 if (playerLanding != null) yield return playerLanding.WaitForCompletion();
                 if (enemyLanding != null && enemyLanding.IsActive()) yield return enemyLanding.WaitForCompletion();
+                if (playerReleases || enemyReleases)
+                {
+                    float remaining = releaseStart + releaseDuration - Time.time;
+                    if (remaining > 0f) yield return new WaitForSeconds(remaining);
+                }
+
+                var damage = combatEffects.CalculateDamageBatch(attacks, round, stunnedThisSlot);
+                enemyExecutions[slot] = new ExecutedCardPreview(enemyPath,
+                    damage.AttackCells.TryGetValue(enemyId, out var cells) ? cells : Array.Empty<Vector2Int>());
+                bool playerRiftBurst = effects.ResolveRiftImpact(playerId, pc, damage);
+                bool enemyRiftBurst = effects.ResolveRiftImpact(enemyId, ec, damage);
+                if (playerRiftBurst || enemyRiftBurst) presentation?.PlayRiftImpactShake();
+                combatEffects.ApplyDamageBatch(damage);
+                effects.PlayCardHitSounds(damage);
                 if (HasDash(pc)) playerAttackPresentation?.Cancel();
                 if (HasDash(ec)) enemyAttackPresentation?.Cancel();
                 effects.CancelPreparationPresentation(playerId, unitVisualPlacement);
@@ -333,7 +343,13 @@ namespace DuelHero.Battle
                     effects.CancelPreparationPresentation(playerId, unitVisualPlacement);
                     effects.CancelPreparationPresentation(enemyId, unitVisualPlacement);
                 }
-                if (pc?.SelfForesight > 0) playerStats.ApplyForesight(pc.SelfForesight);
+                if (pc?.SelfForesight > 0)
+                {
+                    int pending = playerStats.PendingForesight;
+                    playerStats.ApplyForesight(pc.SelfForesight);
+                    if (pc.id == "future_sight_001" && playerStats.PendingForesight > pending)
+                        effects.PlayForesightGain(playerMovement);
+                }
                 if (pc?.SelfStun > 0) playerStats.ApplyStun(pc.SelfStun);
                 if (ec?.SelfStun > 0) enemyStats.ApplyStun(ec.SelfStun);
                 playerQueue.BlockFutureSlots(slot + 1, playerStats.Stun);
