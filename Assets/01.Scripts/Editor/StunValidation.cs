@@ -73,6 +73,23 @@ public static class StunValidation
         }
         public void Dispose() { Turn.enabled = false; UnityEngine.Object.DestroyImmediate(Root); }
     }
+    public static void ValidateOpeningThrust()
+    {
+        foreach (bool stunned in new[] { false, true })
+        {
+            using var f = new Fixture();
+            var card = f.Deck.AddCard("opening_thrust_001");
+            Check(card != null && CardEffectExecutor.SupportsDefinition(card.Definition), "opening thrust data");
+            Check(f.Queue.TryReserve(card), "reserve opening thrust");
+            while (f.Queue.Reservations.Count < 3)
+                Check(f.Queue.TryReserve(f.Deck.WaitAction), "reserve wait");
+            if (stunned) f.Enemy.ApplyStun(1);
+            f.Execute(new[] { WaitCard.Definition, WaitCard.Definition, WaitCard.Definition });
+            Check(f.Enemy.Stun == 0 && f.Enemy.Health == (stunned ? 80 : 90), "opening thrust uses the consumed stun slot");
+        }
+        Debug.Log("OPENING_THRUST_VALIDATION_PASS");
+    }
+
     [MenuItem("Tools/Duel Hero/Cards/Validate stun")]
     public static void Run()
     {

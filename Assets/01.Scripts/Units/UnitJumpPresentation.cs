@@ -18,6 +18,10 @@ namespace DuelHero.Units
         public float LiftFraction { get; private set; }
         public Vector3 MotionWorldPosition => motionRoot != null ? motionRoot.position : transform.position;
         private Tween motion;
+        private GameObject energyCharge;
+        private bool isEnergyRelease;
+        private float energyReleaseCenterHeight;
+        private float energyReleaseLiftHeight;
         private Vector3 restPosition;
         private int version;
 
@@ -68,12 +72,74 @@ namespace DuelHero.Units
             }
         }
 
+        public Tween BeginEnergyRelease(GameObject chargePrefab, float duration, float centerHeight, float liftHeight)
+        {
+            if (!isActiveAndEnabled || IsPlaying || motionRoot == null || motionRoot.parent == null)
+                return null;
+
+            version++;
+            IsPlaying = isEnergyRelease = true;
+            energyReleaseCenterHeight = centerHeight;
+            energyReleaseLiftHeight = liftHeight;
+            restPosition = motionRoot.localPosition;
+            sprites?.SetPose(UnitPose.JumpAir);
+            var lift = motionRoot.parent.InverseTransformVector(Vector3.up * energyReleaseLiftHeight);
+            if (chargePrefab != null)
+            {
+                energyCharge = Instantiate(chargePrefab, EnergyReleaseCenter, Quaternion.identity);
+                energyCharge.transform.SetParent(motionRoot, true);
+                foreach (var particles in energyCharge.GetComponentsInChildren<ParticleSystem>())
+                {
+                    var main = particles.main;
+                    main.simulationSpeed *= 1.5f / duration;
+                }
+            }
+
+            motion = DOVirtual.Float(0f, 1f, duration, progress =>
+            {
+                LiftFraction = progress;
+                motionRoot.localPosition = restPosition + lift * progress;
+            }).SetEase(Ease.InOutSine);
+            return motion;
+        }
+
+        internal bool IsEnergyReleaseActive => isEnergyRelease;
+        public Vector3 EnergyReleaseCenter => MotionWorldPosition + Vector3.up * energyReleaseCenterHeight;
+
+        public Tween LandEnergyRelease(float duration)
+        {
+            if (!isEnergyRelease) return null;
+            ClearEnergyCharge();
+            motion = DOVirtual.Float(LiftFraction, 0f, duration, progress =>
+            {
+                LiftFraction = progress;
+                motionRoot.localPosition = restPosition +
+                    motionRoot.parent.InverseTransformVector(Vector3.up * (energyReleaseLiftHeight * progress));
+            }).SetEase(Ease.InOutSine).OnComplete(() =>
+            {
+                motionRoot.localPosition = restPosition;
+                IsPlaying = isEnergyRelease = false;
+                sprites?.ResetPose();
+            });
+            return motion;
+        }
+
+        public void ClearEnergyCharge()
+        {
+            if (energyCharge == null) return;
+            energyCharge.SetActive(false);
+            Destroy(energyCharge);
+            energyCharge = null;
+        }
+
         public void Cancel()
         {
             version++;
             motion?.Pause();
             motion?.Kill();
             motion = null;
+            ClearEnergyCharge();
+            isEnergyRelease = false;
             LiftFraction = 0f;
             if (IsPlaying && motionRoot != null) motionRoot.localPosition = restPosition;
             IsPlaying = false;

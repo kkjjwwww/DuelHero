@@ -28,6 +28,13 @@ namespace DuelHero.Battle
 
         internal void PlayRiftImpactShake() => cameraController?.PlayRiftImpactShake();
 
+        internal void BeginEnergyFocus(System.Func<Vector3> focus, float zoom, float duration) =>
+            cameraController?.BeginEnergyFocus(focus, zoom, duration);
+        internal void EndEnergyFocus(float duration) => cameraController?.EndEnergyFocus(duration);
+        internal void CancelEnergyFocus() => cameraController?.CancelEnergyFocus();
+        internal void PlayEnergyImpactShake(float strength, float duration) =>
+            cameraController?.PlayImpactShake(strength, duration);
+
         private void Awake()
         {
             handPosition = handPanel.anchoredPosition;

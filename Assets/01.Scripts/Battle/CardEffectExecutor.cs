@@ -18,6 +18,23 @@ namespace DuelHero.Battle
         [SerializeField] private GameObject moveDustVfx;
         [SerializeField] private GameObject tearWoundVfx, whirlwindVfx, thornThrowVfx, thornImpactVfx;
         [SerializeField] private GameObject riftTileVfx, riftBurstVfx;
+        [SerializeField] private GameObject energyReleaseChargeVfx, energyReleaseBurstVfx, energyReleaseGroundVfx, energyReleaseHitVfx;
+        [SerializeField, Min(.01f)] private float energyReleaseRiseDuration = 1.5f;
+        [SerializeField, Min(.01f)] private float energyReleaseLandingDuration = .25f;
+        [SerializeField, Min(0f)] private float energyReleaseCenterHeight = .65f;
+        [SerializeField, Min(0f)] private float energyReleaseLiftHeight = .65f;
+        [SerializeField, Min(0f)] private float energyReleaseAirHoldDuration = .2f;
+        [SerializeField, Min(1f)] private float energyReleaseZoom = 1.15f;
+        [SerializeField, Min(0f)] private float energyReleaseShakeStrength = .09f;
+        [SerializeField, Min(0f)] private float energyReleaseShakeDuration = .15f;
+
+        internal float EnergyReleaseRiseDuration => Mathf.Max(.01f, energyReleaseRiseDuration);
+        internal float EnergyReleaseLandingDuration => Mathf.Max(.01f, energyReleaseLandingDuration);
+        internal float EnergyReleaseAirHoldDuration => Mathf.Max(0f, energyReleaseAirHoldDuration);
+        internal float EnergyReleaseZoom => Mathf.Max(1f, energyReleaseZoom);
+        internal float EnergyReleaseShakeStrength => Mathf.Max(0f, energyReleaseShakeStrength);
+        internal float EnergyReleaseShakeDuration => Mathf.Max(0f, energyReleaseShakeDuration);
+
         private readonly Dictionary<string, List<GameObject>> riftTiles = new();
         private Tween whirlwindSorting;
         private CardSoundSettings cardSoundSettings;
@@ -164,6 +181,11 @@ namespace DuelHero.Battle
                 }
                 return;
             }
+            if (result.CardId == "energy_release_001" && energyReleaseHitVfx != null)
+            {
+                PlayTechniqueVfx(energyReleaseHitVfx, position, energyReleaseHitVfx.transform.rotation);
+                return;
+            }
             if (result.HitVfx == "thorn_impact" && thornImpactVfx != null)
             {
                 PlayTechniqueVfx(thornImpactVfx, position, thornImpactVfx.transform.rotation);
@@ -195,7 +217,8 @@ namespace DuelHero.Battle
             IReadOnlyList<Vector2Int> dashPath = null, bool counter = false)
         {
             if (attack == null || unit == null || card == null) return;
-            bool thrust = card.attackVfx == "thrust";
+            bool openingThrust = card.attackVfx == "opening_thrust";
+            bool thrust = card.attackVfx == "thrust" || openingThrust;
             bool sweep = card.attackVfx == "sweep";
             GameObject prefab = card.attackVfx switch
             {
@@ -244,7 +267,7 @@ namespace DuelHero.Battle
             }
             if (thrust)
             {
-                PlayThrustLine(position + unit.Grid.transform.up * .08f, step, sprite, direction == Vector2Int.up);
+                PlayThrustLine(position + unit.Grid.transform.up * .08f, step, sprite, direction == Vector2Int.up, openingThrust);
                 return;
             }
             if (dashPath != null && dashPath.Count > 0)
@@ -368,6 +391,36 @@ namespace DuelHero.Battle
             riftTiles.Remove(actorId);
         }
 
+        internal static bool IsEnergyRelease(CardDefinition card) => card?.id == "energy_release_001";
+
+        internal Tween BeginEnergyRelease(UnitJumpPresentation jump) =>
+            jump?.BeginEnergyRelease(energyReleaseChargeVfx, EnergyReleaseRiseDuration,
+                energyReleaseCenterHeight, Mathf.Max(0f, energyReleaseLiftHeight));
+
+        internal Tween LandEnergyRelease(UnitJumpPresentation jump) =>
+            jump?.LandEnergyRelease(EnergyReleaseLandingDuration);
+
+        internal Vector3 GetEnergyReleaseCenter(GridMovement unit, UnitJumpPresentation jump) =>
+            jump != null && jump.IsEnergyReleaseActive ? jump.EnergyReleaseCenter
+                : (jump != null ? jump.MotionWorldPosition : unit.Grid.CellToWorld(unit.GridPosition)) +
+                    Vector3.up * energyReleaseCenterHeight;
+
+        internal void ResolveEnergyRelease(string actorId, UnitJumpPresentation jump, CombatEffectResolver.DamageBatch batch)
+        {
+            jump?.ClearEnergyCharge();
+            if (!batch.AttackCells.ContainsKey(actorId) ||
+                !combatEffects.TryGetUnit(actorId, out var unit, out _)) return;
+
+            Vector3 ground = unit.Grid.CellToWorld(unit.GridPosition);
+            if (energyReleaseBurstVfx != null)
+            {
+                Vector3 center = GetEnergyReleaseCenter(unit, jump);
+                Destroy(Instantiate(energyReleaseBurstVfx, center, energyReleaseBurstVfx.transform.rotation), 1f);
+            }
+            if (energyReleaseGroundVfx != null)
+                PlayTechniqueVfx(energyReleaseGroundVfx, ground, energyReleaseGroundVfx.transform.rotation);
+        }
+
         public bool ResolveRiftImpact(string actorId, CardDefinition card, CombatEffectResolver.DamageBatch batch)
         {
             if (card?.attackVfx != "rift_charge") return false;
@@ -382,7 +435,7 @@ namespace DuelHero.Battle
             return true;
         }
 
-        private void PlayThrustLine(Vector3 tip, Vector3 step, SpriteRenderer sprite, bool behind)
+        private void PlayThrustLine(Vector3 tip, Vector3 step, SpriteRenderer sprite, bool behind, bool openingThrust)
         {
             if (thrustLineMaterial == null)
             {
@@ -396,8 +449,10 @@ namespace DuelHero.Battle
             var line = effect.AddComponent<LineRenderer>();
             line.sharedMaterial = thrustLineMaterial;
             line.positionCount = 2;
-            line.startWidth = .045f;
-            line.endWidth = .012f;
+            float scale = openingThrust ? 1.5f : 1f;
+            step *= scale;
+            line.startWidth = .045f * scale;
+            line.endWidth = .012f * scale;
             line.numCapVertices = 3;
             if (sprite != null)
             {
@@ -406,16 +461,18 @@ namespace DuelHero.Battle
             }
             line.SetPosition(0, tip);
             line.SetPosition(1, tip + step * .15f);
-            var color = new Color(.58f, .91f, 1f);
+            var color = openingThrust ? new Color(1f, .81f, .12f) : new Color(.58f, .91f, 1f);
+            var tipColor = openingThrust ? new Color(1f, .96f, .65f) : Color.white;
             line.startColor = color;
-            line.endColor = Color.white;
+            line.endColor = tipColor;
             float duration = .2f * VfxDurationMultiplier;
             DOVirtual.Float(0f, 1f, duration, progress =>
             {
                 line.SetPosition(1, tip + step * Mathf.Lerp(.15f, .8f, progress));
                 color.a = 1f - progress;
                 line.startColor = color;
-                line.endColor = new Color(1f, 1f, 1f, color.a);
+                tipColor.a = color.a;
+                line.endColor = tipColor;
             }).SetEase(Ease.OutQuad).SetLink(effect);
             Destroy(effect, duration);
         }
@@ -446,7 +503,7 @@ namespace DuelHero.Battle
                 effect != null && SupportsMovementMetadata(card, effect) && effect.value >= 0 && effect.statusMultiplier >= 0 &&
                 (string.IsNullOrEmpty(effect.triggerTiming) || effect.triggerTiming == "action" || effect.IsCounter) &&
                 (!effect.IsCounter || new[] { "damage", "guard", "energyRestore", "healthRestore" }.Contains(effect.effectType)) &&
-                (effect.statusMultiplier == 0 || (effect.effectType == "damage" && effect.statusId == "bleed")) && (effect.effectType switch
+                (effect.statusMultiplier == 0 || (effect.effectType == "damage" && (effect.statusId == "bleed" || effect.statusId == "stun"))) && (effect.effectType switch
                 {
                     "move" => effect.targetType == "자신" && effect.value > 0 && TryDirection(effect.rangeOffsets, out _),
                     "guard" => effect.targetType == "자신" && effect.durationSlots > 0,

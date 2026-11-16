@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using DG.Tweening;
 using DuelHero.Cards;
 using DuelHero.Data;
 using DuelHero.Units;
@@ -212,6 +213,13 @@ namespace DuelHero.Battle
                 // Snapshot both disables before either actor can apply stun this slot.
                 bool playerStunned = playerStats.ConsumeStunSlot();
                 bool enemyStunned = enemyStats.ConsumeStunSlot();
+                HashSet<UnitStats> stunnedThisSlot = null;
+                if (playerStunned || enemyStunned)
+                {
+                    stunnedThisSlot = new HashSet<UnitStats>();
+                    if (playerStunned) stunnedThisSlot.Add(playerStats);
+                    if (enemyStunned) stunnedThisSlot.Add(enemyStats);
+                }
                 var pc = playerStunned ? StunCard.Definition : playerCards[slot];
                 var ec = enemyStunned ? StunCard.Definition : enemyCards[slot];
                 int playerCost = pc?.EnergyCostAt(playerStats.Energy) ?? 0;
@@ -238,10 +246,12 @@ namespace DuelHero.Battle
                 AddAttacks(attacks, playerId, pc, movementPath: playerPath, spentEnergy: playerCost);
                 AddAttacks(attacks, enemyId, ec, movementPath: enemyPath, spentEnergy: enemyCost);
 
-                // Each actor returns to idle before the next actor starts. Damage remains simultaneous.
-                if (playerAttackPresentation != null && !HasDash(pc) && attacks.Any(a => a.ActorId == playerId))
+                bool playerReleases = CardEffectExecutor.IsEnergyRelease(pc);
+                bool enemyReleases = CardEffectExecutor.IsEnergyRelease(ec);
+                // Other attacks finish first so both charged bursts can meet the shared damage frame.
+                if (!playerReleases && playerAttackPresentation != null && !HasDash(pc) && attacks.Any(a => a.ActorId == playerId))
                     yield return effects.PlayAttackAnimated(playerAttackPresentation, playerId, pc, playerPath, placement: unitVisualPlacement);
-                if (enemyAttackPresentation != null && !HasDash(ec) && attacks.Any(a => a.ActorId == enemyId))
+                if (!enemyReleases && enemyAttackPresentation != null && !HasDash(ec) && attacks.Any(a => a.ActorId == enemyId))
                     yield return effects.PlayAttackAnimated(enemyAttackPresentation, enemyId, ec, enemyPath, placement: unitVisualPlacement);
 
                 if (HasDash(pc) && attacks.Any(a => a.ActorId == playerId))
@@ -249,14 +259,46 @@ namespace DuelHero.Battle
                 if (HasDash(ec) && attacks.Any(a => a.ActorId == enemyId))
                     yield return effects.PlayDashImpact(enemyAttackPresentation, enemyId, ec, enemyPath);
 
-                var damage = combatEffects.CalculateDamageBatch(attacks, round);
+                Vector3 playerCell = playerReleases
+                    ? playerMovement.Grid.CellToWorld(playerMovement.GridPosition) : Vector3.zero;
+                Vector3 enemyCell = enemyReleases
+                    ? enemyMovement.Grid.CellToWorld(enemyMovement.GridPosition) : Vector3.zero;
+                var playerRise = playerReleases ? effects.BeginEnergyRelease(playerJumpPresentation) : null;
+                var enemyRise = enemyReleases ? effects.BeginEnergyRelease(enemyJumpPresentation) : null;
+                if (playerRise != null || enemyRise != null)
+                {
+                    Vector3 focus = playerRise != null && enemyRise != null
+                        ? (playerCell + enemyCell) * .5f
+                        : playerRise != null ? playerCell : enemyCell;
+                    presentation?.BeginEnergyFocus(() => focus, effects.EnergyReleaseZoom, effects.EnergyReleaseRiseDuration);
+                }
+                if (playerRise != null) yield return playerRise.WaitForCompletion();
+                if (enemyRise != null && enemyRise.IsActive()) yield return enemyRise.WaitForCompletion();
+
+                var damage = combatEffects.CalculateDamageBatch(attacks, round, stunnedThisSlot);
                 enemyExecutions[slot] = new ExecutedCardPreview(enemyPath,
                     damage.AttackCells.TryGetValue(enemyId, out var cells) ? cells : Array.Empty<Vector2Int>());
                 bool playerRiftBurst = effects.ResolveRiftImpact(playerId, pc, damage);
                 bool enemyRiftBurst = effects.ResolveRiftImpact(enemyId, ec, damage);
                 if (playerRiftBurst || enemyRiftBurst) presentation?.PlayRiftImpactShake();
+                if (playerReleases) effects.ResolveEnergyRelease(playerId, playerJumpPresentation, damage);
+                if (enemyReleases) effects.ResolveEnergyRelease(enemyId, enemyJumpPresentation, damage);
                 combatEffects.ApplyDamageBatch(damage);
                 effects.PlayCardHitSounds(damage);
+                if (playerReleases || enemyReleases)
+                {
+                    presentation?.PlayEnergyImpactShake(effects.EnergyReleaseShakeStrength, effects.EnergyReleaseShakeDuration);
+                    if (playerRise != null || enemyRise != null)
+                    {
+                        float hold = effects.EnergyReleaseAirHoldDuration;
+                        if (hold > 0f) yield return new WaitForSeconds(hold);
+                        presentation?.EndEnergyFocus(effects.EnergyReleaseLandingDuration);
+                    }
+                }
+                var playerLanding = playerReleases ? effects.LandEnergyRelease(playerJumpPresentation) : null;
+                var enemyLanding = enemyReleases ? effects.LandEnergyRelease(enemyJumpPresentation) : null;
+                if (playerLanding != null) yield return playerLanding.WaitForCompletion();
+                if (enemyLanding != null && enemyLanding.IsActive()) yield return enemyLanding.WaitForCompletion();
                 if (HasDash(pc)) playerAttackPresentation?.Cancel();
                 if (HasDash(ec)) enemyAttackPresentation?.Cancel();
                 effects.CancelPreparationPresentation(playerId, unitVisualPlacement);
@@ -280,7 +322,7 @@ namespace DuelHero.Battle
                     var counterAttacks = new List<CombatEffectResolver.AttackRequest>();
                     if (playerCounter) { yield return effects.ExecutePreparationAnimated(playerId, pc, round, playerJumpPresentation, unitVisualPlacement, true); AddAttacks(counterAttacks, playerId, pc, true); }
                     if (enemyCounter) { yield return effects.ExecutePreparationAnimated(enemyId, ec, round, enemyJumpPresentation, unitVisualPlacement, true); AddAttacks(counterAttacks, enemyId, ec, true); }
-                    var counters = combatEffects.CalculateDamageBatch(counterAttacks, round);
+                    var counters = combatEffects.CalculateDamageBatch(counterAttacks, round, stunnedThisSlot);
                     if (counters.AttackCells.TryGetValue(enemyId, out var counterCells))
                     {
                         enemyExecutions[slot] = new ExecutedCardPreview(enemyPath,
@@ -485,6 +527,7 @@ namespace DuelHero.Battle
             : enemyHealth <= 0 ? BattleOutcome.Victory : BattleOutcome.Running;
         private void CancelUnitPresentations()
         {
+            presentation?.CancelEnergyFocus();
             if (effects != null)
             {
                 effects.CancelPreparationPresentation(playerId, unitVisualPlacement);

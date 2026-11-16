@@ -1,5 +1,7 @@
 using System;
 using System.Collections;
+using DG.Tweening;
+using DuelHero.Cards;
 using UnityEngine;
 
 namespace DuelHero.Units
@@ -20,14 +22,64 @@ namespace DuelHero.Units
         [SerializeField] private Sprite jumpGround;
         [SerializeField] private Sprite jumpAir;
         [SerializeField, Min(0f)] private float supportPoseDuration = 0.4f;
+        [SerializeField, Range(0f, 0.1f)] private float idleBreathAmount = 0.02f;
+        private CardReservationQueue battleQueue;
+        private UnitStats stats;
+        private Tween idleBreath;
+        private Vector3 restScale;
+        private float breathProgress;
         private int supportPoseVersion;
         private bool supportPosePlaying;
 
         public UnitPose CurrentPose { get; private set; } = UnitPose.Idle;
 
         private void Reset() => targetRenderer = GetComponentInChildren<SpriteRenderer>(true);
+        private void Awake()
+        {
+            battleQueue = FindFirstObjectByType<CardReservationQueue>();
+            stats = GetComponentInParent<UnitStats>();
+        }
+
         private void OnEnable() => ResetPose();
-        private void OnDisable() => CancelSupportPose();
+        private void OnDisable()
+        {
+            CancelSupportPose();
+            StopIdleBreath();
+        }
+
+        private void LateUpdate()
+        {
+            if (CurrentPose != UnitPose.Idle || idleBreathAmount <= 0f ||
+                targetRenderer == null || targetRenderer.sprite == null ||
+                (battleQueue != null && battleQueue.IsExecuting) ||
+                (stats != null && stats.IsInitialized && stats.Health <= 0))
+            {
+                StopIdleBreath();
+                return;
+            }
+
+            if (idleBreath == null)
+            {
+                restScale = targetRenderer.transform.localScale;
+                breathProgress = 0f;
+                idleBreath = DOTween.To(() => breathProgress, value => breathProgress = value, 1f, 1.05f)
+                    .SetEase(Ease.InOutSine)
+                    .SetLoops(-1, LoopType.Yoyo)
+                    .SetDelay(UnityEngine.Random.Range(0f, 0.65f));
+            }
+
+            var scale = restScale;
+            scale.y *= 1f + breathProgress * idleBreathAmount;
+            targetRenderer.transform.localScale = scale;
+        }
+
+        private void StopIdleBreath()
+        {
+            if (idleBreath == null) return;
+            idleBreath.Kill();
+            idleBreath = null;
+            if (targetRenderer != null) targetRenderer.transform.localScale = restScale;
+        }
 
         public IEnumerator PlaySupportPose(UnitPose pose, bool holdUntilResolved = false, System.Action onStarted = null, float? duration = null)
         {
@@ -62,6 +114,7 @@ namespace DuelHero.Units
         {
             Sprite selected = style switch { "thrust" => after ? thrustAfter : thrustBefore, "slash" => after ? slashAfter : slashBefore, "punch" => after ? punchAfter : punchBefore, _ => null };
             if (selected == null || targetRenderer == null) return SetPose(after ? UnitPose.AttackAfter : UnitPose.AttackBefore);
+            StopIdleBreath();
             targetRenderer.sprite = selected;
             CurrentPose = after ? UnitPose.AttackAfter : UnitPose.AttackBefore;
             return true;
@@ -95,6 +148,7 @@ namespace DuelHero.Units
                 Debug.LogError($"캐릭터 SpriteRenderer와 {pose} 이미지를 연결해주세요.", this);
                 return false;
             }
+            if (pose != UnitPose.Idle) StopIdleBreath();
             targetRenderer.sprite = sprite;
             CurrentPose = pose;
             return true;

@@ -160,8 +160,8 @@ namespace DuelHero.Editor
             Set(serialized, "visualRoot", visual.transform);
             Set(serialized, "frontRoot", frontRoot);
             Set(serialized, "illustration", illustration);
-            var illustrationIds = new[] { "slash_001", "guard_001", "breathing_001", "move_up_001", "move_down_001", "move_left_001", "move_right_001", WaitCard.Id, "thrust_001", "sweep_001", "head_break_001", "bleed_attack_001", "riposte_stance_001", "tear_wound_001", "charge_slash_001", "whirlwind_001", "flash_step_001", "qi_breathing_001", "shield_deploy_001", "energy_release_001", "future_sight_001" };
-            var illustrationFiles = new[] { "Slash", "Guard", "Breathing", "Move", "Move", "Move", "Move", "Wait", "Thrust", "Sweep", "HeadBreak", "BleedAttack", "RiposteStance", "TearWound", "ChargeSlash", "Whirlwind", "FlashStep", "QiBreathing", "ShieldDeploy", "EnergyRelease", "FutureSight" };
+            var illustrationIds = new[] { "slash_001", "guard_001", "breathing_001", "move_up_001", "move_down_001", "move_left_001", "move_right_001", WaitCard.Id, "thrust_001", "sweep_001", "head_break_001", "bleed_attack_001", "riposte_stance_001", "tear_wound_001", "charge_slash_001", "whirlwind_001", "flash_step_001", "qi_breathing_001", "shield_deploy_001", "energy_release_001", "future_sight_001", "opening_thrust_001" };
+            var illustrationFiles = new[] { "Slash", "Guard", "Breathing", "Move", "Move", "Move", "Move", "Wait", "Thrust", "Sweep", "HeadBreak", "BleedAttack", "RiposteStance", "TearWound", "ChargeSlash", "Whirlwind", "FlashStep", "QiBreathing", "ShieldDeploy", "EnergyRelease", "FutureSight", "OpeningThrust" };
             var illustrations = serialized.FindProperty("cardIllustrations");
             illustrations.arraySize = illustrationIds.Length;
             for (int i = 0; i < illustrationIds.Length; i++)

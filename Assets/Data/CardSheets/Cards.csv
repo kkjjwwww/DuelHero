@@ -38,3 +38,4 @@
 [{cooldownTurns}턴]","방어","10","","일반","TRUE","FALSE","FALSE","1"
 "energy_release_001","에너지 방출","[준비3][소멸] 남은 에너지를 모두 소모한다. 소모한 에너지만큼 범위 내 모든 적에게 피해를 입힌다. 자신에게 [기절]을 2 부여한다.","공격","?","preparation;exhaust;stun","전설","TRUE","FALSE","FALSE","0","allRemaining"
 "future_sight_001","미래예지","자신에게 [예지]를 {effect1.value} 부여한다.","특수","10","foresight","고급","TRUE","FALSE","FALSE","2",""
+"opening_thrust_001","빈틈 찌르기","[방향지정] 범위 내 모든 적에게 피해 {effect1.value}을 준다. [기절]로 이번 슬롯의 행동이 막힌 대상에게는 대신 피해 20을 준다.","공격","15","direction_select;stun","희귀","TRUE","FALSE","FALSE","1",""

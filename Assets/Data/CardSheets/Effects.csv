@@ -32,3 +32,4 @@
 "energy_release_001_self_stun","energy_release_001","2","applyStatus","2","0","","자신","stun","","action","","","",""
 "energy_release_001_preparation","energy_release_001","","keywordParameter","3","","","","","","","","","","preparation"
 "future_sight_001_foresight","future_sight_001","1","applyStatus","1","0","","자신","foresight","","action","","","",""
+"opening_thrust_001_damage","opening_thrust_001","1","damage","10","0","(0,0);(1,0);(2,0)","적","stun","","action","10","","",""

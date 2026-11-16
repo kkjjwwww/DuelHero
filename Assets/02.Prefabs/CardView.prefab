@@ -1235,6 +1235,9 @@ MonoBehaviour:
   - cardId: future_sight_001
     sprite: {fileID: 21300000, guid: 0150a7848e224ada996df9cc0703e928, type: 3}
     enemySprite: {fileID: 21300000, guid: 0150a7848e224ada996df9cc0703e928, type: 3}
+  - cardId: opening_thrust_001
+    sprite: {fileID: 21300000, guid: 270b4696c88f4e86b62c5ab278693b8d, type: 3}
+    enemySprite: {fileID: 21300000, guid: 270b4696c88f4e86b62c5ab278693b8d, type: 3}
   illustrationMaskLabel: {fileID: 2585468343720503962}
   nameLabel: {fileID: 4830123014176368167}
   energyLabel: {fileID: 7672088178475286491}

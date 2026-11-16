@@ -135,7 +135,7 @@ namespace DuelHero.Battle
         {
             ApplyDamageBatch(CalculateDamageBatch(new[] { new AttackRequest(actorId, cardId, effect) }, round));
         }
-        public DamageBatch CalculateDamageBatch(IEnumerable<AttackRequest> attacks, int round)
+        public DamageBatch CalculateDamageBatch(IEnumerable<AttackRequest> attacks, int round, HashSet<UnitStats> stunnedThisSlot = null)
         {
             var batch = new DamageBatch();
             var remainingGuard = new Dictionary<UnitStats, int>();
@@ -162,6 +162,8 @@ namespace DuelHero.Battle
 
                     if (!remainingGuard.TryGetValue(target.stats, out int shield)) shield = target.stats.GuardReduction;
                     int baseDamage = attack.DamageOverride ?? effect.value;
+                    if (effect.statusId == "stun" && stunnedThisSlot?.Contains(target.stats) == true)
+                        baseDamage = checked(baseDamage + effect.statusMultiplier);
                     int raw = checked(baseDamage + (effect.statusId == "bleed" ? target.stats.Bleed * effect.statusMultiplier : 0));
                     int amount = DamageAfterGuard(raw, shield);
                     remainingGuard[target.stats] = shield - (raw - amount);

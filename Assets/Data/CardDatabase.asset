@@ -947,6 +947,42 @@ MonoBehaviour:
       durationSlots: 0
       rangeOffsets: []
     keywordParameters: []
+  - id: opening_thrust_001
+    name: "\uBE48\uD2C8 \uCC0C\uB974\uAE30"
+    description: "[\uBC29\uD5A5\uC9C0\uC815] \uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574 {effect1.value}\uC744 \uC900\uB2E4. [\uAE30\uC808]\uB85C \uC774\uBC88 \uC2AC\uB86F\uC758 \uD589\uB3D9\uC774 \uB9C9\uD78C \uB300\uC0C1\uC5D0\uAC8C\uB294 \uB300\uC2E0 \uD53C\uD574 20\uC744 \uC900\uB2E4."
+    actionType: "\uACF5\uACA9"
+    rarity: "\uD76C\uADC0"
+    attackStyle: thrust
+    attackVfx: opening_thrust
+    hitVfx:
+    energyCost: 15
+    spendsAllEnergy: 0
+    cooldownTurns: 1
+    keywordIds:
+    - direction_select
+    - stun
+    isObtainable: 1
+    isBasicAction: 0
+    isStarterCard: 0
+    effects:
+    - id: opening_thrust_001_damage
+      cardId: opening_thrust_001
+      effectType: damage
+      targetType: "\uC801"
+      statusId: stun
+      triggerEffectId:
+      triggerTiming: action
+      movementStyle:
+      rangeBasis:
+      statusMultiplier: 10
+      resolutionOrder: 1
+      value: 10
+      durationSlots: 0
+      rangeOffsets:
+      - {x: 0, y: 0}
+      - {x: 1, y: 0}
+      - {x: 2, y: 0}
+    keywordParameters: []
   keywords:
   - id: direction_select
     name: "\uBC29\uD5A5\uC9C0\uC815"

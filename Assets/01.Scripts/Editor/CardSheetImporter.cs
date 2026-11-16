@@ -190,7 +190,7 @@ public static class CardSheetImporter
             if (effect.IsCounter && (effect.effectType == "move" || effect.effectType == "applyStatus" ||
                 !cards.Single(c => c.id == effect.cardId).keywordIds.Contains("counter")))
                 throw new FormatException($"{effect.id}: unsupported counter effect or missing keyword");
-            if (effect.statusMultiplier > 0 && (effect.effectType != "damage" || effect.statusId != "bleed" || !statuses.Any(s => s.id == "bleed")))
+            if (effect.statusMultiplier > 0 && (effect.effectType != "damage" || (effect.statusId != "bleed" && effect.statusId != "stun") || !statuses.Any(s => s.id == effect.statusId)))
                 throw new FormatException($"{effect.id}: unsupported status scaling");
             if (effect.effectType == "move" && (effect.rangeOffsets.Length != 1 ||
                 Math.Abs((long)effect.rangeOffsets[0].x) + Math.Abs((long)effect.rangeOffsets[0].y) != 1))

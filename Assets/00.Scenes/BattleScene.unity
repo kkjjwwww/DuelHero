@@ -9280,6 +9280,18 @@ MonoBehaviour:
   thornImpactVfx: {fileID: 6136042356583249104, guid: baf5c544465b49f4b8f350f6f83a08a4, type: 3}
   riftTileVfx: {fileID: 2415998490264815513, guid: b49c099adac1fb94f9c58c27f601caf3, type: 3}
   riftBurstVfx: {fileID: 9099439688097790410, guid: cb99808704ed79f49a2d7e2726293814, type: 3}
+  energyReleaseChargeVfx: {fileID: 2693094929603671876, guid: 3f664725e7a2ef544b693d28f1742ed6, type: 3}
+  energyReleaseBurstVfx: {fileID: 6216339919389851293, guid: 1831780259559f84290f6e2a789cd6d2, type: 3}
+  energyReleaseGroundVfx: {fileID: 4984824894364517515, guid: d1f9959d4b157d949b354bd05bcd5a0a, type: 3}
+  energyReleaseHitVfx: {fileID: 5111495584109495077, guid: 1c8c42c98fa91b44abebc0b5ebb31be3, type: 3}
+  energyReleaseRiseDuration: 1.5
+  energyReleaseLandingDuration: 0.25
+  energyReleaseCenterHeight: 0.4
+  energyReleaseLiftHeight: 0.4
+  energyReleaseAirHoldDuration: 1
+  energyReleaseZoom: 1.2
+  energyReleaseShakeStrength: 0.5
+  energyReleaseShakeDuration: 0.5
 --- !u!114 &910000003
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -20353,6 +20365,7 @@ MonoBehaviour:
   cardDatabase: {fileID: 11400000, guid: b38eb9bf764792848bf05096af2f0d8d, type: 2}
   stunSprite: {fileID: 21300000, guid: 4c12997c9ca64b98a31f73122ec5c972, type: 3}
   bleedSprite: {fileID: 21300000, guid: e3f280d94e304884aa530bd4b0f58aeb, type: 3}
+  foresightSprite: {fileID: 0}
 --- !u!114 &1836698426
 MonoBehaviour:
   m_ObjectHideFlags: 0
