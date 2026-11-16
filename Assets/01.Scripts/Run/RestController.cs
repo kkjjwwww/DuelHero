@@ -20,6 +20,7 @@ namespace DuelHero.Run
         [SerializeField] private GameObject choices, confirmation;
         [FormerlySerializedAs("status")]
         [SerializeField] private Text goldLabel;
+        [SerializeField] private TMPro.TMP_FontAsset goldFont;
         [SerializeField] private Text message, selectedCardLabel;
         [SerializeField] private Text healDescription, removeDescription;
         [SerializeField] private Button heal, remove, confirm, cancel, returnToMap;
@@ -40,7 +41,7 @@ namespace DuelHero.Run
         {
             run = RunSessionStore.Current;
             nodeId = run?.PendingRestNodeId;
-            goldDisplay = CurrencyLabel.CreateGoldBalance(goldLabel);
+            goldDisplay = CurrencyLabel.CreateGoldBalance(goldLabel, goldFont);
         }
 
         private void OnEnable()

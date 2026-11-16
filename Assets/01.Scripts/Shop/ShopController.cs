@@ -24,6 +24,7 @@ namespace DuelHero.Shop
         [SerializeField] private Material artifactOutlineMaterial;
         [SerializeField] private ShopConfig shopConfig;
         [SerializeField] private Text goldLabel, message;
+        [SerializeField] private TMPro.TMP_FontAsset goldFont;
         [SerializeField] private Button exitButton;
         [SerializeField] private Button ownedCardsButton;
         [SerializeField] private EnemyCardListUI ownedCardsView;
@@ -87,7 +88,7 @@ namespace DuelHero.Shop
             if (artifactOutlineMaterial != null)
                 canvas.additionalShaderChannels |= AdditionalCanvasShaderChannels.TexCoord1;
             overlay = (RectTransform)canvas.transform;
-            goldDisplay = CurrencyLabel.CreateGoldBalance(goldLabel);
+            goldDisplay = CurrencyLabel.CreateGoldBalance(goldLabel, goldFont);
             priceIcon = Resources.Load<Sprite>("UI/Currency/gold-coin");
             tooltip = KeywordTooltip.Create(canvas);
             rangePreview = CardRangePreview.GetOrCreate(canvas);

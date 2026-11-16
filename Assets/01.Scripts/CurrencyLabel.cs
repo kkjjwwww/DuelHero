@@ -1,4 +1,5 @@
 using DuelHero.Cards;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,8 +10,9 @@ namespace DuelHero.UI
         public RectTransform Position { get; }
         private readonly Text label;
         private readonly Image icon;
+        private TextMeshProUGUI balanceText;
 
-        public static CurrencyLabel CreateGoldBalance(Text label)
+        public static CurrencyLabel CreateGoldBalance(Text label, TMP_FontAsset font)
         {
             var balance = new CurrencyLabel(label, Resources.Load<Sprite>("UI/Currency/money-pouch"), 36f);
             var row = balance.Position.gameObject;
@@ -18,6 +20,19 @@ namespace DuelHero.UI
             row.AddComponent<ContentSizeFitter>().horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
             row.AddComponent<Image>().color = Color.clear;
             label.raycastTarget = false;
+            if (font != null)
+            {
+                var textObject = new GameObject("Gold Amount", typeof(RectTransform), typeof(TextMeshProUGUI));
+                textObject.transform.SetParent(balance.Position, false);
+                var text = textObject.GetComponent<TextMeshProUGUI>();
+                text.font = font;
+                text.fontSize = label.fontSize;
+                text.color = label.color;
+                text.alignment = TextAlignmentOptions.MidlineLeft;
+                text.raycastTarget = false;
+                balance.balanceText = text;
+                label.enabled = false;
+            }
             row.AddComponent<DelayedTooltipTrigger>().Configure("보유골드", 0f);
             return balance;
         }
@@ -63,8 +78,16 @@ namespace DuelHero.UI
 
         private void Set(string value, bool amount)
         {
-            label.text = value;
-            label.fontStyle = amount ? FontStyle.Bold : FontStyle.Normal;
+            if (balanceText != null)
+            {
+                balanceText.text = value;
+                balanceText.fontStyle = amount ? FontStyles.Bold : FontStyles.Normal;
+            }
+            else
+            {
+                label.text = value;
+                label.fontStyle = amount ? FontStyle.Bold : FontStyle.Normal;
+            }
             icon.gameObject.SetActive(amount && icon.sprite != null);
         }
     }

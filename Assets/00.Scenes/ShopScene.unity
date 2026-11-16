@@ -363,6 +363,7 @@ MonoBehaviour:
   artifactOutlineMaterial: {fileID: 2100000, guid: 8e0dab625caf4fec8b75aa82d3f91d97, type: 2}
   shopConfig: {fileID: 11400000, guid: 38275596c72efce49897d63a0d18ed05, type: 2}
   goldLabel: {fileID: 774620465}
+  goldFont: {fileID: 11400000, guid: 8bea58569a1472f47a53ce57e797b5aa, type: 2}
   message: {fileID: 280707257}
   exitButton: {fileID: 73066116}
   ownedCardsButton: {fileID: 7095986556096269479}

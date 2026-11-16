@@ -1531,6 +1531,7 @@ MonoBehaviour:
   runConfig: {fileID: 11400000, guid: b462dcd4ce94f814a82b228fa4549985, type: 2}
   shopConfig: {fileID: 11400000, guid: 38275596c72efce49897d63a0d18ed05, type: 2}
   goldLabel: {fileID: 1650826732}
+  goldFont: {fileID: 11400000, guid: 8bea58569a1472f47a53ce57e797b5aa, type: 2}
   shopScenePath: Assets/00.Scenes/ShopScene.unity
   restScenePath: Assets/00.Scenes/RestScene.unity
   battleScenePath: Assets/00.Scenes/BattleScene.unity

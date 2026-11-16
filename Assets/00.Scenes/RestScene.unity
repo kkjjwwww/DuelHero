@@ -2718,6 +2718,7 @@ MonoBehaviour:
   choices: {fileID: 2106686095}
   confirmation: {fileID: 2021112954}
   goldLabel: {fileID: 1690691528}
+  goldFont: {fileID: 11400000, guid: 8bea58569a1472f47a53ce57e797b5aa, type: 2}
   message: {fileID: 1603286744}
   selectedCardLabel: {fileID: 1460953603}
   healDescription: {fileID: 2106261047}
