@@ -8,40 +8,15 @@ namespace DuelHero.UI
     internal sealed class CurrencyLabel
     {
         public RectTransform Position { get; }
-        private readonly Text label;
+        private readonly TextMeshProUGUI label;
         private readonly Image icon;
-        private TextMeshProUGUI balanceText;
 
         public static CurrencyLabel CreateGoldBalance(TextMeshProUGUI label)
         {
-            var balance = new CurrencyLabel(label, Resources.Load<Sprite>("UI/Currency/money-pouch"), 36f)
-            {
-                balanceText = label
-            };
+            var balance = new CurrencyLabel(label, Resources.Load<Sprite>("UI/Currency/money-pouch"), 36f);
             label.alignment = TextAlignmentOptions.MidlineLeft;
             label.raycastTarget = false;
             balance.ConfigureGoldRow();
-            return balance;
-        }
-
-        public static CurrencyLabel CreateGoldBalance(Text label, TMP_FontAsset font)
-        {
-            var balance = new CurrencyLabel(label, Resources.Load<Sprite>("UI/Currency/money-pouch"), 36f);
-            balance.ConfigureGoldRow();
-            label.raycastTarget = false;
-            if (font != null)
-            {
-                var textObject = new GameObject("Gold Amount", typeof(RectTransform), typeof(TextMeshProUGUI));
-                textObject.transform.SetParent(balance.Position, false);
-                var text = textObject.GetComponent<TextMeshProUGUI>();
-                text.font = font;
-                text.fontSize = label.fontSize;
-                text.color = label.color;
-                text.alignment = TextAlignmentOptions.MidlineLeft;
-                text.raycastTarget = false;
-                balance.balanceText = text;
-                label.enabled = false;
-            }
             return balance;
         }
 
@@ -54,14 +29,10 @@ namespace DuelHero.UI
             row.AddComponent<DelayedTooltipTrigger>().Configure("보유골드", 0f);
         }
 
-        public CurrencyLabel(Text label, Sprite sprite, float iconSize) : this((Graphic)label, sprite, iconSize)
+        public CurrencyLabel(TextMeshProUGUI label, Sprite sprite, float iconSize)
         {
             this.label = label;
-            label.alignment = TextAnchor.MiddleCenter;
-        }
-
-        private CurrencyLabel(Graphic label, Sprite sprite, float iconSize)
-        {
+            label.alignment = TextAlignmentOptions.Center;
             var textRect = label.rectTransform;
             var row = new GameObject(label.name + "Row", typeof(RectTransform), typeof(HorizontalLayoutGroup));
             Position = (RectTransform)row.transform;
@@ -99,16 +70,8 @@ namespace DuelHero.UI
 
         private void Set(string value, bool amount)
         {
-            if (balanceText != null)
-            {
-                balanceText.text = value;
-                balanceText.fontStyle = amount ? FontStyles.Bold : FontStyles.Normal;
-            }
-            else
-            {
-                label.text = value;
-                label.fontStyle = amount ? FontStyle.Bold : FontStyle.Normal;
-            }
+            label.text = value;
+            label.fontStyle = amount ? FontStyles.Bold : FontStyles.Normal;
             icon.gameObject.SetActive(amount && icon.sprite != null);
         }
     }

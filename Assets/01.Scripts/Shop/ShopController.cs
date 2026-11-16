@@ -23,8 +23,7 @@ namespace DuelHero.Shop
         [SerializeField] private ArtifactDatabase artifactDatabase;
         [SerializeField] private Material artifactOutlineMaterial;
         [SerializeField] private ShopConfig shopConfig;
-        [SerializeField] private Text goldLabel, message;
-        [SerializeField] private TMPro.TMP_FontAsset goldFont;
+        [SerializeField] private TMPro.TextMeshProUGUI goldLabel, message;
         [SerializeField] private Button exitButton;
         [SerializeField] private Button ownedCardsButton;
         [SerializeField] private EnemyCardListUI ownedCardsView;
@@ -88,7 +87,7 @@ namespace DuelHero.Shop
             if (artifactOutlineMaterial != null)
                 canvas.additionalShaderChannels |= AdditionalCanvasShaderChannels.TexCoord1;
             overlay = (RectTransform)canvas.transform;
-            goldDisplay = CurrencyLabel.CreateGoldBalance(goldLabel, goldFont);
+            goldDisplay = CurrencyLabel.CreateGoldBalance(goldLabel);
             priceIcon = Resources.Load<Sprite>("UI/Currency/gold-coin");
             tooltip = KeywordTooltip.Create(canvas);
             rangePreview = CardRangePreview.GetOrCreate(canvas);
@@ -143,7 +142,7 @@ namespace DuelHero.Shop
             rect.sizeDelta = size;
             rect.localScale = Vector3.one * (onStand ? 1f : 1.65f);
             rect.anchoredPosition3D = onStand ? Vector3.zero : new Vector3(0, 35, 0);
-            card.SetFont(message.font);
+            card.SetFont(GameFonts.UI);
             if (definition != null)
             {
                 card.Bind(definition, database.keywords); card.SetFrontVisible(true); card.SetState(string.Empty, 0, true);
@@ -186,9 +185,9 @@ namespace DuelHero.Shop
 
         private CurrencyLabel CreatePriceLabel(string name, RectTransform parent)
         {
-            var label = new GameObject(name, typeof(RectTransform), typeof(Text), typeof(Shadow));
+            var label = new GameObject(name, typeof(RectTransform), typeof(TMPro.TextMeshProUGUI));
             label.transform.SetParent(parent, false);
-            var text = label.GetComponent<Text>(); text.font = message.font; text.fontSize = 22; text.alignment = TextAnchor.MiddleCenter; text.color = new Color(1, .85f, .46f); text.raycastTarget = false;
+            var text = label.GetComponent<TMPro.TextMeshProUGUI>(); text.font = message.font; text.fontSize = 22; text.alignment = TMPro.TextAlignmentOptions.Center; text.color = new Color(1, .85f, .46f); text.raycastTarget = false;
             var labelRect = (RectTransform)label.transform;
             labelRect.anchorMin = labelRect.anchorMax = labelRect.pivot = new Vector2(.5f, .5f);
             labelRect.sizeDelta = new Vector2(180, 34);
@@ -208,12 +207,12 @@ namespace DuelHero.Shop
             if (icon.sprite == null)
             {
                 icon.color = new Color(.24f, .2f, .3f);
-                var fallback = new GameObject("ArtifactName", typeof(RectTransform), typeof(Text)).GetComponent<Text>();
+                var fallback = new GameObject("ArtifactName", typeof(RectTransform), typeof(TMPro.TextMeshProUGUI)).GetComponent<TMPro.TextMeshProUGUI>();
                 fallback.transform.SetParent(rect, false);
                 fallback.rectTransform.anchorMax = Vector2.one;
                 fallback.rectTransform.offsetMin = fallback.rectTransform.offsetMax = Vector2.zero;
                 fallback.font = message.font;
-                fallback.alignment = TextAnchor.MiddleCenter;
+                fallback.alignment = TMPro.TextAlignmentOptions.Center;
                 fallback.text = artifact.name;
                 fallback.raycastTarget = false;
             }

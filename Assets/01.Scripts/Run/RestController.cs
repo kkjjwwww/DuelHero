@@ -19,10 +19,9 @@ namespace DuelHero.Run
         [SerializeField] private RestHealthBar healthBar;
         [SerializeField] private GameObject choices, confirmation;
         [FormerlySerializedAs("status")]
-        [SerializeField] private Text goldLabel;
-        [SerializeField] private TMPro.TMP_FontAsset goldFont;
-        [SerializeField] private Text message, selectedCardLabel;
-        [SerializeField] private Text healDescription, removeDescription;
+        [SerializeField] private TMPro.TextMeshProUGUI goldLabel;
+        [SerializeField] private TMPro.TextMeshProUGUI message, selectedCardLabel;
+        [SerializeField] private TMPro.TextMeshProUGUI healDescription, removeDescription;
         [SerializeField] private Button heal, remove, confirm, cancel, returnToMap;
         [SerializeField] private string mapScenePath = "Assets/00.Scenes/MapScene.unity";
 
@@ -41,7 +40,7 @@ namespace DuelHero.Run
         {
             run = RunSessionStore.Current;
             nodeId = run?.PendingRestNodeId;
-            goldDisplay = CurrencyLabel.CreateGoldBalance(goldLabel, goldFont);
+            goldDisplay = CurrencyLabel.CreateGoldBalance(goldLabel);
         }
 
         private void OnEnable()
