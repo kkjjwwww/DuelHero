@@ -13,6 +13,7 @@ namespace DuelHero.Cards
         public string statusId, triggerEffectId;
         public string triggerTiming;
         public string movementStyle, rangeBasis;
+        public bool IsSelfForesight => effectType == "applyStatus" && targetType == "자신" && statusId == "foresight" && !IsCounter;
         public bool IsSelfStun => effectType == "applyStatus" && targetType == "자신" && statusId == "stun" && !IsCounter;
         public bool IsDash => effectType == "move" && movementStyle == "dash";
         public bool IsLongJump => effectType == "move" && movementStyle == "longJump";
@@ -41,6 +42,7 @@ namespace DuelHero.Cards
         public bool spendsAllEnergy;
         public int EnergyCostAt(int available) => spendsAllEnergy ? available : energyCost;
         public string EnergyCostLabel => spendsAllEnergy ? "?" : energyCost.ToString();
+        public int SelfForesight => effects?.Where(e => e.IsSelfForesight).Sum(e => e.value) ?? 0;
         public int SelfStun => effects?.Where(e => e.IsSelfStun).Sum(e => e.value) ?? 0;
         public int cooldownTurns = 1;
         public int EffectiveCooldownTurns => isBasicAction ? 0 : cooldownTurns;

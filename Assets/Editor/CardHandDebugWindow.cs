@@ -12,7 +12,7 @@ namespace DuelHero.EditorTools
     public sealed class CardHandDebugWindow : EditorWindow
     {
         private static readonly string[] Categories = { "공격", "이동", "방어", "회복", "특수" };
-        private static readonly string[] Debuffs = { "기절", "출혈" };
+        private static readonly string[] Statuses = { "기절", "출혈", "예지" };
         private readonly List<CardInstance> addedCards = new();
         private int categoryIndex;
         private int cardIndex;
@@ -20,8 +20,8 @@ namespace DuelHero.EditorTools
         private UnitStats selectedUnit;
         private int healthInput;
         private int energyInput;
-        private int debuffIndex;
-        private int debuffAmount = 1;
+        private int statusIndex;
+        private int statusAmount = 1;
         private int statAmount = 10;
         private int guardSlots = 1;
         private string statResult;
@@ -72,7 +72,7 @@ namespace DuelHero.EditorTools
                 if (GUILayout.Button("즉시 승리") && turn.TryWinForDebug()) return;
             }
             EditorGUILayout.Space(12);
-            DrawDebuffDebug(queue, turn);
+            DrawStatusDebug(queue, turn);
             DrawEnemyChange(turn);
             DrawEnemyReservation(turn);
             EditorGUILayout.Space(12);
@@ -161,31 +161,33 @@ namespace DuelHero.EditorTools
                 EditorGUILayout.HelpBox(enemyReservationResult, MessageType.Info);
         }
 
-        private void DrawDebuffDebug(CardReservationQueue queue, BattleTurnController turn)
+        private void DrawStatusDebug(CardReservationQueue queue, BattleTurnController turn)
         {
-            EditorGUILayout.LabelField("디버프 부여", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("버프 디버프 부여", EditorStyles.boldLabel);
             using (new EditorGUI.DisabledScope(turn == null || !turn.CanEditForDebug))
             {
-                debuffIndex = EditorGUILayout.Popup("디버프", debuffIndex, Debuffs);
-                debuffAmount = Mathf.Clamp(EditorGUILayout.IntField("부여할 수치", debuffAmount), 1, 99);
+                statusIndex = EditorGUILayout.Popup("버프·디버프", statusIndex, Statuses);
+                statusAmount = Mathf.Clamp(EditorGUILayout.IntField("부여할 수치", statusAmount), 1, statusIndex == 2 ? 3 : 99);
                 var player = queue.UnitStats;
                 using (new EditorGUI.DisabledScope(player == null || !player.IsInitialized))
-                    DrawDebuffButton(turn, player, "플레이어");
+                    DrawStatusButton(turn, player, "플레이어");
+                if (statusIndex == 2) return;
                 foreach (var unit in FindObjectsByType<UnitStats>(FindObjectsSortMode.None))
                 {
                     if (unit == player || !unit.IsInitialized) continue;
-                    DrawDebuffButton(turn, unit, unit.gameObject.name);
+                    DrawStatusButton(turn, unit, unit.gameObject.name);
                 }
             }
         }
 
-        private void DrawDebuffButton(BattleTurnController turn, UnitStats unit, string targetName)
+        private void DrawStatusButton(BattleTurnController turn, UnitStats unit, string targetName)
         {
-            bool isBleed = debuffIndex == 1;
-            int current = (isBleed ? unit?.Bleed : unit?.Stun) ?? 0;
-            if (!GUILayout.Button($"{targetName}에게 {Debuffs[debuffIndex]} 부여 · 현재 {current}")) return;
-            if (isBleed) turn.TryApplyBleedForDebug(unit, debuffAmount);
-            else turn.TryApplyStunForDebug(unit, debuffAmount);
+            bool isBleed = statusIndex == 1;
+            int current = (statusIndex == 2 ? unit?.PendingForesight : isBleed ? unit?.Bleed : unit?.Stun) ?? 0;
+            if (!GUILayout.Button($"{targetName}에게 {Statuses[statusIndex]} 부여 · 현재 {current}")) return;
+            if (statusIndex == 2) unit.ApplyForesight(statusAmount);
+            else if (isBleed) turn.TryApplyBleedForDebug(unit, statusAmount);
+            else turn.TryApplyStunForDebug(unit, statusAmount);
         }
 
         private void DrawCards(PlayerDeck deck, CardReservationQueue queue, DeckListUI deckList, bool editable)
@@ -249,7 +251,8 @@ namespace DuelHero.EditorTools
             }
 
             var units = new List<UnitStats> { player };
-            foreach (var unit in FindObjectsByType<UnitStats>(FindObjectsSortMode.None))
+            if (statusIndex == 2) return;
+                foreach (var unit in FindObjectsByType<UnitStats>(FindObjectsSortMode.None))
                 if (unit != player && unit.IsInitialized) units.Add(unit);
             int selectedIndex = units.IndexOf(selectedUnit);
             if (selectedIndex < 0) { selectedIndex = 0; SelectUnit(player); }

@@ -18689,6 +18689,7 @@ MonoBehaviour:
   cardDatabase: {fileID: 11400000, guid: b38eb9bf764792848bf05096af2f0d8d, type: 2}
   stunSprite: {fileID: 21300000, guid: 4c12997c9ca64b98a31f73122ec5c972, type: 3}
   bleedSprite: {fileID: 21300000, guid: e3f280d94e304884aa530bd4b0f58aeb, type: 3}
+  foresightSprite: {fileID: 21300000, guid: 208514bec80e4a70b34471d0f57128fa, type: 3}
 --- !u!114 &1702914085
 MonoBehaviour:
   m_ObjectHideFlags: 0

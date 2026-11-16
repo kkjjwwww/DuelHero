@@ -915,6 +915,38 @@ MonoBehaviour:
     keywordParameters:
     - keywordId: preparation
       value: 3
+  - id: future_sight_001
+    name: "\uBBF8\uB798\uC608\uC9C0"
+    description: "\uC790\uC2E0\uC5D0\uAC8C [\uC608\uC9C0]\uB97C {effect1.value} \uBD80\uC5EC\uD55C\uB2E4."
+    actionType: "\uD2B9\uC218"
+    rarity: "\uACE0\uAE09"
+    attackStyle:
+    attackVfx:
+    hitVfx:
+    energyCost: 10
+    spendsAllEnergy: 0
+    cooldownTurns: 2
+    keywordIds:
+    - foresight
+    isObtainable: 1
+    isBasicAction: 0
+    isStarterCard: 0
+    effects:
+    - id: future_sight_001_foresight
+      cardId: future_sight_001
+      effectType: applyStatus
+      targetType: "\uC790\uC2E0"
+      statusId: foresight
+      triggerEffectId:
+      triggerTiming: action
+      movementStyle:
+      rangeBasis:
+      statusMultiplier: 0
+      resolutionOrder: 1
+      value: 1
+      durationSlots: 0
+      rangeOffsets: []
+    keywordParameters: []
   keywords:
   - id: direction_select
     name: "\uBC29\uD5A5\uC9C0\uC815"
@@ -965,6 +997,11 @@ MonoBehaviour:
       \uC0AC\uC6A9\uD560 \uC218 \uC5C6\uB2E4."
     parameters: 
     textColor: '#999999'
+  - id: foresight
+    name: "\uC608\uC9C0"
+    description: "\uB2E4\uC74C\uD134 \uC2DC\uC791 \uC2DC, \uC0C1\uB300\uC758 \uD589\uB3D9 \uC2AC\uB86F\uC758 \uC815\uBCF4\uB97C \uC911\uCCA9\uB2F9 1\uAC1C\uC529 \uBB34\uC791\uC704\uB85C \uC644\uC804\uACF5\uAC1C\uD55C\uB2E4. (\uCD5C\uB300 3\uC911\uCCA9)"
+    parameters:
+    textColor: '#BC9BFF'
   statuses:
   - id: stun
     name: "\uAE30\uC808"
@@ -976,5 +1013,11 @@ MonoBehaviour:
     name: "\uCD9C\uD608"
     category: "\uB514\uBC84\uD504"
     keywordId: bleed
+    stackRule: add
+    countUnit: stack
+  - id: foresight
+    name: "\uC608\uC9C0"
+    category: "\uBC84\uD504"
+    keywordId: foresight
     stackRule: add
     countUnit: stack

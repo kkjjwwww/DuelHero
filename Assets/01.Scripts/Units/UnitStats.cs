@@ -9,6 +9,32 @@ namespace DuelHero.Units
         public int MaxHealth { get; private set; }
         public int Energy { get; private set; }
         public int MaxEnergy { get; private set; }
+        private int pendingForesight;
+        private int activeForesight;
+        public int PendingForesight => pendingForesight;
+        public int Foresight => activeForesight > 0 ? activeForesight : pendingForesight;
+
+        public void ApplyForesight(int amount)
+        {
+            pendingForesight = (int)Math.Min(3, (long)pendingForesight + amount);
+            Changed?.Invoke();
+        }
+
+        public int ActivateForesight()
+        {
+            activeForesight = pendingForesight;
+            pendingForesight = 0;
+            Changed?.Invoke();
+            return activeForesight;
+        }
+
+        public void EndForesight()
+        {
+            if (activeForesight == 0) return;
+            activeForesight = 0;
+            Changed?.Invoke();
+        }
+
         public int Stun { get; private set; }
         public int Bleed { get; private set; }
         public void ApplyBleed(int amount)
@@ -92,7 +118,7 @@ namespace DuelHero.Units
         internal void ResetForEnemyDebug()
         {
             IsInitialized = false;
-            Stun = Bleed = 0;
+            Stun = Bleed = pendingForesight = activeForesight = 0;
             guard.Reset(Array.Empty<GuardEffectSnapshot>());
         }
         public void SetHealthForDebug(int value)

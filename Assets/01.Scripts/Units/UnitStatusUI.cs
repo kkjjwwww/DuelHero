@@ -23,7 +23,8 @@ namespace DuelHero.Units
         [SerializeField] private CardDatabase cardDatabase;
         [SerializeField] private Sprite stunSprite;
         [SerializeField] private Sprite bleedSprite;
-        private UnitDebuffIcon stunIcon, bleedIcon;
+        [SerializeField] private Sprite foresightSprite;
+        private UnitDebuffIcon stunIcon, bleedIcon, foresightIcon;
         private EnergyCostPreviewUI.SegmentView guardPreviewView;
         private CardPreviewResult guardPreview;
         private IUnitStatus status;
@@ -49,6 +50,8 @@ namespace DuelHero.Units
                     stunIcon = UnitDebuffIcon.Create(debuffAnchor, stunSprite, FindKeyword("stun"), fillFromRight);
                 if (bleedIcon == null && bleedSprite != null)
                     bleedIcon = UnitDebuffIcon.Create(debuffAnchor, bleedSprite, FindKeyword("bleed"), fillFromRight);
+                if (foresightIcon == null && foresightSprite != null)
+                    foresightIcon = UnitDebuffIcon.Create(debuffAnchor, foresightSprite, FindKeyword("foresight"), fillFromRight);
             }
             healthHover = StatusBarHover.Bind(healthFill, healthLabel);
             energyHover = StatusBarHover.Bind(energyFill, energyLabel);
@@ -85,6 +88,7 @@ namespace DuelHero.Units
             if (energyHover != null) energyHover.enabled = false;
             stunIcon?.SetCount(0, 0);
             bleedIcon?.SetCount(0, 0);
+            foresightIcon?.SetCount(0, 0);
             EnergyCostPreviewUI.SegmentView.SetRange(damageTrailFill, 0, 0, 0);
             guardPreview = null;
             status = null;
@@ -104,6 +108,8 @@ namespace DuelHero.Units
             int stun = ready ? source.Stun : 0;
             stunIcon?.SetCount(stun, 0);
             bleedIcon?.SetCount(ready ? source.Bleed : 0, stunIcon != null && stun > 0 ? 1 : 0);
+            foresightIcon?.SetCount(ready ? source.Foresight : 0,
+                (stunIcon != null && stun > 0 ? 1 : 0) + (bleedIcon != null && ready && source.Bleed > 0 ? 1 : 0));
             UpdateEnergy(ready);
             if (gain > 0)
                 guardPreviewView?.Show(shieldEnd, shieldEnd + gain, maximum,

@@ -176,8 +176,8 @@ public static class CardSheetImporter
                 throw new FormatException($"{keyword.id}: textColor must be #RRGGBB");
         Unique(statuses.Select(s => s.id), "status id");
         foreach (var status in statuses)
-            if ((status.id != "stun" && status.id != "bleed") || status.category != "디버프" || status.stackRule != "add" ||
-                status.countUnit != (status.id == "bleed" ? "stack" : "actionSlot") || !keywordIds.Contains(status.keywordId))
+            if ((status.id != "stun" && status.id != "bleed" && status.id != "foresight") || status.category != (status.id == "foresight" ? "버프" : "디버프") || status.stackRule != "add" ||
+                status.countUnit != (status.id == "stun" ? "actionSlot" : "stack") || !keywordIds.Contains(status.keywordId))
                 throw new FormatException($"{status.id}: unsupported status definition or missing keyword");
         foreach (var effect in effects)
         {
@@ -197,13 +197,13 @@ public static class CardSheetImporter
                 throw new FormatException($"{effect.id}: move requires one cardinal unit offset");
             if (!new[] { "자신", "적" }.Contains(effect.targetType)) throw new FormatException($"{effect.id}: invalid targetType");
             if (effect.effectType == "applyStatus" && (effect.value <= 0 || effect.durationSlots != 0 || !statuses.Any(s => s.id == effect.statusId) ||
-                (effect.IsSelfStun ? !string.IsNullOrEmpty(effect.triggerEffectId) : effect.targetType != "적" || !effects.Any(hit => hit.cardId == effect.cardId && hit.id == effect.triggerEffectId &&
+                ((effect.IsSelfStun || effect.IsSelfForesight) ? !string.IsNullOrEmpty(effect.triggerEffectId) : effect.targetType != "적" || effect.statusId == "foresight" || !effects.Any(hit => hit.cardId == effect.cardId && hit.id == effect.triggerEffectId &&
                     hit.effectType == "damage" && hit.resolutionOrder < effect.resolutionOrder && hit.IsCounter == effect.IsCounter))))
                 throw new FormatException($"{effect.id}: invalid status or hit-effect reference");
         }
         foreach (var card in cards)
         {
-            if (!new[] { "공격", "이동", "방어", "회복" }.Contains(card.actionType)) throw new FormatException($"{card.id}: invalid actionType");
+            if (!new[] { "공격", "이동", "방어", "회복", "특수" }.Contains(card.actionType)) throw new FormatException($"{card.id}: invalid actionType");
             foreach (string keyword in card.keywordIds)
                 if (!keywordIds.Contains(keyword)) throw new FormatException($"{card.id}: missing keyword {keyword}");
             card.effects = effects.Where(e => e.cardId == card.id).OrderBy(e => e.resolutionOrder).ToArray();

@@ -453,7 +453,7 @@ namespace DuelHero.Battle
                     "energyRestore" => effect.targetType == "자신",
                     "healthRestore" => effect.targetType == "자신",
                     "damage" => effect.targetType == "적" && effect.rangeOffsets != null && effect.rangeOffsets.Length > 0,
-                    "applyStatus" => effect.IsSelfStun ? effect.value > 0 && effect.durationSlots == 0 && string.IsNullOrEmpty(effect.triggerEffectId) : effect.targetType == "적" && (effect.statusId == "stun" || effect.statusId == "bleed") && effect.value > 0 &&
+                    "applyStatus" => (effect.IsSelfStun || effect.IsSelfForesight) ? effect.value > 0 && effect.durationSlots == 0 && string.IsNullOrEmpty(effect.triggerEffectId) : effect.targetType == "적" && (effect.statusId == "stun" || effect.statusId == "bleed") && effect.value > 0 &&
                         card.effects.Any(hit => hit.effectType == "damage" && hit.id == effect.triggerEffectId && hit.resolutionOrder < effect.resolutionOrder && hit.IsCounter == effect.IsCounter),
                     _ => false
                 }));

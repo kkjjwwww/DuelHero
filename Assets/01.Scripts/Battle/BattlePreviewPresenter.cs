@@ -102,7 +102,8 @@ namespace DuelHero.Battle
         public void Refresh()
         {
             if (renderer != null && resultSource != null &&
-                resultSource.TryGetEnemyExecution(resultSlot, out var execution, out var unit))
+                (resultSource.TryGetEnemyExecution(resultSlot, out var execution, out var unit) ||
+                 resultSource.TryGetForesightPreview(resultSlot, out execution, out unit)))
             {
                 renderer.ShowExecuted(execution, unit, unit.GetComponentInChildren<SpriteRenderer>(true));
                 PublishEnergy(null);

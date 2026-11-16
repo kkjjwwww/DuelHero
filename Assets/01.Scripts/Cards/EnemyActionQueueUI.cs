@@ -51,6 +51,8 @@ namespace DuelHero.Cards
             if (plan != null && source != null && IsValid(source.PreparedEnemyRevealSlotIndex) &&
                 !StunCard.IsStun(plan[source.PreparedEnemyRevealSlotIndex]))
                 slots[source.PreparedEnemyRevealSlotIndex].ShowTypeOnly();
+            for (int i = 0; i < slots.Length; i++)
+                if (source != null && plan != null && i < plan.Count && source.IsForesightSlot(i)) RevealSlot(i);
             RefreshInspection();
         }
         private void RefreshStun()
@@ -64,7 +66,7 @@ namespace DuelHero.Cards
             {
                 int slot = i;
                 if (slots[i] != null)
-                    slots[i].SetResultInspection(source != null && source.CanInspectSlots && source.ResultsAvailable, OpenCardList,
+                    slots[i].SetResultInspection(source != null && source.CanInspectSlots && (source.ResultsAvailable || source.IsForesightSlot(i)), OpenCardList,
                         () => preview?.FocusEnemyResult(source, slot),
                         () => preview?.ClearEnemyResult(source, slot),
                         preparation: source != null && source.CanInspectSlots && !source.ResultsAvailable);
@@ -87,7 +89,6 @@ namespace DuelHero.Cards
         {
             if (IsValid(index)) slots[index].CompleteExecution();
         }
-        // Independent entry point for future preparation-phase reveal effects.
         public void RevealSlot(int index)
         {
             if (IsValid(index)) slots[index].Reveal();

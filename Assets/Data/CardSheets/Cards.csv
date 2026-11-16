@@ -37,3 +37,4 @@
 "shield_deploy_001","방패전개","{effect1.durationSlots}개 슬롯 동안 보호막을 {effect1.value} 얻는다.
 [{cooldownTurns}턴]","방어","10","","일반","TRUE","FALSE","FALSE","1"
 "energy_release_001","에너지 방출","[준비3][소멸] 남은 에너지를 모두 소모한다. 소모한 에너지만큼 범위 내 모든 적에게 피해를 입힌다. 자신에게 [기절]을 2 부여한다.","공격","?","preparation;exhaust;stun","전설","TRUE","FALSE","FALSE","0","allRemaining"
+"future_sight_001","미래예지","자신에게 [예지]를 {effect1.value} 부여한다.","특수","10","foresight","고급","TRUE","FALSE","FALSE","2",""

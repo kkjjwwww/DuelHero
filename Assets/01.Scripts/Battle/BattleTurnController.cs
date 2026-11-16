@@ -56,6 +56,26 @@ namespace DuelHero.Battle
         public int PreparedEnemyRevealSlotIndex { get; private set; } = -1;
         private readonly System.Random intentRandom = new();
         private IEnemyActionPlan enemyPlan;
+        private int foresightRound = -1;
+        private readonly HashSet<int> foresightSlots = new();
+
+        public bool IsForesightSlot(int slot) => foresightSlots.Contains(slot);
+
+        public bool TryGetForesightPreview(int slot, out ExecutedCardPreview preview, out GridMovement unit)
+        {
+            preview = null;
+            unit = null;
+            if (!CanInspectSlots || ResultsAvailable || !IsForesightSlot(slot) || preparedEnemyCards == null ||
+                !combatEffects.TryGetUnit(enemyId, out unit, out var stats)) return false;
+
+            var initial = new CardPreviewState(unit.GridPosition, stats.Energy, stats.MaxEnergy, unit.Grid.Map);
+            var requests = preparedEnemyCards.Take(slot + 1)
+                .Select(card => new CardPreviewRequest(card ?? WaitCard.Definition, Vector2Int.right)).ToArray();
+            var result = CardPreviewCalculator.Calculate(initial, requests)[slot];
+            if (!result.CanExecute) return false;
+            preview = new ExecutedCardPreview(result.MovementPath, result.AttackCells);
+            return true;
+        }
         private int executedSlots;
         private int executionRound;
         private bool restoring;
@@ -88,6 +108,22 @@ namespace DuelHero.Battle
                 preparedEnemyCards = cards;
                 executedSlots = 0;
                 PreparedEnemyRevealSlotIndex = intentRandom.Next(cards.Length);
+                if (foresightRound != playerQueue.CurrentRound)
+                {
+                    foresightRound = playerQueue.CurrentRound;
+                    foresightSlots.Clear();
+                    if (combatEffects != null && combatEffects.TryGetUnit(playerId, out _, out var stats) && stats.Foresight > 0)
+                    {
+                        int remaining = stats.ActivateForesight();
+                        var candidates = Enumerable.Range(0, cards.Length).ToList();
+                        while (remaining-- > 0 && candidates.Count > 0)
+                        {
+                            int index = intentRandom.Next(candidates.Count);
+                            foresightSlots.Add(candidates[index]);
+                            candidates.RemoveAt(index);
+                        }
+                    }
+                }
                 EnemyPlanPrepared?.Invoke(PreparedEnemyCards);
                 return true;
             }
@@ -255,6 +291,7 @@ namespace DuelHero.Battle
                     effects.CancelPreparationPresentation(playerId, unitVisualPlacement);
                     effects.CancelPreparationPresentation(enemyId, unitVisualPlacement);
                 }
+                if (pc?.SelfForesight > 0) playerStats.ApplyForesight(pc.SelfForesight);
                 if (pc?.SelfStun > 0) playerStats.ApplyStun(pc.SelfStun);
                 if (ec?.SelfStun > 0) enemyStats.ApplyStun(ec.SelfStun);
                 playerQueue.BlockFutureSlots(slot + 1, playerStats.Stun);
@@ -285,6 +322,7 @@ namespace DuelHero.Battle
         {
             if (playerQueue == null || !playerQueue.IsExecuting || ResultsAvailable || restoring) return;
             enemyPlan?.CompletePlan(executionRound, executedSlots);
+            if (combatEffects != null && combatEffects.TryGetUnit(playerId, out _, out var playerStats)) playerStats.EndForesight();
             Publish(BattleActionKind.TurnEnded);
             CompleteResults();
         }
