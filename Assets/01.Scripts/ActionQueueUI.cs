@@ -1,3 +1,4 @@
+using TMPro;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -6,12 +7,12 @@ using DG.Tweening;
 
 public class ActionQueueUI : MonoBehaviour
 {
-    [SerializeField] private Text[] actionLabels = new Text[3];
+    [SerializeField] private TextMeshProUGUI[] actionLabels = new TextMeshProUGUI[3];
     [SerializeField] private Image[] slotImages = new Image[3];
     [SerializeField] private CardReservationQueue reservationQueue;
     [SerializeField] private Button executeButton;
     [SerializeField] private CardActionExecutor actionExecutor;
-    [SerializeField] private Text executionStatus;
+    [SerializeField] private TextMeshProUGUI executionStatus;
     [SerializeField] private Color emptySlotColor = Color.clear;
     [Header("Next Turn Outline")]
     [SerializeField, Min(0f)] private float nextTurnOutlineThickness = 2f;
@@ -35,7 +36,7 @@ public class ActionQueueUI : MonoBehaviour
     private Tween nextTurnBlink;
     private CardReservationOutline nextTurnOutline;
     private CanvasGroup nextTurnOutlineGroup;
-    private Text executeButtonLabel;
+    private TextMeshProUGUI executeButtonLabel;
     private DuelHero.Cards.DisabledExecuteSound disabledExecuteSound;
     private readonly List<UnityEngine.Events.UnityAction> cancelListeners = new();
     private readonly List<Button> reservationButtons = new();
@@ -99,7 +100,7 @@ public class ActionQueueUI : MonoBehaviour
         if (executeButton != null)
         {
             executeButton.interactable = !battleEnded && (nextTurn || (reservationQueue != null && !reservationQueue.IsExecuting && reservationQueue.Reservations.Count == 3 && energyValid));
-            if (executeButtonLabel == null) executeButtonLabel = executeButton.GetComponentInChildren<Text>(true);
+            if (executeButtonLabel == null) executeButtonLabel = executeButton.GetComponentInChildren<TextMeshProUGUI>(true);
             if (executeButtonLabel != null) executeButtonLabel.text = nextTurn ? "다음 턴 진행" : "행동 실행";
             if (nextTurn && nextTurnBlink == null)
             {

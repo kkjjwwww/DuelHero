@@ -1,3 +1,4 @@
+using TMPro;
 using DuelHero.Cards;
 using DuelHero.UI;
 using UnityEngine;
@@ -10,12 +11,12 @@ namespace DuelHero.Units
     {
         private const float Size = 28f;
         private const float Spacing = 4f;
-        private Text countLabel;
+        private TextMeshProUGUI countLabel;
         private KeywordDefinition keyword;
         private KeywordTooltip tooltip;
         private bool fromRight;
 
-        internal static UnitDebuffIcon Create(RectTransform energyBar, Sprite sprite, KeywordDefinition keyword, bool fromRight)
+        internal static UnitDebuffIcon Create(RectTransform energyBar, Sprite sprite, KeywordDefinition keyword, bool fromRight, TMP_FontAsset font)
         {
             var root = new GameObject(sprite.name, typeof(RectTransform), typeof(Image), typeof(UnitDebuffIcon));
             var rect = (RectTransform)root.transform;
@@ -25,23 +26,24 @@ namespace DuelHero.Units
             rect.sizeDelta = new Vector2(Size, Size);
             root.GetComponent<Image>().sprite = sprite;
 
-            var label = new GameObject("Stacks", typeof(RectTransform), typeof(Text), typeof(Outline)).GetComponent<Text>();
+            var label = new GameObject("Stacks", typeof(RectTransform), typeof(TextMeshProUGUI)).GetComponent<TextMeshProUGUI>();
             var labelRect = label.rectTransform;
             labelRect.SetParent(rect, false);
             labelRect.anchorMin = Vector2.zero;
             labelRect.anchorMax = Vector2.one;
             labelRect.offsetMin = Vector2.zero;
             labelRect.offsetMax = new Vector2(0f, -10f);
-            label.font = GameFonts.UI;
+            label.font = font;
             label.fontSize = 13;
-            label.fontStyle = FontStyle.Bold;
-            label.resizeTextForBestFit = true;
-            label.resizeTextMinSize = 8;
-            label.resizeTextMaxSize = 13;
-            label.alignment = TextAnchor.LowerRight;
+            label.fontStyle = FontStyles.Bold;
+            label.enableAutoSizing = true;
+            label.fontSizeMin = 8;
+            label.fontSizeMax = 13;
+            label.alignment = TextAlignmentOptions.BottomRight;
             label.color = new Color(1f, .97f, .85f);
             label.raycastTarget = false;
-            label.GetComponent<Outline>().effectColor = new Color(.07f, .06f, .05f);
+            label.outlineColor = new Color(.07f, .06f, .05f);
+            label.outlineWidth = .15f;
 
             var icon = root.GetComponent<UnitDebuffIcon>();
             icon.countLabel = label;

@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -6,10 +7,10 @@ namespace DuelHero.Units
 {
     internal sealed class StatusBarHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
-        private Text label;
+        private TextMeshProUGUI label;
         private Image hitArea;
 
-        public static StatusBarHover Bind(Image fill, Text label)
+        public static StatusBarHover Bind(Image fill, TextMeshProUGUI label)
         {
             if (fill == null || label == null) return null;
             // The segment container keeps its full width even when the fill is empty.

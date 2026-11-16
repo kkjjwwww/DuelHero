@@ -1,3 +1,4 @@
+using TMPro;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,11 +9,11 @@ namespace DuelHero.Cards
     public sealed class CardRewardUI : MonoBehaviour
     {
         [SerializeField] private RectTransform content;
-        [SerializeField] private Text message;
+        [SerializeField] private TextMeshProUGUI message;
         [SerializeField] private CardView cardPrefab;
         [SerializeField] private Image screenBackground;
         [SerializeField] private Button actionButton;
-        [SerializeField] private Text actionLabel, goldLabel;
+        [SerializeField] private TextMeshProUGUI actionLabel, goldLabel;
         [SerializeField, Range(0f, 1f), InspectorName("보상 배경 불투명도")]
         private float backgroundOpacity = .88f;
         private readonly List<CardView> views = new();
@@ -38,7 +39,7 @@ namespace DuelHero.Cards
             goldLabel.text = "획득 예정 골드  +" + gold;
             actionLabel.text = cards.Count == 0 ? "계속" : "건너뛰기";
             message.text = cards.Count == 0 ? "획득 가능한 카드가 없습니다." : "카드를 클릭하면 획득하고 맵으로 돌아갑니다.";
-            Font font = message.font;
+            Font font = DuelHero.UI.GameFonts.UI;
             tooltip = KeywordTooltip.Create(GetComponentInParent<Canvas>().rootCanvas);
             rangePreview = CardRangePreview.GetOrCreate(GetComponentInParent<Canvas>().rootCanvas);
             for (int i = 0; i < cards.Count; i++)

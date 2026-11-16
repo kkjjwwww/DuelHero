@@ -1,3 +1,4 @@
+using TMPro;
 using System.Collections.Generic;
 using System.Linq;
 using DuelHero.Cards;
@@ -13,8 +14,8 @@ namespace DuelHero.Logging
         [SerializeField] private DuelHero.Units.UnitInitializer enemyEncounter;
         [SerializeField] private ScrollRect scroll;
         [SerializeField] private RectTransform content;
-        [SerializeField] private Font font;
-        private readonly List<Text> rows = new();
+        [SerializeField] private TMP_FontAsset font;
+        private readonly List<TextMeshProUGUI> rows = new();
         private void OnEnable() { if (source != null) source.Changed += Refresh; Refresh(); }
         private void OnDisable() { if (source != null) source.Changed -= Refresh; }
         internal void TogglePanel()
@@ -31,11 +32,11 @@ namespace DuelHero.Logging
             Vector2 oldPosition = content.anchoredPosition;
             while (rows.Count < source.Entries.Count)
             {
-                var go = new GameObject("LogRow", typeof(RectTransform), typeof(Text), typeof(LayoutElement));
+                var go = new GameObject("LogRow", typeof(RectTransform), typeof(TextMeshProUGUI), typeof(LayoutElement));
                 go.transform.SetParent(content, false);
-                var text = go.GetComponent<Text>(); text.font = font; text.fontSize = 14;
+                var text = go.GetComponent<TextMeshProUGUI>(); text.font = font; text.fontSize = 14;
                 text.color = new Color(0.95f, 0.95f, 0.95f); text.raycastTarget = false;
-                text.horizontalOverflow = HorizontalWrapMode.Wrap; text.alignment = TextAnchor.MiddleLeft;
+                text.alignment = TextAlignmentOptions.MidlineLeft;
                 rows.Add(text);
             }
             for (int i = 0; i < rows.Count; i++)

@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
@@ -12,9 +13,9 @@ namespace DuelHero.Cards
     {
         [SerializeField] private GameObject frontFace;
         [SerializeField] private GameObject backFace;
-        [SerializeField] private Text nameLabel;
-        [SerializeField] private Text costLabel;
-        [SerializeField] private Text effectLabel;
+        [SerializeField] private TextMeshProUGUI nameLabel;
+        [SerializeField] private TextMeshProUGUI costLabel;
+        [SerializeField] private TextMeshProUGUI effectLabel;
         [SerializeField] private CanvasGroup cardCanvasGroup;
         [SerializeField] private GameObject executionHighlight;
         [Header("Execution Scale")]

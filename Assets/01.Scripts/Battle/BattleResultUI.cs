@@ -1,3 +1,4 @@
+using TMPro;
 using System;
 using UnityEngine;
 using UnityEngine.UI;
@@ -6,10 +7,10 @@ namespace DuelHero.Battle
     public sealed class BattleResultUI : MonoBehaviour
     {
         [SerializeField] private CanvasGroup panel;
-        [SerializeField] private Text resultLabel;
+        [SerializeField] private TextMeshProUGUI resultLabel;
         [SerializeField] private Button restartButton;
-        [SerializeField] private Text actionLabel;
-        [SerializeField] private Text goldRewardLabel;
+        [SerializeField] private TextMeshProUGUI actionLabel;
+        [SerializeField] private TextMeshProUGUI goldRewardLabel;
         public void ShowGold(int? amount, bool awarded)
         {
             if (goldRewardLabel == null) return;

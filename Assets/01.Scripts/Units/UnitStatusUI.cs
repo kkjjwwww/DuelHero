@@ -1,3 +1,4 @@
+using TMPro;
 using DG.Tweening;
 using System;
 using UnityEngine;
@@ -13,8 +14,8 @@ namespace DuelHero.Units
         [SerializeField] private Image damageTrailFill;
         [SerializeField] private Image frameFlash;
         [SerializeField] private Image energyFill;
-        [SerializeField] private Text healthLabel;
-        [SerializeField] private Text energyLabel;
+        [SerializeField] private TextMeshProUGUI healthLabel;
+        [SerializeField] private TextMeshProUGUI energyLabel;
         [SerializeField] private Image guardFill;
         [SerializeField] private Image guardPreviewSegment;
         [SerializeField] private BattlePreviewPresenter preview;
@@ -47,11 +48,11 @@ namespace DuelHero.Units
             if (debuffAnchor != null)
             {
                 if (stunIcon == null && stunSprite != null)
-                    stunIcon = UnitDebuffIcon.Create(debuffAnchor, stunSprite, FindKeyword("stun"), fillFromRight);
+                    stunIcon = UnitDebuffIcon.Create(debuffAnchor, stunSprite, FindKeyword("stun"), fillFromRight, energyLabel != null ? energyLabel.font : null);
                 if (bleedIcon == null && bleedSprite != null)
-                    bleedIcon = UnitDebuffIcon.Create(debuffAnchor, bleedSprite, FindKeyword("bleed"), fillFromRight);
+                    bleedIcon = UnitDebuffIcon.Create(debuffAnchor, bleedSprite, FindKeyword("bleed"), fillFromRight, energyLabel != null ? energyLabel.font : null);
                 if (foresightIcon == null && foresightSprite != null)
-                    foresightIcon = UnitDebuffIcon.Create(debuffAnchor, foresightSprite, FindKeyword("foresight"), fillFromRight);
+                    foresightIcon = UnitDebuffIcon.Create(debuffAnchor, foresightSprite, FindKeyword("foresight"), fillFromRight, energyLabel != null ? energyLabel.font : null);
             }
             healthHover = StatusBarHover.Bind(healthFill, healthLabel);
             energyHover = StatusBarHover.Bind(energyFill, energyLabel);

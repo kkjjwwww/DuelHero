@@ -16,7 +16,7 @@ namespace DuelHero.Units
         [SerializeField] private EnemyEncounterProfiles encounterProfiles;
         [SerializeField] private BattleConfig battleConfig;
         [FormerlySerializedAs("encounterNameLabel")]
-        [SerializeField] private UnityEngine.UI.Text unitNameLabel;
+        [SerializeField] private TMPro.TextMeshProUGUI unitNameLabel;
         private EnemyEncounterProfile encounter;
         public EnemyEncounterProfile Encounter => encounterProfiles == null ? null :
             encounter ??= encounterProfiles.Resolve(RunSessionStore.Current);
