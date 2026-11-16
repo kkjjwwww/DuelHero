@@ -29,7 +29,7 @@ namespace DuelHero.Units
         private void OnEnable() => ResetPose();
         private void OnDisable() => CancelSupportPose();
 
-        public IEnumerator PlaySupportPose(UnitPose pose, bool holdUntilResolved = false, System.Action onStarted = null)
+        public IEnumerator PlaySupportPose(UnitPose pose, bool holdUntilResolved = false, System.Action onStarted = null, float? duration = null)
         {
             if (pose != UnitPose.Block && pose != UnitPose.Heal)
                 throw new ArgumentOutOfRangeException(nameof(pose));
@@ -41,7 +41,8 @@ namespace DuelHero.Units
             {
                 if (!SetPose(pose)) { CancelSupportPose(); yield break; }
                 onStarted?.Invoke();
-                if (supportPoseDuration > 0f) yield return new WaitForSeconds(supportPoseDuration);
+                float holdDuration = duration ?? supportPoseDuration;
+                if (holdDuration > 0f) yield return new WaitForSeconds(holdDuration);
             }
             finally
             {

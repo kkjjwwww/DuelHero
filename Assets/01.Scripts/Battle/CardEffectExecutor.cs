@@ -627,6 +627,8 @@ namespace DuelHero.Battle
                         yield return sprites.PlaySupportPose(UnitPose.Block, true, () => PlayCardSounds(card.id, CardSoundSettings.Timing.GuardPose));
                     else if (effect.effectType == "healthRestore" || effect.effectType == "energyRestore")
                         yield return sprites.PlaySupportPose(UnitPose.Heal);
+                    else if (effect.IsSelfForesight)
+                        yield return sprites.PlaySupportPose(UnitPose.Heal, duration: 0.8f);
                     if (!movement.isActiveAndEnabled) yield break;
                 }
             }

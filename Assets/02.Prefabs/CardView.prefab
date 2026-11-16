@@ -1232,6 +1232,9 @@ MonoBehaviour:
   - cardId: energy_release_001
     sprite: {fileID: 21300000, guid: 5b3c3c9d3937404881d93961d6b4ebc1, type: 3}
     enemySprite: {fileID: 21300000, guid: 5b3c3c9d3937404881d93961d6b4ebc1, type: 3}
+  - cardId: future_sight_001
+    sprite: {fileID: 21300000, guid: 0150a7848e224ada996df9cc0703e928, type: 3}
+    enemySprite: {fileID: 21300000, guid: 0150a7848e224ada996df9cc0703e928, type: 3}
   illustrationMaskLabel: {fileID: 2585468343720503962}
   nameLabel: {fileID: 4830123014176368167}
   energyLabel: {fileID: 7672088178475286491}
