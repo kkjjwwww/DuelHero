@@ -9,7 +9,7 @@ namespace DuelHero.Cards
 {
     public sealed class OptionsDisplaySettings : MonoBehaviour
     {
-        private Dropdown resolutionDropdown, modeDropdown;
+        private TMPro.TMP_Dropdown resolutionDropdown, modeDropdown;
         private readonly List<Vector2Int> resolutions = new List<Vector2Int>();
         private bool initialized;
         private bool currentOutsideList;
@@ -26,8 +26,8 @@ namespace DuelHero.Cards
         private void Initialize()
         {
             var content = transform.Find("OptionsContent");
-            resolutionDropdown = content.Find("ResolutionField").GetComponent<Dropdown>();
-            modeDropdown = content.Find("WindowModeField").GetComponent<Dropdown>();
+            resolutionDropdown = content.Find("ResolutionField").GetComponent<TMPro.TMP_Dropdown>();
+            modeDropdown = content.Find("WindowModeField").GetComponent<TMPro.TMP_Dropdown>();
             resolutionDropdown.onValueChanged.AddListener(ApplyResolution);
             modeDropdown.onValueChanged.AddListener(ApplyMode);
             content.Find("ReturnToTitle").GetComponent<Button>().onClick.AddListener(ReturnToTitle);

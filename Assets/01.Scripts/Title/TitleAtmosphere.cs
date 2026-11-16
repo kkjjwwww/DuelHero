@@ -38,6 +38,9 @@ namespace DuelHero.Title
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Register()
         {
+#if UNITY_STANDALONE_WIN && !UNITY_EDITOR
+            Application.targetFrameRate = 60;
+#endif
             SceneManager.sceneLoaded -= Attach;
             SceneManager.sceneLoaded += Attach;
         }

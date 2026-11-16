@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using DuelHero.Battle;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -17,8 +18,8 @@ namespace DuelHero.Cards
         [SerializeField] private Button outsideCloseButton;
         [SerializeField] private GameObject panel;
         [SerializeField] private RectTransform content;
-        [SerializeField] private Text titleLabel;
-        [SerializeField] private Text detailLabel;
+        [SerializeField] private TextMeshProUGUI titleLabel;
+        [SerializeField] private TextMeshProUGUI detailLabel;
         [SerializeField] private Font font;
         [SerializeField] private CardView cardPrefab;
         [Header("Category Layout")]
@@ -38,7 +39,7 @@ namespace DuelHero.Cards
         }
         private sealed class Category
         {
-            public Text Title;
+            public TextMeshProUGUI Title;
             public CardWrapLayout Layout;
             public readonly List<RectTransform> Items = new();
         }
@@ -290,11 +291,12 @@ namespace DuelHero.Cards
                 {
                     var go = new GameObject("Category_" + name, typeof(RectTransform), typeof(LayoutElement), typeof(CardWrapLayout));
                     go.transform.SetParent(content, false);
-                    var titleGo = new GameObject("Title", typeof(RectTransform), typeof(Text));
+                    var titleGo = new GameObject("Title", typeof(RectTransform), typeof(TextMeshProUGUI));
                     titleGo.transform.SetParent(go.transform, false);
-                    var title = titleGo.GetComponent<Text>();
-                    title.font = font; title.fontSize = 18; title.color = Color.white;
-                    title.alignment = TextAnchor.MiddleLeft; title.raycastTarget = false;
+                    var title = titleGo.GetComponent<TextMeshProUGUI>();
+                    if (titleLabel != null) title.font = titleLabel.font;
+                    title.fontSize = 18; title.color = Color.white;
+                    title.alignment = TextAlignmentOptions.MidlineLeft; title.raycastTarget = false;
                     var rect = title.rectTransform;
                     rect.anchorMin = new Vector2(0, 1); rect.anchorMax = Vector2.one;
                     rect.pivot = new Vector2(.5f, 1); rect.sizeDelta = new Vector2(-8f, 28f);

@@ -4,6 +4,7 @@ using DuelHero.Map;
 using DuelHero.Run;
 using System;
 using System.IO;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -13,7 +14,7 @@ namespace DuelHero.Title
     {
         private const string MapScenePath = "Assets/00.Scenes/MapScene.unity";
         [SerializeField] private Button continueButton;
-        [SerializeField] private Text errorLabel;
+        [SerializeField] private TextMeshProUGUI errorLabel;
         [SerializeField] private Sprite noticePanel;
         [SerializeField] private Sprite popupButton;
         [SerializeField] private Sprite disabledPopupButton;
@@ -146,15 +147,15 @@ namespace DuelHero.Title
             CreateText("Label", rect, Vector2.zero, new Vector2(200, 65)).text = label;
         }
 
-        private Text CreateText(string name, RectTransform parent, Vector2 position, Vector2 size)
+        private TextMeshProUGUI CreateText(string name, RectTransform parent, Vector2 position, Vector2 size)
         {
-            var obj = new GameObject(name, typeof(RectTransform), typeof(Text));
+            var obj = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
             var rect = obj.GetComponent<RectTransform>();
             rect.SetParent(parent, false);
             rect.anchorMin = rect.anchorMax = new Vector2(.5f, .5f);
             rect.anchoredPosition = position; rect.sizeDelta = size;
-            var label = obj.GetComponent<Text>();
-            label.font = errorLabel.font; label.fontSize = 28; label.alignment = TextAnchor.MiddleCenter;
+            var label = obj.GetComponent<TextMeshProUGUI>();
+            label.font = errorLabel.font; label.fontSize = 28; label.alignment = TextAlignmentOptions.Center;
             label.color = Color.white; label.raycastTarget = false;
             return label;
         }
