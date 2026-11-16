@@ -11,7 +11,7 @@ namespace DuelHero.Map
         [SerializeField] private RectTransform nodeLayer;
         [SerializeField] private RouteNodeView nodePrefab;
         [SerializeField] private RouteMapConnections connections;
-        [SerializeField] private Text seedLabel;
+        [SerializeField] private TMPro.TextMeshProUGUI seedLabel;
         [SerializeField] private GameObject clearBanner;
         [SerializeField] private Button restartButton;
         [SerializeField] private RectTransform viewport;

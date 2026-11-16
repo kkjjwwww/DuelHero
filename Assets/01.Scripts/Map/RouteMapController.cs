@@ -23,8 +23,7 @@ namespace DuelHero.Map
         [SerializeField] private CardDatabase cardDatabase;
         [SerializeField] private RunConfig runConfig;
         [SerializeField] private ShopConfig shopConfig;
-        [SerializeField] private UnityEngine.UI.Text goldLabel;
-        [SerializeField] private TMPro.TMP_FontAsset goldFont;
+        [SerializeField] private TMPro.TextMeshProUGUI goldLabel;
         [SerializeField] private string shopScenePath = "Assets/00.Scenes/ShopScene.unity";
         [SerializeField] private string restScenePath = "Assets/00.Scenes/RestScene.unity";
         [SerializeField] private string battleScenePath = "Assets/00.Scenes/BattleScene.unity";
@@ -65,7 +64,7 @@ namespace DuelHero.Map
         private void Start()
         {
             if (goldLabel != null)
-                goldDisplay = CurrencyLabel.CreateGoldBalance(goldLabel, goldFont);
+                goldDisplay = CurrencyLabel.CreateGoldBalance(goldLabel);
             session = RunSessionStore.Current;
             bool newMap = session == null;
             session ??= CreateRun(CreateRandomSeed());
