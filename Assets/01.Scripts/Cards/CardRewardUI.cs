@@ -11,6 +11,7 @@ namespace DuelHero.Cards
         [SerializeField] private RectTransform content;
         [SerializeField] private TextMeshProUGUI message;
         [SerializeField] private CardView cardPrefab;
+        [SerializeField] private CardAcquisitionPresentation acquisitionPrefab;
         [SerializeField] private Image screenBackground;
         [SerializeField] private Button actionButton;
         [SerializeField] private TextMeshProUGUI actionLabel, goldLabel;
@@ -21,6 +22,8 @@ namespace DuelHero.Cards
         private CardRangePreview rangePreview;
         private bool showing;
         private bool inputEnabled;
+        private CardView selectedView;
+        private CardAcquisitionPresentation acquisition;
         public bool IsShowing => showing;
         public event Action<string> CardSelected;
         public event Action ActionRequested;
@@ -54,7 +57,7 @@ namespace DuelHero.Cards
                 card.Bind(definition, database.keywords);
                 card.SetFrontVisible(true);
                 card.SetState(string.Empty, 0, true);
-                card.SetClickAction(() => Select(definition.id));
+                card.SetClickAction(() => Select(definition.id, card));
                 var hover = card.GetComponent<CardHoverInfo>();
                 hover.ShowInfo = () => { if (inputEnabled) rangePreview.Show(card); };
                 hover.HideInfo = () => rangePreview.Hide(card);
@@ -65,11 +68,27 @@ namespace DuelHero.Cards
             SetInteractable(true);
         }
 
-        private void Select(string id)
+        private void Select(string id, CardView card)
         {
             if (!inputEnabled) return;
+            selectedView = card;
             SetInteractable(false);
             CardSelected?.Invoke(id);
+        }
+
+        public bool PlayAcquisition(CardDefinition definition, CardDatabase database, Action onCompleted)
+        {
+            if (selectedView == null || acquisitionPrefab == null) return false;
+            if (acquisition == null)
+                acquisition = Instantiate(acquisitionPrefab, GetComponentInParent<Canvas>().rootCanvas.transform, false);
+            if (!acquisition.Play(selectedView, definition, database, onCompleted)) return false;
+            selectedView.gameObject.SetActive(false);
+            return true;
+        }
+
+        public void CancelAcquisition()
+        {
+            if (acquisition != null) acquisition.Cancel();
         }
 
         public void SetInteractable(bool value)
@@ -99,6 +118,7 @@ namespace DuelHero.Cards
 
         private void OnDestroy()
         {
+            if (acquisition != null) Destroy(acquisition.gameObject);
             if (actionButton != null) actionButton.onClick.RemoveListener(RequestAction);
             if (tooltip != null) Destroy(tooltip.gameObject);
         }

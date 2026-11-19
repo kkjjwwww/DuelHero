@@ -17016,6 +17016,7 @@ MonoBehaviour:
   content: {fileID: 25208878}
   message: {fileID: 728395268}
   cardPrefab: {fileID: 6403934370426295413, guid: 17b8247d91cf50047946601446045288, type: 3}
+  acquisitionPrefab: {fileID: 102, guid: 8153a20b65ad4c98aebacdd2124cc302, type: 3}
   screenBackground: {fileID: 698998688}
   actionButton: {fileID: 2034193586}
   actionLabel: {fileID: 1903061039}

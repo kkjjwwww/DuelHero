@@ -27,6 +27,7 @@ namespace DuelHero.Battle
         private bool processed;
         private bool transitioning;
         private bool rewardPending;
+        private bool rewardAnimating;
         private int victoryHealth;
         private int victoryGold;
         private CardDefinition[] rewardOptions = Array.Empty<CardDefinition>();
@@ -55,6 +56,8 @@ namespace DuelHero.Battle
 
         private void OnDisable()
         {
+            if (rewardView != null) rewardView.CancelAcquisition();
+            rewardAnimating = false;
             source.BattleFinished -= HandleFinished;
             view.ActionRequested -= HandleAction;
             if (rewardView != null)
@@ -111,6 +114,7 @@ namespace DuelHero.Battle
 
         private void HandleAction()
         {
+            if (rewardAnimating) return;
             if (rewardPending) { ResolveReward(null); return; }
             if (!processed || transitioning) return;
             if (run != null && !ReferenceEquals(run, RunSessionStore.Current)) return;
@@ -188,6 +192,24 @@ namespace DuelHero.Battle
             }
             rewardPending = false;
             processed = true;
+            if (added != null)
+            {
+                rewardAnimating = true;
+                try
+                {
+                    if (rewardView.PlayAcquisition(added.Definition, playerDeck.Database, () =>
+                    {
+                        rewardAnimating = false;
+                        if (isActiveAndEnabled) HandleAction();
+                    })) return;
+                }
+                catch (Exception error)
+                {
+                    Debug.LogWarning("카드 획득 연출을 재생하지 못했습니다: " + error.Message, this);
+                    rewardView.CancelAcquisition();
+                }
+                rewardAnimating = false;
+            }
             HandleAction();
         }
 
@@ -196,7 +218,7 @@ namespace DuelHero.Battle
             if (rewardView != null && rewardView.IsShowing)
             {
                 view.Show(BattleOutcome.Running, string.Empty, false);
-                if (processed) rewardView.ShowReturn(victoryGold, transitioning, LastError);
+                if (processed && !rewardAnimating) rewardView.ShowReturn(victoryGold, transitioning, LastError);
                 return;
             }
             string label = run == null ? "재시작" : outcome == BattleOutcome.Victory ? "계속" : "타이틀로";
