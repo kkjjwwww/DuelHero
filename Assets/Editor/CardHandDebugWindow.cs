@@ -23,6 +23,7 @@ namespace DuelHero.EditorTools
         private int statusIndex;
         private int statusAmount = 1;
         private int statAmount = 10;
+        private int damageAmount = 10;
         private int guardSlots = 1;
         private string statResult;
         private Vector2 scrollPosition;
@@ -278,6 +279,7 @@ namespace DuelHero.EditorTools
                 }
 
                 EditorGUILayout.Space();
+                damageAmount = Mathf.Max(1, EditorGUILayout.IntField("체력 피해량", damageAmount));
                 statAmount = Mathf.Max(1, EditorGUILayout.IntField("변화량", statAmount));
                 guardSlots = Mathf.Max(1, EditorGUILayout.IntField("보호막 지속 슬롯", guardSlots));
                 var unit = selectedUnit;
@@ -318,7 +320,7 @@ namespace DuelHero.EditorTools
         private void ApplyDebugDamage(UnitStats unit)
         {
             int before = unit.Health;
-            ApplyStatChange("체력 피해", () => unit.TakeDamage(statAmount));
+            ApplyStatChange("체력 피해", () => unit.TakeDamage(damageAmount));
             int damage = before - unit.Health;
             if (damage > 0)
                 FindFirstObjectByType<BattleDamageNumberUI>()?.ShowDamageForDebug(unit.transform, damage);

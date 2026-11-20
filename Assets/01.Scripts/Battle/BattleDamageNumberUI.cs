@@ -13,6 +13,8 @@ namespace DuelHero.Battle
         [SerializeField] private Camera battleCamera;
         [SerializeField] private RectTransform hudRoot;
         [SerializeField] private Sprite[] digits;
+        [SerializeField, Min(2)] private int damageForMaxScale = 50;
+        [SerializeField, Min(1f)] private float maxDamageNumberScale = 1.6f;
         private const float Duration = .55f;
         private const float FadeDuration = .18f;
         private static readonly Color DamageRed = new Color(1f, .29f, .26f);
@@ -68,6 +70,8 @@ namespace DuelHero.Battle
             rect.SetParent(parent, false);
             rect.SetAsFirstSibling();
             rect.anchorMin = rect.anchorMax = new Vector2(.5f, .5f);
+            float damageRatio = Mathf.InverseLerp(1f, damageForMaxScale, amount);
+            rect.localScale = Vector3.one * Mathf.Lerp(1f, maxDamageNumberScale, damageRatio);
             var group = root.GetComponent<CanvasGroup>();
             group.blocksRaycasts = false;
             group.interactable = false;
