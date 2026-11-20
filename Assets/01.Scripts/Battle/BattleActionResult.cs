@@ -20,6 +20,8 @@ namespace DuelHero.Battle
         public int BleedBonusDamage { get; }
         public int Round { get; }
         public int Value { get; }
+        public int DisplayDamage { get; }
+        public bool IsLethalHit { get; }
         public int ReducedDamage { get; }
         public int DurationSlots { get; }
         public Vector2Int From { get; }
@@ -27,12 +29,14 @@ namespace DuelHero.Battle
         public BattleActionResult(BattleActionKind kind, string actorId, int round = 0, string cardId = null,
             BattleActionOutcome outcome = BattleActionOutcome.Success, Vector2Int from = default,
             Vector2Int to = default, int value = 0, string targetId = null, int reducedDamage = 0, int durationSlots = 0,
-            string hitVfx = null, int bleedBonusDamage = 0)
+            string hitVfx = null, int bleedBonusDamage = 0, int? displayDamage = null, bool isLethalHit = false)
         {
             Kind = kind; ActorId = actorId; Round = round; CardId = cardId;
             Outcome = outcome; From = from; To = to; Value = value; TargetId = targetId;
             HitVfx = hitVfx; ReducedDamage = reducedDamage; DurationSlots = durationSlots;
             BleedBonusDamage = bleedBonusDamage;
+            DisplayDamage = displayDamage ?? value;
+            IsLethalHit = isLethalHit;
         }
     }
 }

@@ -15,6 +15,11 @@ namespace DuelHero.Battle
         [SerializeField, Min(0f)] private float heavyShakeStrength = .22f;
         [SerializeField, Min(0f)] private float heavyShakeDuration = .32f;
         [SerializeField, Min(0f)] private float heavyHitStop = .24f;
+        [SerializeField, Min(0f)] private float heavyZoomAmount = .10f;
+        [SerializeField, Min(.01f)] private float heavyZoomInDuration = .08f;
+        [SerializeField, Min(.01f)] private float heavyZoomOutDuration = .30f;
+        [SerializeField, Range(.05f, 1f)] private float finalHitSpeed = .45f;
+        [SerializeField, Min(0f)] private float finalHitSlowDuration = .3f;
 
         private Camera targetCamera;
         private Vector3 basePosition, battlePosition;
@@ -27,6 +32,18 @@ namespace DuelHero.Battle
         private float activeShakeStrength;
         private bool hitStopActive;
         private double hitStopUntil;
+        private int hitStopFrame;
+        private float pendingHitStop;
+        private Vector2 pendingShake;
+        private bool pendingImpactZoom;
+        private bool pendingFinalHit;
+        private bool finalHitSlowed;
+        private double finalHitSlowUntil;
+        private float finalHitStartZoom;
+        private Tween impactZoomMotion;
+        private float impactZoom = 1f;
+        internal bool IsHoldingImpact => hitStopActive || pendingHitStop > 0f;
+        internal bool IsFinalHitSlowed => finalHitSlowed;
         private Vector2 impactOffset;
         internal Vector3 ImpactWorldOffset => transform.rotation * new Vector3(impactOffset.x, impactOffset.y, 0f);
         private Tween energyFocusMotion;
@@ -72,34 +89,45 @@ namespace DuelHero.Battle
             {
                 entryZoom = zoom;
                 ApplyView();
-            }, 1f, .8f).SetEase(Ease.InOutSine).SetUpdate(true)
+            }, 1f, .8f).SetEase(Ease.InOutSine)
                 .OnComplete(() => entryZoomMotion = null);
         }
 
         internal void PlayRiftImpactShake() => PlayImpactShake(.09f, .2f);
 
-        internal void PlayDamageImpact(int damage, bool lethal, bool statusDamage)
+        internal void PlayDamageImpact(int damage, bool lethal, bool statusDamage, bool finalHit)
         {
             if (!isActiveAndEnabled || damage <= 0) return;
             float ratio = Mathf.InverseLerp(1f, Mathf.Max(2, standardImpactDamage), damage);
             bool heavy = damage >= heavyImpactDamage;
-            PlayImpactShake(
-                heavy ? heavyShakeStrength : Mathf.Lerp(standardShakeStrength.x, standardShakeStrength.y, ratio),
-                heavy ? heavyShakeDuration : Mathf.Lerp(standardShakeDuration.x, standardShakeDuration.y, ratio));
+            float strength = heavy ? heavyShakeStrength : Mathf.Lerp(standardShakeStrength.x, standardShakeStrength.y, ratio);
+            float shakeDuration = heavy ? heavyShakeDuration : Mathf.Lerp(standardShakeDuration.x, standardShakeDuration.y, ratio);
 
             float duration = heavy ? heavyHitStop :
                 statusDamage ? 0f : Mathf.Lerp(standardHitStop.x, standardHitStop.y, ratio);
             if (lethal) duration = Mathf.Max(duration, lethalHitStop);
-            if (duration <= 0f) return;
-
-            double deadline = Time.realtimeSinceStartupAsDouble + duration;
-            if (!hitStopActive)
+            if (duration <= 0f && !IsHoldingImpact)
             {
-                GameTimePause.Acquire();
-                hitStopActive = true;
-                hitStopUntil = deadline;
+                PlayImpactShake(strength, shakeDuration);
+                if (finalHit) BeginFinalHitSlow();
+                if (!finalHitSlowed && (heavy || lethal)) PlayImpactZoom();
+                return;
             }
-            else hitStopUntil = System.Math.Max(hitStopUntil, deadline);
+
+            if (strength >= pendingShake.x) pendingShake = new Vector2(strength, shakeDuration);
+            pendingImpactZoom |= heavy || lethal;
+            pendingFinalHit |= finalHit;
+            if (hitStopActive)
+            {
+                if (pendingImpactZoom) HoldImpactZoom();
+                hitStopUntil = System.Math.Max(hitStopUntil, Time.realtimeSinceStartupAsDouble + duration);
+            }
+            else
+            {
+                // Allow the newly spawned hit effect one frame to emit before freezing.
+                if (pendingHitStop <= 0f) hitStopFrame = Time.frameCount + 1;
+                pendingHitStop = Mathf.Max(pendingHitStop, duration);
+            }
         }
 
         private void EndHitStop()
@@ -122,7 +150,7 @@ namespace DuelHero.Battle
                 float phase = progress * Mathf.PI * 6f;
                 impactOffset = new Vector2(Mathf.Sin(phase) * strength, Mathf.Sin(phase * .8f) * (strength * (.055f / .09f))) * envelope;
                 ApplyView();
-            }).SetEase(Ease.Linear).SetUpdate(true).OnKill(() =>
+            }).SetEase(Ease.Linear).OnKill(() =>
             {
                 impactShake = null;
                 impactOffset = Vector2.zero;
@@ -165,8 +193,82 @@ namespace DuelHero.Battle
 
         private void LateUpdate()
         {
-            if (hitStopActive && Time.realtimeSinceStartupAsDouble >= hitStopUntil) EndHitStop();
+            if (finalHitSlowed && !IsHoldingImpact) UpdateFinalHitRecovery();
+            if (pendingHitStop > 0f && Time.frameCount >= hitStopFrame)
+            {
+                hitStopUntil = Time.realtimeSinceStartupAsDouble + pendingHitStop;
+                pendingHitStop = 0f;
+                hitStopActive = true;
+                if (pendingImpactZoom) HoldImpactZoom();
+                GameTimePause.Acquire();
+            }
+            if (hitStopActive && Time.realtimeSinceStartupAsDouble >= hitStopUntil)
+            {
+                if (pendingFinalHit) BeginFinalHitSlow();
+                pendingFinalHit = false;
+                EndHitStop();
+                impactShake?.Kill();
+                PlayImpactShake(pendingShake.x, pendingShake.y);
+                pendingShake = Vector2.zero;
+                if (pendingImpactZoom && !finalHitSlowed) PlayImpactZoom(alreadyZoomed: true);
+                pendingImpactZoom = false;
+            }
             if (energyFocus != null) ApplyView();
+        }
+
+        private void BeginFinalHitSlow()
+        {
+            if (finalHitSlowDuration <= 0f || finalHitSpeed >= 1f) return;
+            HoldImpactZoom();
+            finalHitStartZoom = impactZoom;
+            GameTimePause.BeginSlowMotion(finalHitSpeed);
+            finalHitSlowed = true;
+            finalHitSlowUntil = Time.realtimeSinceStartupAsDouble + finalHitSlowDuration;
+        }
+
+        private void UpdateFinalHitRecovery()
+        {
+            double remaining = finalHitSlowUntil - Time.realtimeSinceStartupAsDouble;
+            if (remaining <= 0)
+            {
+                SetImpactZoom(1f);
+                EndFinalHitSlow();
+                return;
+            }
+
+            float progress = Mathf.Clamp01(1f - (float)remaining / finalHitSlowDuration);
+            float eased = .5f * (1f - Mathf.Cos(Mathf.PI * progress));
+            GameTimePause.BeginSlowMotion(Mathf.Lerp(finalHitSpeed, 1f, eased));
+            SetImpactZoom(Mathf.Lerp(finalHitStartZoom, 1f, eased));
+        }
+
+        private void EndFinalHitSlow()
+        {
+            if (!finalHitSlowed) return;
+            finalHitSlowed = false;
+            GameTimePause.EndSlowMotion();
+        }
+
+        private void HoldImpactZoom()
+        {
+            impactZoomMotion?.Kill();
+            SetImpactZoom(1f + heavyZoomAmount);
+        }
+
+        private void PlayImpactZoom(bool alreadyZoomed = false)
+        {
+            impactZoomMotion?.Kill();
+            var sequence = DOTween.Sequence();
+            if (!alreadyZoomed)
+                sequence.Append(DOTween.To(() => impactZoom, SetImpactZoom, 1f + heavyZoomAmount, heavyZoomInDuration).SetEase(Ease.OutQuad));
+            impactZoomMotion = sequence.Append(DOTween.To(() => impactZoom, SetImpactZoom, 1f, heavyZoomOutDuration).SetEase(Ease.InOutSine))
+                .OnKill(() => impactZoomMotion = null);
+        }
+
+        private void SetImpactZoom(float zoom)
+        {
+            impactZoom = zoom;
+            ApplyView();
         }
 
         private void ApplyView()
@@ -178,7 +280,7 @@ namespace DuelHero.Battle
             if (energyFocus != null)
                 position += Vector3.ProjectOnPlane(energyFocus() - position, rotation * Vector3.forward) * energyFocusBlend;
             transform.SetPositionAndRotation(position + shakePosition, rotation);
-            float zoom = baseZoom * battleZoom * entryZoom * Mathf.Lerp(1f, energyZoom, energyFocusBlend);
+            float zoom = baseZoom * battleZoom * entryZoom * impactZoom * Mathf.Lerp(1f, energyZoom, energyFocusBlend);
             if (targetCamera.orthographic) targetCamera.orthographicSize = baseSize / zoom;
             else targetCamera.fieldOfView = baseFov / zoom;
         }
@@ -186,6 +288,13 @@ namespace DuelHero.Battle
         private void OnDisable()
         {
             EndHitStop();
+            EndFinalHitSlow();
+            pendingFinalHit = false;
+            pendingHitStop = 0f;
+            pendingShake = Vector2.zero;
+            pendingImpactZoom = false;
+            impactZoomMotion?.Kill();
+            impactZoom = 1f;
             CancelEnergyFocus();
             impactShake?.Kill();
             entryZoomMotion?.Kill();

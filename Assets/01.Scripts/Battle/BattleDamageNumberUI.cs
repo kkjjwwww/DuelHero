@@ -10,6 +10,7 @@ namespace DuelHero.Battle
     public sealed class BattleDamageNumberUI : MonoBehaviour
     {
         [SerializeField] private CombatEffectResolver resolver;
+        [SerializeField] private BattleTurnController battleTurn;
         [SerializeField] private Camera battleCamera;
         [SerializeField] private Sprite[] digits;
         [SerializeField, Min(2)] private int damageForMaxScale = 50;
@@ -42,28 +43,29 @@ namespace DuelHero.Battle
         {
             if (result.Outcome != BattleActionOutcome.Success || result.Value <= 0 ||
                 (result.Kind != BattleActionKind.Damage && result.Kind != BattleActionKind.StatusDamage) ||
-                !resolver.TryGetUnit(result.TargetId, out var target, out var stats))
+                !resolver.TryGetUnit(result.TargetId, out var target, out _))
                 return;
 
-            ShowNumber(target.transform, result.Value);
-            PlayImpact(result.Value, stats != null && stats.Health <= 0, result.Kind == BattleActionKind.StatusDamage);
+            bool finalHit = result.IsLethalHit && battleTurn != null && battleTurn.IsFinalEnemyHit(result.TargetId);
+            PlayImpact(result.DisplayDamage, result.IsLethalHit, result.Kind == BattleActionKind.StatusDamage, finalHit);
+            ShowNumber(target.transform, result.DisplayDamage);
         }
 
 #if UNITY_EDITOR
-        public void ShowDamageForDebug(Transform target, int amount, bool lethal)
+        public void ShowDamageForDebug(Transform target, int amount, int displayDamage, bool lethal)
         {
             if (Application.isPlaying && isActiveAndEnabled && target != null && amount > 0)
             {
-                ShowNumber(target, amount);
-                PlayImpact(amount, lethal, false);
+                PlayImpact(displayDamage, lethal, false);
+                ShowNumber(target, displayDamage);
             }
         }
 #endif
 
-        private void PlayImpact(int amount, bool lethal, bool statusDamage)
+        private void PlayImpact(int amount, bool lethal, bool statusDamage, bool finalHit = false)
         {
             if (battleCamera != null && battleCamera.TryGetComponent<BattleCameraController>(out var controller))
-                controller.PlayDamageImpact(amount, lethal, statusDamage);
+                controller.PlayDamageImpact(amount, lethal, statusDamage, finalHit);
         }
 
         private void ShowNumber(Transform target, int amount)
@@ -107,13 +109,23 @@ namespace DuelHero.Battle
             }
 
             Render(0f);
-            Tween motion = DOVirtual.Float(0f, 1f, Duration, Render).SetEase(Ease.Linear).SetUpdate(UpdateType.Late, true);
+            Tween motion = DOVirtual.Float(0f, 1f, Duration, Render).SetEase(Ease.Linear).SetUpdate(UpdateType.Late);
+            if (controller != null && controller.IsHoldingImpact) motion.Pause();
             active.Add((target, direction, motion));
             motion.OnKill(() =>
             {
                 active.RemoveAll(entry => entry.motion == motion);
                 if (root != null) Destroy(root);
             });
+        }
+
+        private void LateUpdate()
+        {
+            if (battleCamera != null && battleCamera.TryGetComponent<BattleCameraController>(out var controller) &&
+                controller.IsHoldingImpact) return;
+
+            foreach (var number in active)
+                if (!number.motion.IsPlaying()) number.motion.Play();
         }
 
         private RectTransform GetDamageOverlay()

@@ -15,6 +15,8 @@ namespace DuelHero.Battle
         [SerializeField] private CardReservationQueue playerQueue;
         [SerializeField] private string playerId;
         [SerializeField] private string enemyId;
+        internal bool IsFinalEnemyHit(string targetId) => targetId == enemyId &&
+            combatEffects != null && combatEffects.TryGetUnit(playerId, out _, out var player) && player.Health > 0;
         [SerializeField] private MonoBehaviour enemyPlanSource;
         [SerializeField] private CardEffectExecutor effects;
         [SerializeField] private CombatEffectResolver combatEffects;
@@ -25,6 +27,8 @@ namespace DuelHero.Battle
         [SerializeField] private UnitJumpPresentation playerJumpPresentation;
         [SerializeField] private UnitJumpPresentation enemyJumpPresentation;
         [SerializeField] private UnitVisualPlacement unitVisualPlacement;
+        [SerializeField, Min(0f)] private float defeatPresentationDuration = .3f;
+        [SerializeField, Min(0f)] private float postDefeatResultDelay = .35f;
         public bool IsInputLocked => (playerQueue != null && playerQueue.IsExecuting) ||
             (presentation != null && presentation.IsActive);
         [SerializeField, Min(0.01f)] private float slotDelay = 0.4f;
@@ -363,9 +367,18 @@ namespace DuelHero.Battle
                 executedSlots++;
                 Outcome = EvaluateOutcome(playerStats.Health, enemyStats.Health);
                 // Keep the executed cards visible while the result is being shown.
-                yield return new WaitForSeconds(slotDelay);
+                if (Outcome == BattleOutcome.Running) yield return new WaitForSeconds(slotDelay);
                 SlotCompleted?.Invoke(slot);
                 if (Outcome != BattleOutcome.Running) break;
+            }
+            if (Outcome != BattleOutcome.Running && unitVisualPlacement != null &&
+                combatEffects.TryGetUnit(Outcome == BattleOutcome.Victory ? enemyId : playerId, out var defeated, out _))
+            {
+                while (presentation != null && presentation.IsHoldingImpact) yield return null;
+                yield return unitVisualPlacement.PlayDefeat(defeated, defeatPresentationDuration);
+                while (presentation != null && presentation.IsFinalHitSlowed) yield return null;
+                if (postDefeatResultDelay > 0f)
+                    yield return new WaitForSeconds(postDefeatResultDelay);
             }
             FinishExecution();
         }

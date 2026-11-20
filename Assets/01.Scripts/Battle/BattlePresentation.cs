@@ -19,6 +19,8 @@ namespace DuelHero.Battle
         [SerializeField] private Vector3 cameraPositionOffset;
         [SerializeField] private float cameraPitchOffset;
         public bool IsActive { get; private set; }
+        internal bool IsHoldingImpact => cameraController != null && cameraController.IsHoldingImpact;
+        internal bool IsFinalHitSlowed => cameraController != null && cameraController.IsFinalHitSlowed;
         private Vector2 handPosition;
         private Vector2 buttonPosition;
         private Vector2[] slotPositions;

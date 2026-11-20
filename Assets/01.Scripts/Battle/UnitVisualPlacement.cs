@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -25,6 +26,7 @@ namespace DuelHero.Battle
             [NonSerialized] public int actionFacing;
             [NonSerialized] public UnitJumpPresentation jump;
             [NonSerialized] public SpriteRenderer shadow;
+            [NonSerialized] public float deathFade;
         }
         [SerializeField] private BoardOccupancy board;
         [SerializeField] private UnitVisual[] units = Array.Empty<UnitVisual>();
@@ -159,10 +161,34 @@ namespace DuelHero.Battle
             float size = 1.5f * Width(entry) * Mathf.Lerp(1f, .88f, lift) / groundShadow.bounds.size.x;
             entry.shadow.transform.SetPositionAndRotation(projected, Quaternion.LookRotation(-up, grid.transform.forward));
             entry.shadow.transform.localScale = Vector3.one * size;
-            entry.shadow.color = new Color(0f, 0f, 0f, Mathf.Lerp(.58f, .50f, lift));
+            entry.shadow.color = new Color(0f, 0f, 0f, Mathf.Lerp(.58f, .50f, lift) * (1f - entry.deathFade));
             entry.shadow.sortingLayerID = entry.sprite.sortingLayerID;
             entry.shadow.sortingOrder = entry.sprite.sortingOrder - 1;
             entry.shadow.enabled = true;
+        }
+
+        internal IEnumerator PlayDefeat(GridMovement movement, float duration)
+        {
+            var entry = entries.Find(candidate => candidate.movement == movement);
+            if (entry == null || entry.sprite == null || entry.deathFade >= 1f) yield break;
+
+            var sprite = entry.sprite;
+            Color initialColor = sprite.color;
+            Quaternion initialRotation = sprite.transform.localRotation;
+            float direction = sprite.flipX ? -1f : 1f;
+            for (float elapsed = 0f; elapsed < duration && sprite != null; elapsed += Time.deltaTime)
+            {
+                float progress = Mathf.Clamp01(elapsed / duration);
+                entry.deathFade = progress;
+                Color color = initialColor;
+                color.a *= 1f - progress;
+                sprite.color = color;
+                sprite.transform.localRotation = initialRotation * Quaternion.Euler(0f, 0f, direction * 18f * progress);
+                yield return null;
+            }
+            entry.deathFade = 1f;
+            if (sprite != null) sprite.enabled = false;
+            if (entry.shadow != null) entry.shadow.enabled = false;
         }
         public void Refresh()
         {

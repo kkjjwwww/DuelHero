@@ -326,13 +326,14 @@ namespace DuelHero.EditorTools
             }
             string beforeStats = FormatStats(unit);
             int before = unit.Health;
+            int displayDamage = Mathf.Max(0, damageAmount - unit.GuardReduction);
             unit.TakeDamage(damageAmount);
             int damage = before - unit.Health;
             healthInput = unit.Health;
             energyInput = unit.Energy;
             statResult = $"체력 피해 · 요청 {damageAmount}, 실제 {damage}\n이전  {beforeStats}\n이후  {FormatStats(unit)}";
             if (damage > 0)
-                FindFirstObjectByType<BattleDamageNumberUI>()?.ShowDamageForDebug(unit.transform, damage, unit.Health <= 0);
+                FindFirstObjectByType<BattleDamageNumberUI>()?.ShowDamageForDebug(unit.transform, damage, displayDamage, unit.Health <= 0);
         }
 
         private void ApplyStatChange(string label, Action apply)

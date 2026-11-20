@@ -3785,6 +3785,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9dab51eb71a1b944fac157c80346d998, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Battle.BattleCameraController
+  standardImpactDamage: 30
+  heavyImpactDamage: 50
+  standardShakeStrength: {x: 0.008, y: 0.065}
+  standardShakeDuration: {x: 0.1, y: 0.22}
+  standardHitStop: {x: 0.06, y: 0.14}
+  lethalHitStop: 0.18
+  heavyShakeStrength: 0.22
+  heavyShakeDuration: 0.32
+  heavyHitStop: 0.24
+  heavyZoomAmount: 0.1
+  heavyZoomInDuration: 0.08
+  heavyZoomOutDuration: 0.3
+  finalHitSpeed: 0.45
+  finalHitSlowDuration: 2
 --- !u!1 &337857982
 GameObject:
   m_ObjectHideFlags: 0
@@ -9806,6 +9820,8 @@ MonoBehaviour:
   playerJumpPresentation: {fileID: 185798879}
   enemyJumpPresentation: {fileID: 2024972217}
   unitVisualPlacement: {fileID: 910000004}
+  defeatPresentationDuration: 0.3
+  postDefeatResultDelay: 0.35
   slotDelay: 0.52
   enemyCardRevealDuration: 0.52
   postRevealDelay: 0.65
@@ -11069,6 +11085,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Battle.BattleDamageNumberUI
   resolver: {fileID: 1243114849}
+  battleTurn: {fileID: 910000001}
   battleCamera: {fileID: 330585545}
   digits:
   - {fileID: 21300000, guid: cf0e430691be5ad438017066a0701119, type: 3}
@@ -11081,6 +11098,8 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 6f8ca13eb7bd4fc4e978375467346519, type: 3}
   - {fileID: 21300000, guid: e5c2dfc78cf3a9742abba0fbdd2d758c, type: 3}
   - {fileID: 21300000, guid: 2249e4fe66478444e950bac7a75f68c2, type: 3}
+  damageForMaxScale: 50
+  maxDamageNumberScale: 2.5
 --- !u!114 &979334506
 MonoBehaviour:
   m_ObjectHideFlags: 0

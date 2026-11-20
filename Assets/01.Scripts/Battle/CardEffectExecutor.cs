@@ -14,6 +14,7 @@ namespace DuelHero.Battle
         private const float VfxLifetime = .3f * VfxDurationMultiplier;
         [SerializeField] private CombatEffectResolver combatEffects;
         [SerializeField] private GameObject slashVfx, dashVfx, headCrushVfx, hitVfx, blockVfx;
+        [SerializeField, Range(.1f, 1f)] private float lethalHitVfxSpeed = .7f;
         [SerializeField] private GameObject energyRestoreVfx;
         [SerializeField] private GameObject moveDustVfx;
         [SerializeField] private GameObject tearWoundVfx, whirlwindVfx, thornThrowVfx, thornImpactVfx;
@@ -167,31 +168,33 @@ namespace DuelHero.Battle
             }
             if (result.Value <= 0) return;
 
+            float hitDurationMultiplier = result.IsLethalHit ? 1f / Mathf.Max(.1f, lethalHitVfxSpeed) : 1f;
             if (renderer != null) ShakeHitSprite(renderer.transform);
             if (result.HitVfx == "tear_wound" && tearWoundVfx != null)
             {
-                SpawnVfx(hitVfx, position);
+                SpawnVfx(hitVfx, position, hitDurationMultiplier);
                 var bonus = tearWoundVfx.transform.Find("BleedBonus");
                 if (result.BleedBonusDamage > 0 && bonus != null)
                 {
                     var effect = Instantiate(bonus.gameObject, position, tearWoundVfx.transform.rotation * bonus.localRotation);
                     effect.transform.localScale = Vector3.Scale(tearWoundVfx.transform.localScale, bonus.localScale);
                     effect.SetActive(true);
-                    Destroy(effect, .45f);
+                    ScaleParticleDuration(effect, hitDurationMultiplier);
+                    Destroy(effect, .45f * hitDurationMultiplier);
                 }
                 return;
             }
             if (result.CardId == "energy_release_001" && energyReleaseHitVfx != null)
             {
-                PlayTechniqueVfx(energyReleaseHitVfx, position, energyReleaseHitVfx.transform.rotation);
+                PlayTechniqueVfx(energyReleaseHitVfx, position, energyReleaseHitVfx.transform.rotation, hitDurationMultiplier);
                 return;
             }
             if (result.HitVfx == "thorn_impact" && thornImpactVfx != null)
             {
-                PlayTechniqueVfx(thornImpactVfx, position, thornImpactVfx.transform.rotation);
+                PlayTechniqueVfx(thornImpactVfx, position, thornImpactVfx.transform.rotation, hitDurationMultiplier);
                 return;
             }
-            SpawnVfx(result.HitVfx == "head_crush" && headCrushVfx != null ? headCrushVfx : hitVfx, position);
+            SpawnVfx(result.HitVfx == "head_crush" && headCrushVfx != null ? headCrushVfx : hitVfx, position, hitDurationMultiplier);
         }
 
         private void ShakeHitSprite(Transform visual)
@@ -321,10 +324,11 @@ namespace DuelHero.Battle
         public const float TechniqueVfxLifetime = .45f;
         public const float EnergyReleaseBurstLifetime = 1f;
 
-        private GameObject PlayTechniqueVfx(GameObject prefab, Vector3 position, Quaternion rotation)
+        private GameObject PlayTechniqueVfx(GameObject prefab, Vector3 position, Quaternion rotation, float durationMultiplier = 1f)
         {
             var instance = Instantiate(prefab, position, rotation);
-            Destroy(instance, TechniqueVfxLifetime);
+            if (durationMultiplier != 1f) ScaleParticleDuration(instance, durationMultiplier);
+            Destroy(instance, TechniqueVfxLifetime * durationMultiplier);
             return instance;
         }
 
@@ -523,13 +527,18 @@ namespace DuelHero.Battle
         {
             if (prefab == null) return null;
             var instance = Instantiate(prefab, position, prefab.transform.rotation);
+            ScaleParticleDuration(instance, VfxDurationMultiplier * extraDurationMultiplier);
+            Destroy(instance, VfxLifetime * extraDurationMultiplier);
+            return instance;
+        }
+
+        private static void ScaleParticleDuration(GameObject instance, float durationMultiplier)
+        {
             foreach (var particleSystem in instance.GetComponentsInChildren<ParticleSystem>(true))
             {
                 var settings = particleSystem.main;
-                settings.simulationSpeed /= VfxDurationMultiplier * extraDurationMultiplier;
+                settings.simulationSpeed /= durationMultiplier;
             }
-            Destroy(instance, VfxLifetime * extraDurationMultiplier);
-            return instance;
         }
 
         public bool Supports(string actorId, CardDefinition card)

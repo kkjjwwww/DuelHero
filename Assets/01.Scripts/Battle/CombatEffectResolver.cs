@@ -111,6 +111,7 @@ namespace DuelHero.Battle
             {
                 if (unit == null || unit.stats == null || !unit.stats.IsInitialized || !seen.Add(unit.stats)) continue;
                 int before = unit.stats.GuardReduction;
+                int bleedAmount = unit.stats.Bleed;
                 int bleedDamage = unit.stats.TickBleed();
                 if (bleedDamage > 0 && !damageSoundPlayed && Application.isPlaying)
                 {
@@ -119,7 +120,8 @@ namespace DuelHero.Battle
                 }
                 if (bleedDamage > 0)
                     ActionResolved?.Invoke(new BattleActionResult(BattleActionKind.StatusDamage, unit.id, round,
-                        value: bleedDamage, targetId: unit.id, cardId: "bleed"));
+                        value: bleedDamage, targetId: unit.id, cardId: "bleed", displayDamage: bleedAmount,
+                        isLethalHit: unit.stats.Health == 0));
                 unit.stats.EndSlot();
                 if (before > unit.stats.GuardReduction)
                     ActionResolved?.Invoke(new BattleActionResult(BattleActionKind.GuardExpired, unit.id, round,
@@ -201,7 +203,8 @@ namespace DuelHero.Battle
                 results.Add(new BattleActionResult(BattleActionKind.Damage, hit.ActorId, hit.Round, hit.CardId,
                     from: hit.From, to: hit.To, value: before - hit.Target.Health, targetId: hit.TargetId,
                     reducedDamage: hit.Reduced, hitVfx: hit.HitVfx,
-                    bleedBonusDamage: Mathf.Max(0, before - hit.Target.Health - hit.DamageWithoutBleed)));
+                    bleedBonusDamage: Mathf.Max(0, before - hit.Target.Health - hit.DamageWithoutBleed),
+                    displayDamage: hit.Amount, isLethalHit: before > 0 && hit.Target.Health == 0));
             }
             foreach (var result in results.Concat(batch.Misses)) ActionResolved?.Invoke(result);
         }
