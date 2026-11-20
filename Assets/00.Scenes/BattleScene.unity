@@ -3798,7 +3798,7 @@ MonoBehaviour:
   heavyZoomInDuration: 0.08
   heavyZoomOutDuration: 0.3
   finalHitSpeed: 0.45
-  finalHitSlowDuration: 2
+  finalHitSlowDuration: 1
 --- !u!1 &337857982
 GameObject:
   m_ObjectHideFlags: 0
@@ -9844,6 +9844,7 @@ MonoBehaviour:
   headCrushVfx: {fileID: 2003010171322884681, guid: 737d63437ba9c44469979df223661f10, type: 3}
   hitVfx: {fileID: 7843059973302138610, guid: 7b1aef43145388c4eb488f90e12372eb, type: 3}
   blockVfx: {fileID: 3804534444885753565, guid: cc787e1a64cca2844b5aa7967abf9438, type: 3}
+  lethalHitVfxSpeed: 0.7
   energyRestoreVfx: {fileID: 7553031193883871847, guid: 259726d5fb12ed04cb945ebe4d93e9d7, type: 3}
   moveDustVfx: {fileID: 3208743012318073255, guid: 90f3366e93f31c349aefbe5e52908d6f, type: 3}
   tearWoundVfx: {fileID: 7136383877924439771, guid: 1324891867f5c854cb32d44d9970f736, type: 3}
