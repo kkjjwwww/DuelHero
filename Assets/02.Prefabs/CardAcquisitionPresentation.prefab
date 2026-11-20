@@ -61,3 +61,4 @@ MonoBehaviour:
   collectDuration: 1
   rotationDegrees: 360
   fadeDuration: 0.15
+  backgroundOpacity: 0.65

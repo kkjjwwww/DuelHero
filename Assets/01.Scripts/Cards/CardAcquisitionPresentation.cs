@@ -20,6 +20,7 @@ namespace DuelHero.Cards
         [SerializeField, Min(.01f)] private float collectDuration = .5f;
         [SerializeField] private float rotationDegrees = 360f;
         [SerializeField, Min(0f)] private float fadeDuration = .15f;
+        [SerializeField, Range(0f, 1f)] private float backgroundOpacity = .65f;
 
         private readonly Vector3[] sourceCorners = new Vector3[4];
         private Sequence motion;
@@ -60,6 +61,16 @@ namespace DuelHero.Cards
             var group = overlay.GetComponent<CanvasGroup>();
             group.interactable = false;
             group.blocksRaycasts = false;
+
+            var backdrop = new GameObject("Dim Background", typeof(RectTransform), typeof(Image));
+            var backdropRect = (RectTransform)backdrop.transform;
+            backdropRect.SetParent(root, false);
+            backdropRect.anchorMin = Vector2.zero;
+            backdropRect.anchorMax = Vector2.one;
+            backdropRect.offsetMin = backdropRect.offsetMax = Vector2.zero;
+            var backdropImage = backdrop.GetComponent<Image>();
+            backdropImage.color = new Color(0f, 0f, 0f, backgroundOpacity);
+            backdropImage.raycastTarget = false;
 
             var copy = Instantiate(cardPrefab, root, false);
             copy.Bind(definition, database.keywords);
