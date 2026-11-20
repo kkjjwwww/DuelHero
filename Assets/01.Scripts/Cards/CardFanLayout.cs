@@ -18,6 +18,7 @@ namespace DuelHero.Cards
         [SerializeField, Range(0f, 25f)] private float hoverFanAngle = 14f;
         [SerializeField, Min(.01f)] private float hoverEnterDuration = .24f;
         [SerializeField, Min(.01f)] private float hoverReflowDuration = .22f;
+        [SerializeField, Range(0f, 25f)] private float restingPitch = 12f;
         [SerializeField, Range(0f, 20f)] private float hoverBaseTilt = 6f;
         [SerializeField, Range(0f, 15f)] private float hoverPointerTilt = 5f;
         [SerializeField, Min(.01f)] private float hoverTiltResponse = .1f;
@@ -29,7 +30,6 @@ namespace DuelHero.Cards
         private readonly Dictionary<CardView, CardRaycastArea> hitAreas = new();
         private readonly Vector3[] canvasCorners = new Vector3[4];
         private readonly HashSet<RectTransform> tiltingVisuals = new();
-        private readonly List<RectTransform> settledVisuals = new();
         private Canvas canvas;
         private bool hoverEnabled;
         private CardView focused;
@@ -118,9 +118,11 @@ namespace DuelHero.Cards
 
         private void UpdateVisualTilt()
         {
+            if (!hoverEnabled) return;
             RectTransform activeVisual = null;
-            Quaternion targetRotation = Quaternion.identity;
-            if (hoverEnabled && !OptionsPopupBackdrop.IsOpen && focused != null && Mouse.current != null)
+            Quaternion restingRotation = Quaternion.Euler(restingPitch, 0f, 0f);
+            Quaternion targetRotation = restingRotation;
+            if (!OptionsPopupBackdrop.IsOpen && focused != null && Mouse.current != null)
             {
                 var cardRect = (RectTransform)focused.transform;
                 var camera = canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay ? canvas.worldCamera : null;
@@ -132,28 +134,21 @@ namespace DuelHero.Cards
                     float y = Mathf.Clamp(offset.y / Mathf.Max(1f, bounds.height * .5f), -1f, 1f);
                     activeVisual = focused.VisualRoot;
                     targetRotation = Quaternion.Euler(hoverBaseTilt - y * hoverPointerTilt, x * hoverPointerTilt, 0f);
-                    if (activeVisual != null) tiltingVisuals.Add(activeVisual);
                 }
             }
 
             float blend = 1f - Mathf.Exp(-3f * Time.unscaledDeltaTime / Mathf.Max(.01f, hoverTiltResponse));
-            settledVisuals.Clear();
-            foreach (var visual in tiltingVisuals)
+            foreach (var card in cards)
             {
-                if (visual == null)
-                {
-                    settledVisuals.Add(visual);
-                    continue;
-                }
-                Quaternion target = visual == activeVisual ? targetRotation : Quaternion.identity;
+                if (card == null || !card.gameObject.activeInHierarchy) continue;
+                var visual = card.VisualRoot;
+                if (visual == null) continue;
+                tiltingVisuals.Add(visual);
+                Quaternion target = visual == activeVisual ? targetRotation : restingRotation;
                 visual.localRotation = Quaternion.Slerp(visual.localRotation, target, blend);
-                if (visual != activeVisual && Quaternion.Angle(visual.localRotation, target) < .1f)
-                {
+                if (Quaternion.Angle(visual.localRotation, target) < .1f)
                     visual.localRotation = target;
-                    settledVisuals.Add(visual);
-                }
             }
-            foreach (var visual in settledVisuals) tiltingVisuals.Remove(visual);
         }
 
         public void Arrange()
