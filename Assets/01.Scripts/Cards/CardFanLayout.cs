@@ -16,6 +16,11 @@ namespace DuelHero.Cards
         [SerializeField, Min(0f)] private float hoverExtraSpacing = 16f;
         [SerializeField, Min(0f)] private float hoverFanDrop = 36f;
         [SerializeField, Range(0f, 25f)] private float hoverFanAngle = 14f;
+        [SerializeField, Min(.01f)] private float hoverEnterDuration = .24f;
+        [SerializeField, Min(.01f)] private float hoverReflowDuration = .22f;
+        [SerializeField, Range(0f, 20f)] private float hoverBaseTilt = 6f;
+        [SerializeField, Range(0f, 15f)] private float hoverPointerTilt = 5f;
+        [SerializeField, Min(.01f)] private float hoverTiltResponse = .1f;
         [SerializeField, Range(0f, 0.5f)] private float hiddenDescriptionRatio = 0.30f;
         [SerializeField, Min(0f)] private float edgeDrop = 32f;
         private readonly List<CardView> cards = new();
@@ -23,6 +28,8 @@ namespace DuelHero.Cards
         private readonly Dictionary<CardView, float> angles = new();
         private readonly Dictionary<CardView, CardRaycastArea> hitAreas = new();
         private readonly Vector3[] canvasCorners = new Vector3[4];
+        private readonly HashSet<RectTransform> tiltingVisuals = new();
+        private readonly List<RectTransform> settledVisuals = new();
         private Canvas canvas;
         private bool hoverEnabled;
         private CardView focused;
@@ -53,7 +60,7 @@ namespace DuelHero.Cards
         public void SetHoverEnabled(bool enabled)
         {
             hoverEnabled = enabled;
-            if (!enabled && focused != null) ResetFocus();
+            if (!enabled && (focused != null || tiltingVisuals.Count > 0)) ResetFocus();
         }
         private void Update()
         {
@@ -106,6 +113,47 @@ namespace DuelHero.Cards
         {
             Vector2 size = ((RectTransform)transform).rect.size;
             if (size != lastSize) Arrange();
+            if (Application.isPlaying) UpdateVisualTilt();
+        }
+
+        private void UpdateVisualTilt()
+        {
+            RectTransform activeVisual = null;
+            Quaternion targetRotation = Quaternion.identity;
+            if (hoverEnabled && !OptionsPopupBackdrop.IsOpen && focused != null && Mouse.current != null)
+            {
+                var cardRect = (RectTransform)focused.transform;
+                var camera = canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay ? canvas.worldCamera : null;
+                if (RectTransformUtility.ScreenPointToLocalPointInRectangle(cardRect, Mouse.current.position.ReadValue(), camera, out var local))
+                {
+                    Rect bounds = cardRect.rect;
+                    Vector2 offset = local - bounds.center;
+                    float x = Mathf.Clamp(offset.x / Mathf.Max(1f, bounds.width * .5f), -1f, 1f);
+                    float y = Mathf.Clamp(offset.y / Mathf.Max(1f, bounds.height * .5f), -1f, 1f);
+                    activeVisual = focused.VisualRoot;
+                    targetRotation = Quaternion.Euler(hoverBaseTilt - y * hoverPointerTilt, x * hoverPointerTilt, 0f);
+                    if (activeVisual != null) tiltingVisuals.Add(activeVisual);
+                }
+            }
+
+            float blend = 1f - Mathf.Exp(-3f * Time.unscaledDeltaTime / Mathf.Max(.01f, hoverTiltResponse));
+            settledVisuals.Clear();
+            foreach (var visual in tiltingVisuals)
+            {
+                if (visual == null)
+                {
+                    settledVisuals.Add(visual);
+                    continue;
+                }
+                Quaternion target = visual == activeVisual ? targetRotation : Quaternion.identity;
+                visual.localRotation = Quaternion.Slerp(visual.localRotation, target, blend);
+                if (visual != activeVisual && Quaternion.Angle(visual.localRotation, target) < .1f)
+                {
+                    visual.localRotation = target;
+                    settledVisuals.Add(visual);
+                }
+            }
+            foreach (var visual in settledVisuals) tiltingVisuals.Remove(visual);
         }
 
         public void Arrange()
@@ -181,7 +229,7 @@ namespace DuelHero.Cards
             }
             else
             {
-                float duration = hover ? 0.15f : 0.12f;
+                float duration = hover ? hoverEnterDuration : hoverReflowDuration;
                 rect.DOAnchorPos(position, duration).SetEase(Ease.OutQuad).SetUpdate(true);
                 rect.DOLocalRotate(rotation, duration).SetEase(Ease.OutQuad).SetUpdate(true);
                 rect.DOScale(scale, duration).SetEase(Ease.OutQuad).SetUpdate(true);
@@ -270,6 +318,9 @@ namespace DuelHero.Cards
 
         public void ResetFocus()
         {
+            foreach (var visual in tiltingVisuals)
+                if (visual != null) visual.localRotation = Quaternion.identity;
+            tiltingVisuals.Clear();
             bool hadFocus = focused != null;
             focused = null;
             foreach (var card in cards)
