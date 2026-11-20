@@ -25599,6 +25599,9 @@ MonoBehaviour:
   maximumAngle: 18
   hoverScale: 1.55
   hoverNeighborVisibleWidth: 32
+  hoverExtraSpacing: 0
+  hoverFanDrop: 36
+  hoverFanAngle: 14
   hiddenDescriptionRatio: 0.3
   edgeDrop: 32
 --- !u!1 &2103127512

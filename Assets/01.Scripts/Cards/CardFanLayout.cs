@@ -12,7 +12,10 @@ namespace DuelHero.Cards
         [SerializeField, Range(0.1f, 1f)] private float spacingRatio = 0.78f;
         [SerializeField, Range(0f, 35f)] private float maximumAngle = 18f;
         [SerializeField, Min(1f)] private float hoverScale = 1.55f;
-        [SerializeField, Min(0f)] private float hoverNeighborVisibleWidth = 32f;
+        [SerializeField, Min(0f)] private float hoverNeighborVisibleWidth = 44f;
+        [SerializeField, Min(0f)] private float hoverExtraSpacing = 16f;
+        [SerializeField, Min(0f)] private float hoverFanDrop = 36f;
+        [SerializeField, Range(0f, 25f)] private float hoverFanAngle = 14f;
         [SerializeField, Range(0f, 0.5f)] private float hiddenDescriptionRatio = 0.30f;
         [SerializeField, Min(0f)] private float edgeDrop = 32f;
         private readonly List<CardView> cards = new();
@@ -188,6 +191,7 @@ namespace DuelHero.Cards
         {
             var rect = (RectTransform)card.transform;
             position = positions[card];
+            angle = angles[card];
             scale = hover ? hoverScale : 1f;
             if (hover)
             {
@@ -197,9 +201,22 @@ namespace DuelHero.Cards
                 Rect screen = CanvasBounds();
                 float halfHeight = rect.rect.height * scale * 0.5f;
                 position.y = screen.yMin + halfHeight;
+                angle = 0f;
             }
-            else if (focused != null && card != focused) position.x += NeighborShift(card);
-            angle = hover ? 0 : angles[card];
+            else if (focused != null && card != focused)
+            {
+                float offset = HoverFanOffset(cards.IndexOf(card), cards.IndexOf(focused));
+                position.x += NeighborShift(card);
+                float fanHeight = positions[focused].y - hoverFanDrop * offset * offset;
+                position.y = Mathf.Max(position.y, fanHeight);
+                angle = -offset * hoverFanAngle;
+            }
+        }
+
+        private float HoverFanOffset(int index, int focusIndex)
+        {
+            int farthest = Mathf.Max(focusIndex, cards.Count - 1 - focusIndex);
+            return (index - focusIndex) / (float)Mathf.Max(1, farthest);
         }
 
         private float NeighborShift(CardView card)
@@ -207,19 +224,30 @@ namespace DuelHero.Cards
             int focusIndex = cards.IndexOf(focused);
             int index = cards.IndexOf(card);
             int direction = index < focusIndex ? -1 : 1;
-            int sideCount = direction < 0 ? focusIndex : cards.Count - focusIndex - 1;
-            if (sideCount < 2) return 0f;
-
             var neighbor = cards[focusIndex + direction];
             GetPose(focused, true, out var focusPosition, out _, out var scale);
             float focusEdge = focusPosition.x + direction * ((RectTransform)focused.transform).rect.width * scale * 0.5f;
             float neighborEdge = positions[neighbor].x + direction * ((RectTransform)neighbor.transform).rect.width * 0.5f;
             float needed = Mathf.Max(0f, hoverNeighborVisibleWidth + direction * (focusEdge - neighborEdge));
-            float spacing = Mathf.Abs(positions[neighbor].x - positions[focused].x);
-            float shift = Mathf.Min(needed, (sideCount - 1) * spacing * 0.35f);
-            float weight = direction < 0 ? (float)index / (focusIndex - 1) :
-                (float)(cards.Count - 1 - index) / (cards.Count - focusIndex - 2);
-            return direction * shift * weight;
+            float firstShift = Mathf.Max(needed, hoverExtraSpacing);
+            var area = (RectTransform)transform;
+            Rect screen = CanvasBounds();
+            float anchorX = area.rect.center.x;
+            float boundary = direction < 0 ? Mathf.Max(area.rect.xMin, screen.xMin) :
+                Mathf.Min(area.rect.xMax, screen.xMax);
+            float sideScale = 1f;
+            for (int i = focusIndex + direction; i >= 0 && i < cards.Count; i += direction)
+            {
+                var sideCard = cards[i];
+                Rect bounds = ((RectTransform)sideCard.transform).rect;
+                float radians = HoverFanOffset(i, focusIndex) * hoverFanAngle * Mathf.Deg2Rad;
+                float halfWidth = (Mathf.Abs(Mathf.Cos(radians)) * bounds.width +
+                    Mathf.Abs(Mathf.Sin(radians)) * bounds.height) * .5f;
+                float room = direction * (boundary - anchorX - positions[sideCard].x) - halfWidth;
+                float requested = firstShift + (Mathf.Abs(i - focusIndex) - 1) * hoverExtraSpacing;
+                if (requested > 0f) sideScale = Mathf.Min(sideScale, Mathf.Clamp01(room / requested));
+            }
+            return direction * sideScale * (firstShift + (Mathf.Abs(index - focusIndex) - 1) * hoverExtraSpacing);
         }
 
         private void RestoreOrder()
