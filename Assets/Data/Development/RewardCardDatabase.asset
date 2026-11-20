@@ -20,7 +20,11 @@ MonoBehaviour:
     description: "\uC704\uB85C {effect1.value}\uCE78 \uC774\uB3D9\uD55C\uB2E4."
     actionType: "\uC774\uB3D9"
     rarity: "\uC77C\uBC18"
+    attackStyle: 
+    attackVfx: 
+    hitVfx: 
     energyCost: 0
+    spendsAllEnergy: 0
     cooldownTurns: 0
     keywordIds: []
     isObtainable: 0
@@ -34,18 +38,25 @@ MonoBehaviour:
       statusId: 
       triggerEffectId: 
       triggerTiming: 
+      movementStyle: 
+      rangeBasis: 
       statusMultiplier: 0
       resolutionOrder: 1
       value: 1
       durationSlots: 0
       rangeOffsets:
       - {x: 0, y: 1}
+    keywordParameters: []
   - id: move_down_001
     name: "\uC544\uB798 \uC774\uB3D9"
     description: "\uC544\uB798\uB85C {effect1.value}\uCE78 \uC774\uB3D9\uD55C\uB2E4."
     actionType: "\uC774\uB3D9"
     rarity: "\uC77C\uBC18"
+    attackStyle: 
+    attackVfx: 
+    hitVfx: 
     energyCost: 0
+    spendsAllEnergy: 0
     cooldownTurns: 0
     keywordIds: []
     isObtainable: 0
@@ -59,18 +70,25 @@ MonoBehaviour:
       statusId: 
       triggerEffectId: 
       triggerTiming: 
+      movementStyle: 
+      rangeBasis: 
       statusMultiplier: 0
       resolutionOrder: 1
       value: 1
       durationSlots: 0
       rangeOffsets:
       - {x: 0, y: -1}
+    keywordParameters: []
   - id: move_left_001
     name: "\uC67C\uCABD \uC774\uB3D9"
     description: "\uC67C\uCABD\uC73C\uB85C {effect1.value}\uCE78 \uC774\uB3D9\uD55C\uB2E4."
     actionType: "\uC774\uB3D9"
     rarity: "\uC77C\uBC18"
+    attackStyle: 
+    attackVfx: 
+    hitVfx: 
     energyCost: 0
+    spendsAllEnergy: 0
     cooldownTurns: 0
     keywordIds: []
     isObtainable: 0
@@ -84,18 +102,25 @@ MonoBehaviour:
       statusId: 
       triggerEffectId: 
       triggerTiming: 
+      movementStyle: 
+      rangeBasis: 
       statusMultiplier: 0
       resolutionOrder: 1
       value: 1
       durationSlots: 0
       rangeOffsets:
       - {x: -1, y: 0}
+    keywordParameters: []
   - id: move_right_001
     name: "\uC624\uB978\uCABD \uC774\uB3D9"
     description: "\uC624\uB978\uCABD\uC73C\uB85C {effect1.value}\uCE78 \uC774\uB3D9\uD55C\uB2E4."
     actionType: "\uC774\uB3D9"
     rarity: "\uC77C\uBC18"
+    attackStyle: 
+    attackVfx: 
+    hitVfx: 
     energyCost: 0
+    spendsAllEnergy: 0
     cooldownTurns: 0
     keywordIds: []
     isObtainable: 0
@@ -109,19 +134,26 @@ MonoBehaviour:
       statusId: 
       triggerEffectId: 
       triggerTiming: 
+      movementStyle: 
+      rangeBasis: 
       statusMultiplier: 0
       resolutionOrder: 1
       value: 1
       durationSlots: 0
       rangeOffsets:
       - {x: 1, y: 0}
+    keywordParameters: []
   - id: guard_001
     name: "\uBC29\uC5B4"
     description: "{effect1.durationSlots}\uAC1C \uC2AC\uB86F \uB3D9\uC548 \uC9C0\uC18D\uB418\uB294
       \uBCF4\uD638\uB9C9\uC744 {effect1.value} \uC5BB\uB294\uB2E4."
     actionType: "\uBC29\uC5B4"
     rarity: "\uC77C\uBC18"
+    attackStyle: 
+    attackVfx: 
+    hitVfx: 
     energyCost: 0
+    spendsAllEnergy: 0
     cooldownTurns: 0
     keywordIds: []
     isObtainable: 0
@@ -135,18 +167,25 @@ MonoBehaviour:
       statusId: 
       triggerEffectId: 
       triggerTiming: 
+      movementStyle: 
+      rangeBasis: 
       statusMultiplier: 0
       resolutionOrder: 1
       value: 10
       durationSlots: 1
       rangeOffsets:
       - {x: 0, y: 0}
+    keywordParameters: []
   - id: breathing_001
     name: "\uC228\uACE0\uB974\uAE30"
     description: "\uC5D0\uB108\uC9C0\uB97C {effect1.value} \uD68C\uBCF5\uD55C\uB2E4."
     actionType: "\uD68C\uBCF5"
     rarity: "\uC77C\uBC18"
+    attackStyle: 
+    attackVfx: 
+    hitVfx: 
     energyCost: 0
+    spendsAllEnergy: 0
     cooldownTurns: 0
     keywordIds: []
     isObtainable: 0
@@ -160,19 +199,26 @@ MonoBehaviour:
       statusId: 
       triggerEffectId: 
       triggerTiming: 
+      movementStyle: 
+      rangeBasis: 
       statusMultiplier: 0
       resolutionOrder: 1
       value: 20
       durationSlots: 0
       rangeOffsets:
       - {x: 0, y: 0}
+    keywordParameters: []
   - id: slash_001
     name: "\uBCA0\uAE30"
     description: "\uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574
-      {effect1.value}\uB97C(\uC744) \uC900\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
+      {effect1.value} \uB97C(\uC744) \uC900\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
     actionType: "\uACF5\uACA9"
     rarity: "\uC77C\uBC18"
+    attackStyle: slash
+    attackVfx: 
+    hitVfx: 
     energyCost: 10
+    spendsAllEnergy: 0
     cooldownTurns: 1
     keywordIds:
     - direction_select
@@ -187,6 +233,8 @@ MonoBehaviour:
       statusId: 
       triggerEffectId: 
       triggerTiming: 
+      movementStyle: 
+      rangeBasis: 
       statusMultiplier: 0
       resolutionOrder: 1
       value: 10
@@ -194,13 +242,18 @@ MonoBehaviour:
       rangeOffsets:
       - {x: 0, y: 0}
       - {x: 1, y: 0}
+    keywordParameters: []
   - id: thrust_001
     name: "\uCC0C\uB974\uAE30"
     description: "\uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574
-      {effect1.value}\uB97C(\uC744) \uC900\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
+      {effect1.value} \uB97C(\uC744) \uC900\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
     actionType: "\uACF5\uACA9"
     rarity: "\uC77C\uBC18"
+    attackStyle: thrust
+    attackVfx: thrust
+    hitVfx: 
     energyCost: 15
+    spendsAllEnergy: 0
     cooldownTurns: 1
     keywordIds:
     - direction_select
@@ -215,6 +268,8 @@ MonoBehaviour:
       statusId: 
       triggerEffectId: 
       triggerTiming: 
+      movementStyle: 
+      rangeBasis: 
       statusMultiplier: 0
       resolutionOrder: 1
       value: 15
@@ -223,13 +278,18 @@ MonoBehaviour:
       - {x: 0, y: 0}
       - {x: 1, y: 0}
       - {x: 2, y: 0}
+    keywordParameters: []
   - id: sweep_001
     name: "\uD6A1\uBCA0\uAE30"
     description: "\uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574
-      {effect1.value}\uB97C(\uC744) \uC900\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
+      {effect1.value} \uB97C(\uC744) \uC900\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
     actionType: "\uACF5\uACA9"
     rarity: "\uC77C\uBC18"
+    attackStyle: 
+    attackVfx: sweep
+    hitVfx: 
     energyCost: 20
+    spendsAllEnergy: 0
     cooldownTurns: 1
     keywordIds:
     - direction_select
@@ -244,6 +304,8 @@ MonoBehaviour:
       statusId: 
       triggerEffectId: 
       triggerTiming: 
+      movementStyle: 
+      rangeBasis: 
       statusMultiplier: 0
       resolutionOrder: 1
       value: 10
@@ -253,13 +315,18 @@ MonoBehaviour:
       - {x: 1, y: 1}
       - {x: 1, y: 0}
       - {x: 1, y: -1}
+    keywordParameters: []
   - id: head_break_001
     name: "\uBA38\uB9AC\uAE68\uAE30"
     description: "\uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574
-      {effect1.value}\uB97C \uC8FC\uACE0 [\uAE30\uC808]\uC744 {effect2.value} \uBD80\uC5EC\uD55C\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
+      {effect1.value} \uB97C \uC8FC\uACE0 [\uAE30\uC808]\uC744 {effect2.value} \uBD80\uC5EC\uD55C\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
     actionType: "\uACF5\uACA9"
     rarity: "\uC77C\uBC18"
+    attackStyle: punch
+    attackVfx: 
+    hitVfx: head_crush
     energyCost: 20
+    spendsAllEnergy: 0
     cooldownTurns: 2
     keywordIds:
     - direction_select
@@ -275,6 +342,8 @@ MonoBehaviour:
       statusId: 
       triggerEffectId: 
       triggerTiming: 
+      movementStyle: 
+      rangeBasis: 
       statusMultiplier: 0
       resolutionOrder: 1
       value: 3
@@ -289,18 +358,25 @@ MonoBehaviour:
       statusId: stun
       triggerEffectId: head_break_001_effect_01
       triggerTiming: 
+      movementStyle: 
+      rangeBasis: 
       statusMultiplier: 0
       resolutionOrder: 2
       value: 1
       durationSlots: 0
       rangeOffsets: []
+    keywordParameters: []
   - id: bleed_attack_001
     name: "\uCD9C\uD608 \uACF5\uACA9"
     description: "\uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574
-      {effect1.value}\uB97C \uC8FC\uACE0 [\uCD9C\uD608]\uC744 {effect2.value} \uBD80\uC5EC\uD55C\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
+      {effect1.value} \uB97C \uC8FC\uACE0 [\uCD9C\uD608]\uC744 {effect2.value} \uBD80\uC5EC\uD55C\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
     actionType: "\uACF5\uACA9"
     rarity: "\uACE0\uAE09"
+    attackStyle: 
+    attackVfx: 
+    hitVfx: 
     energyCost: 15
+    spendsAllEnergy: 0
     cooldownTurns: 1
     keywordIds:
     - direction_select
@@ -316,9 +392,11 @@ MonoBehaviour:
       statusId: 
       triggerEffectId: 
       triggerTiming: action
+      movementStyle: 
+      rangeBasis: 
       statusMultiplier: 0
       resolutionOrder: 1
-      value: 4
+      value: 8
       durationSlots: 0
       rangeOffsets:
       - {x: 0, y: 0}
@@ -330,19 +408,26 @@ MonoBehaviour:
       statusId: bleed
       triggerEffectId: bleed_attack_001_effect_01
       triggerTiming: action
+      movementStyle: 
+      rangeBasis: 
       statusMultiplier: 0
       resolutionOrder: 2
       value: 3
       durationSlots: 0
       rangeOffsets: []
+    keywordParameters: []
   - id: riposte_stance_001
     name: "\uC751\uC218 \uD0DC\uC138"
     description: "{effect1.durationSlots}\uAC1C \uC2AC\uB86F \uB3D9\uC548 \uBCF4\uD638\uB9C9
       {effect1.value}\uC744 \uC5BB\uB294\uB2E4.\n[\uBC18\uACA9] \uBC94\uC704 \uB0B4
-      \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574 {effect2.value}\uB97C \uC900\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
+      \uC801\uB4E4\uC5D0\uAC8C \uD53C\uD574 {effect2.value} \uB97C \uC900\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
     actionType: "\uBC29\uC5B4"
     rarity: "\uD76C\uADC0"
+    attackStyle: 
+    attackVfx: 
+    hitVfx: 
     energyCost: 20
+    spendsAllEnergy: 0
     cooldownTurns: 2
     keywordIds:
     - direction_select
@@ -358,6 +443,8 @@ MonoBehaviour:
       statusId: 
       triggerEffectId: 
       triggerTiming: action
+      movementStyle: 
+      rangeBasis: 
       statusMultiplier: 0
       resolutionOrder: 1
       value: 10
@@ -371,6 +458,8 @@ MonoBehaviour:
       statusId: 
       triggerEffectId: 
       triggerTiming: counter
+      movementStyle: 
+      rangeBasis: 
       statusMultiplier: 0
       resolutionOrder: 2
       value: 8
@@ -378,6 +467,7 @@ MonoBehaviour:
       rangeOffsets:
       - {x: 0, y: 0}
       - {x: 1, y: 0}
+    keywordParameters: []
   - id: tear_wound_001
     name: "\uC0C1\uCC98 \uCC22\uAE30"
     description: "\uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574
@@ -386,7 +476,11 @@ MonoBehaviour:
       \uC900\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
     actionType: "\uACF5\uACA9"
     rarity: "\uC804\uC124"
+    attackStyle: 
+    attackVfx: 
+    hitVfx: tear_wound
     energyCost: 25
+    spendsAllEnergy: 0
     cooldownTurns: 2
     keywordIds:
     - direction_select
@@ -402,6 +496,8 @@ MonoBehaviour:
       statusId: bleed
       triggerEffectId: 
       triggerTiming: action
+      movementStyle: 
+      rangeBasis: 
       statusMultiplier: 3
       resolutionOrder: 1
       value: 6
@@ -409,13 +505,497 @@ MonoBehaviour:
       rangeOffsets:
       - {x: 0, y: 0}
       - {x: 1, y: 0}
+    keywordParameters: []
+  - id: charge_slash_001
+    name: "\uB3CC\uC9C4 \uBCA0\uAE30"
+    description: "\uC804\uBC29\uC73C\uB85C {effect1.value}\uCE78 \uB3CC\uC9C4\uD558\uACE0,
+      \uC774\uB3D9 \uACBD\uB85C\uC758 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574
+      {effect2.value}\uB97C \uC900\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
+    actionType: "\uACF5\uACA9"
+    rarity: "\uC77C\uBC18"
+    attackStyle: slash
+    attackVfx: dash_slash
+    hitVfx: 
+    energyCost: 25
+    spendsAllEnergy: 0
+    cooldownTurns: 2
+    keywordIds:
+    - direction_select
+    isObtainable: 1
+    isBasicAction: 0
+    isStarterCard: 0
+    effects:
+    - id: charge_slash_001_effect_01
+      cardId: charge_slash_001
+      effectType: move
+      targetType: "\uC790\uC2E0"
+      statusId: 
+      triggerEffectId: 
+      triggerTiming: action
+      movementStyle: dash
+      rangeBasis: 
+      statusMultiplier: 0
+      resolutionOrder: 1
+      value: 2
+      durationSlots: 0
+      rangeOffsets:
+      - {x: 1, y: 0}
+    - id: charge_slash_001_effect_02
+      cardId: charge_slash_001
+      effectType: damage
+      targetType: "\uC801"
+      statusId: 
+      triggerEffectId: 
+      triggerTiming: action
+      movementStyle: 
+      rangeBasis: movementPath
+      statusMultiplier: 0
+      resolutionOrder: 2
+      value: 15
+      durationSlots: 0
+      rangeOffsets:
+      - {x: 0, y: 0}
+      - {x: 1, y: 0}
+      - {x: 2, y: 0}
+    keywordParameters: []
+  - id: chain_mace_001
+    name: "\uCCA0\uD1F4 \uAC15\uD0C0"
+    description: "\uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574
+      {effect1.value} \uB97C \uC8FC\uACE0 [\uAE30\uC808]\uC744 {effect2.value} \uBD80\uC5EC\uD55C\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
+    actionType: "\uACF5\uACA9"
+    rarity: "\uD76C\uADC0"
+    attackStyle: 
+    attackVfx: 
+    hitVfx: 
+    energyCost: 20
+    spendsAllEnergy: 0
+    cooldownTurns: 2
+    keywordIds:
+    - direction_select
+    - stun
+    isObtainable: 0
+    isBasicAction: 0
+    isStarterCard: 0
+    effects:
+    - id: chain_mace_001_effect_01
+      cardId: chain_mace_001
+      effectType: damage
+      targetType: "\uC801"
+      statusId: 
+      triggerEffectId: 
+      triggerTiming: 
+      movementStyle: 
+      rangeBasis: 
+      statusMultiplier: 0
+      resolutionOrder: 1
+      value: 8
+      durationSlots: 0
+      rangeOffsets:
+      - {x: 1, y: 0}
+    - id: chain_mace_001_effect_02
+      cardId: chain_mace_001
+      effectType: applyStatus
+      targetType: "\uC801"
+      statusId: stun
+      triggerEffectId: chain_mace_001_effect_01
+      triggerTiming: 
+      movementStyle: 
+      rangeBasis: 
+      statusMultiplier: 0
+      resolutionOrder: 2
+      value: 1
+      durationSlots: 0
+      rangeOffsets: []
+    keywordParameters: []
+  - id: thorn_throw_001
+    name: "\uAC00\uC2DC \uD22C\uCC99"
+    description: "\uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574
+      {effect1.value} \uB97C \uC8FC\uACE0 [\uCD9C\uD608]\uC744 {effect2.value} \uBD80\uC5EC\uD55C\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
+    actionType: "\uACF5\uACA9"
+    rarity: "\uD76C\uADC0"
+    attackStyle: 
+    attackVfx: thorn_throw
+    hitVfx: thorn_impact
+    energyCost: 20
+    spendsAllEnergy: 0
+    cooldownTurns: 1
+    keywordIds:
+    - direction_select
+    - bleed
+    isObtainable: 0
+    isBasicAction: 0
+    isStarterCard: 0
+    effects:
+    - id: thorn_throw_001_effect_01
+      cardId: thorn_throw_001
+      effectType: damage
+      targetType: "\uC801"
+      statusId: 
+      triggerEffectId: 
+      triggerTiming: action
+      movementStyle: 
+      rangeBasis: 
+      statusMultiplier: 0
+      resolutionOrder: 1
+      value: 6
+      durationSlots: 0
+      rangeOffsets:
+      - {x: 1, y: 0}
+      - {x: 2, y: 0}
+    - id: thorn_throw_001_effect_02
+      cardId: thorn_throw_001
+      effectType: applyStatus
+      targetType: "\uC801"
+      statusId: bleed
+      triggerEffectId: thorn_throw_001_effect_01
+      triggerTiming: action
+      movementStyle: 
+      rangeBasis: 
+      statusMultiplier: 0
+      resolutionOrder: 2
+      value: 3
+      durationSlots: 0
+      rangeOffsets: []
+    keywordParameters: []
+  - id: rift_charge_001
+    name: "\uADE0\uC5F4 \uB3CC\uC9C4"
+    description: "[\uC900\uBE44] \uC804\uBC29\uC73C\uB85C {effect1.value}\uCE78 \uB3CC\uC9C4\uD558\uACE0,
+      \uC774\uB3D9 \uACBD\uB85C\uC758 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574
+      {effect2.value}\uB97C \uC900\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
+    actionType: "\uACF5\uACA9"
+    rarity: "\uC804\uC124"
+    attackStyle: 
+    attackVfx: rift_charge
+    hitVfx: 
+    energyCost: 30
+    spendsAllEnergy: 0
+    cooldownTurns: 2
+    keywordIds:
+    - direction_select
+    - preparation
+    isObtainable: 0
+    isBasicAction: 0
+    isStarterCard: 0
+    effects:
+    - id: rift_charge_001_effect_01
+      cardId: rift_charge_001
+      effectType: move
+      targetType: "\uC790\uC2E0"
+      statusId: 
+      triggerEffectId: 
+      triggerTiming: action
+      movementStyle: dash
+      rangeBasis: 
+      statusMultiplier: 0
+      resolutionOrder: 1
+      value: 2
+      durationSlots: 0
+      rangeOffsets:
+      - {x: 1, y: 0}
+    - id: rift_charge_001_effect_02
+      cardId: rift_charge_001
+      effectType: damage
+      targetType: "\uC801"
+      statusId: 
+      triggerEffectId: 
+      triggerTiming: action
+      movementStyle: 
+      rangeBasis: movementPath
+      statusMultiplier: 0
+      resolutionOrder: 2
+      value: 20
+      durationSlots: 0
+      rangeOffsets:
+      - {x: 0, y: 0}
+      - {x: 1, y: 0}
+      - {x: 2, y: 0}
+    keywordParameters:
+    - keywordId: preparation
+      value: 2
+  - id: whirlwind_001
+    name: "\uD718\uB450\uB974\uAE30"
+    description: "\uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574
+      {effect1.value}\uC744 \uC900\uB2E4.\n[{cooldownTurns}\uD134]"
+    actionType: "\uACF5\uACA9"
+    rarity: "\uACE0\uAE09"
+    attackStyle: 
+    attackVfx: whirlwind
+    hitVfx: 
+    energyCost: 25
+    spendsAllEnergy: 0
+    cooldownTurns: 1
+    keywordIds: []
+    isObtainable: 1
+    isBasicAction: 0
+    isStarterCard: 0
+    effects:
+    - id: whirlwind_001_effect_01
+      cardId: whirlwind_001
+      effectType: damage
+      targetType: "\uC801"
+      statusId: 
+      triggerEffectId: 
+      triggerTiming: action
+      movementStyle: 
+      rangeBasis: 
+      statusMultiplier: 0
+      resolutionOrder: 1
+      value: 10
+      durationSlots: 0
+      rangeOffsets:
+      - {x: -1, y: -1}
+      - {x: 0, y: -1}
+      - {x: 1, y: -1}
+      - {x: -1, y: 0}
+      - {x: 0, y: 0}
+      - {x: 1, y: 0}
+      - {x: -1, y: 1}
+      - {x: 0, y: 1}
+      - {x: 1, y: 1}
+    keywordParameters: []
+  - id: flash_step_001
+    name: "\uCD95\uC9C0\uBC95"
+    description: "\uC9C0\uC815\uD55C \uBC29\uD5A5\uC73C\uB85C {effect1.value}\uCE78
+      \uC774\uB3D9\uD55C\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
+    actionType: "\uC774\uB3D9"
+    rarity: "\uC77C\uBC18"
+    attackStyle: 
+    attackVfx: 
+    hitVfx: 
+    energyCost: 10
+    spendsAllEnergy: 0
+    cooldownTurns: 2
+    keywordIds:
+    - direction_select
+    isObtainable: 1
+    isBasicAction: 0
+    isStarterCard: 0
+    effects:
+    - id: flash_step_001_effect_01
+      cardId: flash_step_001
+      effectType: move
+      targetType: "\uC790\uC2E0"
+      statusId: 
+      triggerEffectId: 
+      triggerTiming: action
+      movementStyle: longJump
+      rangeBasis: 
+      statusMultiplier: 0
+      resolutionOrder: 1
+      value: 2
+      durationSlots: 0
+      rangeOffsets:
+      - {x: 1, y: 0}
+    keywordParameters: []
+  - id: qi_breathing_001
+    name: "\uC6B4\uAE30\uC870\uC2DD"
+    description: "\uC5D0\uB108\uC9C0\uB97C {effect1.value} \uD68C\uBCF5\uD55C\uB2E4.\n[\uC18C\uBA78][{cooldownTurns}\uD134]"
+    actionType: "\uD68C\uBCF5"
+    rarity: "\uC77C\uBC18"
+    attackStyle: 
+    attackVfx: 
+    hitVfx: 
+    energyCost: 0
+    spendsAllEnergy: 0
+    cooldownTurns: 1
+    keywordIds:
+    - exhaust
+    isObtainable: 1
+    isBasicAction: 0
+    isStarterCard: 0
+    effects:
+    - id: qi_breathing_001_effect_01
+      cardId: qi_breathing_001
+      effectType: energyRestore
+      targetType: "\uC790\uC2E0"
+      statusId: 
+      triggerEffectId: 
+      triggerTiming: action
+      movementStyle: 
+      rangeBasis: 
+      statusMultiplier: 0
+      resolutionOrder: 1
+      value: 40
+      durationSlots: 0
+      rangeOffsets:
+      - {x: 0, y: 0}
+    keywordParameters: []
+  - id: shield_deploy_001
+    name: "\uBC29\uD328\uC804\uAC1C"
+    description: "{effect1.durationSlots}\uAC1C \uC2AC\uB86F \uB3D9\uC548 \uBCF4\uD638\uB9C9\uC744
+      {effect1.value} \uC5BB\uB294\uB2E4.\n[{cooldownTurns}\uD134]"
+    actionType: "\uBC29\uC5B4"
+    rarity: "\uC77C\uBC18"
+    attackStyle: 
+    attackVfx: 
+    hitVfx: 
+    energyCost: 10
+    spendsAllEnergy: 0
+    cooldownTurns: 1
+    keywordIds: []
+    isObtainable: 1
+    isBasicAction: 0
+    isStarterCard: 0
+    effects:
+    - id: shield_deploy_001_effect_01
+      cardId: shield_deploy_001
+      effectType: guard
+      targetType: "\uC790\uC2E0"
+      statusId: 
+      triggerEffectId: 
+      triggerTiming: action
+      movementStyle: 
+      rangeBasis: 
+      statusMultiplier: 0
+      resolutionOrder: 1
+      value: 20
+      durationSlots: 1
+      rangeOffsets:
+      - {x: 0, y: 0}
+    keywordParameters: []
+  - id: energy_release_001
+    name: "\uC5D0\uB108\uC9C0 \uBC29\uCD9C"
+    description: "[\uC900\uBE443][\uC18C\uBA78] \uB0A8\uC740 \uC5D0\uB108\uC9C0\uB97C
+      \uBAA8\uB450 \uC18C\uBAA8\uD55C\uB2E4. \uC18C\uBAA8\uD55C \uC5D0\uB108\uC9C0\uB9CC\uD07C
+      \uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574\uB97C \uC785\uD78C\uB2E4.
+      \uC790\uC2E0\uC5D0\uAC8C [\uAE30\uC808]\uC744 2 \uBD80\uC5EC\uD55C\uB2E4."
+    actionType: "\uACF5\uACA9"
+    rarity: "\uC804\uC124"
+    attackStyle: 
+    attackVfx: 
+    hitVfx: 
+    energyCost: 0
+    spendsAllEnergy: 1
+    cooldownTurns: 0
+    keywordIds:
+    - preparation
+    - exhaust
+    - stun
+    isObtainable: 1
+    isBasicAction: 0
+    isStarterCard: 0
+    effects:
+    - id: energy_release_001_damage
+      cardId: energy_release_001
+      effectType: damage
+      targetType: "\uC801"
+      statusId: 
+      triggerEffectId: 
+      triggerTiming: action
+      movementStyle: 
+      rangeBasis: 
+      statusMultiplier: 0
+      resolutionOrder: 1
+      value: 0
+      durationSlots: 0
+      rangeOffsets:
+      - {x: -1, y: -1}
+      - {x: 0, y: -1}
+      - {x: 1, y: -1}
+      - {x: -1, y: 0}
+      - {x: 0, y: 0}
+      - {x: 1, y: 0}
+      - {x: -1, y: 1}
+      - {x: 0, y: 1}
+      - {x: 1, y: 1}
+    - id: energy_release_001_self_stun
+      cardId: energy_release_001
+      effectType: applyStatus
+      targetType: "\uC790\uC2E0"
+      statusId: stun
+      triggerEffectId: 
+      triggerTiming: action
+      movementStyle: 
+      rangeBasis: 
+      statusMultiplier: 0
+      resolutionOrder: 2
+      value: 2
+      durationSlots: 0
+      rangeOffsets: []
+    keywordParameters:
+    - keywordId: preparation
+      value: 3
+  - id: future_sight_001
+    name: "\uBBF8\uB798\uC608\uC9C0"
+    description: "\uC790\uC2E0\uC5D0\uAC8C [\uC608\uC9C0]\uB97C {effect1.value} \uBD80\uC5EC\uD55C\uB2E4."
+    actionType: "\uD2B9\uC218"
+    rarity: "\uACE0\uAE09"
+    attackStyle: 
+    attackVfx: 
+    hitVfx: 
+    energyCost: 10
+    spendsAllEnergy: 0
+    cooldownTurns: 2
+    keywordIds:
+    - foresight
+    isObtainable: 1
+    isBasicAction: 0
+    isStarterCard: 0
+    effects:
+    - id: future_sight_001_foresight
+      cardId: future_sight_001
+      effectType: applyStatus
+      targetType: "\uC790\uC2E0"
+      statusId: foresight
+      triggerEffectId: 
+      triggerTiming: action
+      movementStyle: 
+      rangeBasis: 
+      statusMultiplier: 0
+      resolutionOrder: 1
+      value: 1
+      durationSlots: 0
+      rangeOffsets: []
+    keywordParameters: []
+  - id: opening_thrust_001
+    name: "\uBE48\uD2C8 \uCC0C\uB974\uAE30"
+    description: "[\uBC29\uD5A5\uC9C0\uC815] \uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C
+      \uD53C\uD574 {effect1.value}\uC744 \uC900\uB2E4. \uB300\uC0C1\uC774 [\uAE30\uC808]
+      \uC0C1\uD0DC\uB77C\uBA74 \uCD94\uAC00 \uD53C\uD574 {effect1.statusMultiplier}"
+    actionType: "\uACF5\uACA9"
+    rarity: "\uD76C\uADC0"
+    attackStyle: thrust
+    attackVfx: opening_thrust
+    hitVfx: 
+    energyCost: 15
+    spendsAllEnergy: 0
+    cooldownTurns: 1
+    keywordIds:
+    - direction_select
+    - stun
+    isObtainable: 1
+    isBasicAction: 0
+    isStarterCard: 0
+    effects:
+    - id: opening_thrust_001_damage
+      cardId: opening_thrust_001
+      effectType: damage
+      targetType: "\uC801"
+      statusId: stun
+      triggerEffectId: 
+      triggerTiming: action
+      movementStyle: 
+      rangeBasis: 
+      statusMultiplier: 10
+      resolutionOrder: 1
+      value: 10
+      durationSlots: 0
+      rangeOffsets:
+      - {x: 0, y: 0}
+      - {x: 1, y: 0}
+      - {x: 2, y: 0}
+    keywordParameters: []
   - id: reward_test_common_slash_001
     name: "\uD14C\uC2A4\uD2B8 \uBCA0\uAE30"
     description: "\uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574
       {effect1.value}\uB97C(\uC744) \uC900\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
     actionType: "\uACF5\uACA9"
     rarity: "\uC77C\uBC18"
+    attackStyle: 
+    attackVfx: 
+    hitVfx: 
     energyCost: 10
+    spendsAllEnergy: 0
     cooldownTurns: 1
     keywordIds:
     - direction_select
@@ -430,6 +1010,8 @@ MonoBehaviour:
       statusId: 
       triggerEffectId: 
       triggerTiming: 
+      movementStyle: 
+      rangeBasis: 
       statusMultiplier: 0
       resolutionOrder: 1
       value: 10
@@ -437,13 +1019,18 @@ MonoBehaviour:
       rangeOffsets:
       - {x: 0, y: 0}
       - {x: 1, y: 0}
+    keywordParameters: []
   - id: reward_test_common_thrust_001
     name: "\uD14C\uC2A4\uD2B8 \uCC0C\uB974\uAE30"
     description: "\uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574
       {effect1.value}\uB97C(\uC744) \uC900\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
     actionType: "\uACF5\uACA9"
     rarity: "\uC77C\uBC18"
+    attackStyle: 
+    attackVfx: 
+    hitVfx: 
     energyCost: 15
+    spendsAllEnergy: 0
     cooldownTurns: 1
     keywordIds:
     - direction_select
@@ -458,6 +1045,8 @@ MonoBehaviour:
       statusId: 
       triggerEffectId: 
       triggerTiming: 
+      movementStyle: 
+      rangeBasis: 
       statusMultiplier: 0
       resolutionOrder: 1
       value: 15
@@ -466,13 +1055,18 @@ MonoBehaviour:
       - {x: 0, y: 0}
       - {x: 1, y: 0}
       - {x: 2, y: 0}
+    keywordParameters: []
   - id: reward_test_uncommon_slash_001
     name: "\uD14C\uC2A4\uD2B8 \uBCA0\uAE30"
     description: "\uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574
       {effect1.value}\uB97C(\uC744) \uC900\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
     actionType: "\uACF5\uACA9"
     rarity: "\uACE0\uAE09"
+    attackStyle: 
+    attackVfx: 
+    hitVfx: 
     energyCost: 10
+    spendsAllEnergy: 0
     cooldownTurns: 1
     keywordIds:
     - direction_select
@@ -487,6 +1081,8 @@ MonoBehaviour:
       statusId: 
       triggerEffectId: 
       triggerTiming: 
+      movementStyle: 
+      rangeBasis: 
       statusMultiplier: 0
       resolutionOrder: 1
       value: 10
@@ -494,13 +1090,18 @@ MonoBehaviour:
       rangeOffsets:
       - {x: 0, y: 0}
       - {x: 1, y: 0}
+    keywordParameters: []
   - id: reward_test_uncommon_thrust_001
     name: "\uD14C\uC2A4\uD2B8 \uCC0C\uB974\uAE30"
     description: "\uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574
       {effect1.value}\uB97C(\uC744) \uC900\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
     actionType: "\uACF5\uACA9"
     rarity: "\uACE0\uAE09"
+    attackStyle: 
+    attackVfx: 
+    hitVfx: 
     energyCost: 15
+    spendsAllEnergy: 0
     cooldownTurns: 1
     keywordIds:
     - direction_select
@@ -515,6 +1116,8 @@ MonoBehaviour:
       statusId: 
       triggerEffectId: 
       triggerTiming: 
+      movementStyle: 
+      rangeBasis: 
       statusMultiplier: 0
       resolutionOrder: 1
       value: 15
@@ -523,13 +1126,18 @@ MonoBehaviour:
       - {x: 0, y: 0}
       - {x: 1, y: 0}
       - {x: 2, y: 0}
+    keywordParameters: []
   - id: reward_test_rare_slash_001
     name: "\uD14C\uC2A4\uD2B8 \uBCA0\uAE30"
     description: "\uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574
       {effect1.value}\uB97C(\uC744) \uC900\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
     actionType: "\uACF5\uACA9"
     rarity: "\uD76C\uADC0"
+    attackStyle: 
+    attackVfx: 
+    hitVfx: 
     energyCost: 10
+    spendsAllEnergy: 0
     cooldownTurns: 1
     keywordIds:
     - direction_select
@@ -544,6 +1152,8 @@ MonoBehaviour:
       statusId: 
       triggerEffectId: 
       triggerTiming: 
+      movementStyle: 
+      rangeBasis: 
       statusMultiplier: 0
       resolutionOrder: 1
       value: 10
@@ -551,13 +1161,18 @@ MonoBehaviour:
       rangeOffsets:
       - {x: 0, y: 0}
       - {x: 1, y: 0}
+    keywordParameters: []
   - id: reward_test_rare_thrust_001
     name: "\uD14C\uC2A4\uD2B8 \uCC0C\uB974\uAE30"
     description: "\uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574
       {effect1.value}\uB97C(\uC744) \uC900\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
     actionType: "\uACF5\uACA9"
     rarity: "\uD76C\uADC0"
+    attackStyle: 
+    attackVfx: 
+    hitVfx: 
     energyCost: 15
+    spendsAllEnergy: 0
     cooldownTurns: 1
     keywordIds:
     - direction_select
@@ -572,6 +1187,8 @@ MonoBehaviour:
       statusId: 
       triggerEffectId: 
       triggerTiming: 
+      movementStyle: 
+      rangeBasis: 
       statusMultiplier: 0
       resolutionOrder: 1
       value: 15
@@ -580,13 +1197,18 @@ MonoBehaviour:
       - {x: 0, y: 0}
       - {x: 1, y: 0}
       - {x: 2, y: 0}
+    keywordParameters: []
   - id: reward_test_legendary_slash_001
     name: "\uD14C\uC2A4\uD2B8 \uBCA0\uAE30"
     description: "\uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574
       {effect1.value}\uB97C(\uC744) \uC900\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
     actionType: "\uACF5\uACA9"
     rarity: "\uC804\uC124"
+    attackStyle: 
+    attackVfx: 
+    hitVfx: 
     energyCost: 10
+    spendsAllEnergy: 0
     cooldownTurns: 1
     keywordIds:
     - direction_select
@@ -601,6 +1223,8 @@ MonoBehaviour:
       statusId: 
       triggerEffectId: 
       triggerTiming: 
+      movementStyle: 
+      rangeBasis: 
       statusMultiplier: 0
       resolutionOrder: 1
       value: 10
@@ -608,13 +1232,18 @@ MonoBehaviour:
       rangeOffsets:
       - {x: 0, y: 0}
       - {x: 1, y: 0}
+    keywordParameters: []
   - id: reward_test_legendary_thrust_001
     name: "\uD14C\uC2A4\uD2B8 \uCC0C\uB974\uAE30"
     description: "\uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uD53C\uD574
       {effect1.value}\uB97C(\uC744) \uC900\uB2E4.\n[\uBC29\uD5A5\uC9C0\uC815][{cooldownTurns}\uD134]"
     actionType: "\uACF5\uACA9"
     rarity: "\uC804\uC124"
+    attackStyle: 
+    attackVfx: 
+    hitVfx: 
     energyCost: 15
+    spendsAllEnergy: 0
     cooldownTurns: 1
     keywordIds:
     - direction_select
@@ -629,6 +1258,8 @@ MonoBehaviour:
       statusId: 
       triggerEffectId: 
       triggerTiming: 
+      movementStyle: 
+      rangeBasis: 
       statusMultiplier: 0
       resolutionOrder: 1
       value: 15
@@ -637,20 +1268,12 @@ MonoBehaviour:
       - {x: 0, y: 0}
       - {x: 1, y: 0}
       - {x: 2, y: 0}
+    keywordParameters: []
   keywords:
   - id: direction_select
     name: "\uBC29\uD5A5\uC9C0\uC815"
     description: "\uCE74\uB4DC \uC608\uC57D \uC2DC \uC2E4\uD589 \uBC29\uD5A5\uC744
       \uC120\uD0DD\uD55C\uB2E4."
-    resolutionRule: "\uCE74\uB4DC \uC608\uC57D \uC2DC \uC120\uD0DD\uD55C \uBC29\uD5A5\uC744
-      \uD589\uB3D9 \uD050\uC5D0 \uC800\uC7A5\uD55C\uB2E4. \uBC94\uC704 \uC88C\uD45C\uB294
-      \uC804\uBC29 +Y\uB97C \uAE30\uC900\uC73C\uB85C \uC791\uC131\uD558\uACE0, \uC2E4\uD589
-      \uC2DC \uC608\uC57D \uBC29\uD5A5\uC73C\uB85C \uD68C\uC804\uD558\uC5EC \uC801\uC6A9\uD55C\uB2E4.
-      \uC608\uC57D \uC774\uD6C4 \uCE90\uB9AD\uD130 \uBC29\uD5A5\uC774 \uBC14\uB00C\uC5B4\uB3C4
-      \uC608\uC57D \uBC29\uD5A5\uC744 \uC720\uC9C0\uD55C\uB2E4. \uC774 \uD0A4\uC6CC\uB4DC\uAC00
-      \uC5C6\uB294 \uCE74\uB4DC\uB294 \uAE30\uBCF8\uC801\uC73C\uB85C \uBC29\uD5A5\uC774
-      \uACE0\uC815\uB41C\uB2E4."
-    triggerTiming: "\uC608\uC57D \uC2DC / \uD589\uB3D9 \uC2E4\uD589 \uC2DC"
     parameters: "\uC5C6\uC74C"
     textColor: '#FFBA47'
   - id: single_target
@@ -659,16 +1282,6 @@ MonoBehaviour:
       \uBA85\uC744 \uB300\uC0C1\uC73C\uB85C \uD55C\uB2E4. \uAC19\uC740 \uAC70\uB9AC\uC758
       \uC801\uC774 \uC5EC\uB7EC \uBA85\uC774\uBA74 \uBB34\uC791\uC704\uB85C \uD55C
       \uBA85\uC744 \uC120\uD0DD\uD55C\uB2E4."
-    resolutionRule: "\uD6A8\uACFC \uC2E4\uD589 \uC2DC \uBC94\uC704 \uB0B4 \uC801\uC744
-      \uD6C4\uBCF4\uB85C \uC0BC\uACE0, \uD6A8\uACFC\uB97C \uC0AC\uC6A9\uD558\uB294
-      \uCE90\uB9AD\uD130\uB85C\uBD80\uD130 \uAC00\uC7A5 \uAC00\uAE4C\uC6B4 \uC801
-      \uD55C \uBA85\uC744 \uC120\uD0DD\uD55C\uB2E4. \uCD5C\uB2E8 \uAC70\uB9AC\uAC00
-      \uAC19\uC740 \uC801\uC774 \uC5EC\uB7EC \uBA85\uC774\uBA74 \uADF8 \uD6C4\uBCF4\uB4E4
-      \uC911 \uBB34\uC791\uC704\uB85C \uD55C \uBA85\uC744 \uC120\uD0DD\uD55C\uB2E4.
-      \uBC94\uC704 \uB0B4 \uC801\uC774 \uC5C6\uC73C\uBA74 \uB300\uC0C1\uC774 \uC5C6\uB2E4.
-      \uC774 \uD0A4\uC6CC\uB4DC\uAC00 \uC5C6\uB294 \uC801 \uB300\uC0C1 \uD6A8\uACFC\uB294
-      \uBC94\uC704 \uB0B4 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uC801\uC6A9\uD55C\uB2E4."
-    triggerTiming: "\uD589\uB3D9 \uC2E4\uD589 \uC2DC"
     parameters: 
     textColor: '#FFBA47'
   - id: stun
@@ -676,16 +1289,6 @@ MonoBehaviour:
     description: "\uAE30\uC808 \uC218\uCE58 \uB9CC\uD07C \uB2E4\uC74C \uD589\uB3D9\uC2AC\uB86F\uC744
       \uC0AC\uC6A9 \uD560 \uC218 \uC5C6\uB2E4. \uC774\uBBF8 \uC608\uC57D\uB41C \uD589\uB3D9\uC740
       \uCDE8\uC18C\uB41C\uB2E4."
-    resolutionRule: "\uC911\uCCA9\uC740 \uD569\uC0B0\uD55C\uB2E4. \uD604\uC7AC \uC2AC\uB86F
-      \uD589\uB3D9\uC740 \uC720\uC9C0\uD558\uACE0 \uB2E4\uC74C \uC2AC\uB86F\uBD80\uD130
-      \uD69F\uC218\uB9CC\uD07C \uCC28\uB2E8\uD55C\uB2E4. \uC608\uC57D\uB41C \uD589\uB3D9\uC740
-      \uC704\uCE58\uB97C \uB2F9\uAE30\uC9C0 \uC54A\uACE0 \uCDE8\uC18C\uD558\uBA70
-      \uC5D0\uB108\uC9C0\uC640 \uCFE8\uB2E4\uC6B4\uC744 \uC18C\uBE44\uD558\uC9C0
-      \uC54A\uB294\uB2E4. \uB0A8\uC740 \uD69F\uC218\uB294 \uB2E4\uC74C \uD134\uC73C\uB85C
-      \uC774\uC6D4\uD55C\uB2E4. \uC801\uC911 \uC2DC \uC2E4\uC81C \uD53C\uD574\uAC00
-      0\uC774\uC5B4\uB3C4 \uBD80\uC5EC\uD55C\uB2E4."
-    triggerTiming: "\uC801\uC911 \uC2DC \uBD80\uC5EC / \uB2E4\uC74C \uD589\uB3D9
-      \uC2AC\uB86F\uBD80\uD130 \uC801\uC6A9"
     parameters: "\uAE30\uC808 \uC218\uCE58"
     textColor: '#FFBA47'
   - id: bleed
@@ -693,15 +1296,6 @@ MonoBehaviour:
     description: "\uAC01 \uD589\uB3D9\uC2AC\uB86F \uC885\uB8CC \uC2DC \uCD9C\uD608
       \uC218\uCE58\uB9CC\uD07C \uBCF4\uD638\uB9C9\uC744 \uBB34\uC2DC\uD558\uB294
       \uD53C\uD574\uB97C \uBC1B\uACE0, \uCD9C\uD608 \uC218\uCE58\uAC00 1 \uAC10\uC18C\uD55C\uB2E4."
-    resolutionRule: "\uC911\uCCA9\uC740 \uD569\uC0B0\uD55C\uB2E4. \uBD80\uC5EC\uB41C
-      \uD589\uB3D9\uC2AC\uB86F\uC758 \uC885\uB8CC\uBD80\uD130 \uC801\uC6A9\uD55C\uB2E4.
-      \uCD9C\uD608 3\uC740 \uC2AC\uB86F \uC885\uB8CC\uB9C8\uB2E4 3, 2, 1\uC758 \uD53C\uD574\uB97C
-      \uC900 \uB4A4 \uC0AC\uB77C\uC9C4\uB2E4. \uBC18\uACA9 \uCC98\uB9AC \uD6C4 \uC2AC\uB86F
-      \uC885\uB8CC\uC5D0 \uD53C\uD574\uC640 \uAC10\uC18C\uB97C \uCC98\uB9AC\uD55C\uB2E4.
-      \uB0A8\uC740 \uCD9C\uD608\uC740 \uB2E4\uC74C \uD134\uC73C\uB85C \uC774\uC6D4\uD55C\uB2E4.
-      \uCD9C\uD608 \uD53C\uD574\uB294 \uBC18\uACA9\uC744 \uBC1C\uB3D9\uC2DC\uD0A4\uC9C0
-      \uC54A\uB294\uB2E4."
-    triggerTiming: "\uD589\uB3D9\uC2AC\uB86F \uC885\uB8CC \uC2DC"
     parameters: "\uCD9C\uD608 \uC218\uCE58"
     textColor: '#FF5A5A'
   - id: counter
@@ -710,28 +1304,28 @@ MonoBehaviour:
       \uC9C1\uC811 \uACF5\uACA9\uC744 \uBC1B\uC73C\uBA74, \uC591\uCE21\uC758 \uAE30\uBCF8
       \uD589\uB3D9\uC774 \uBAA8\uB450 \uB05D\uB09C \uB4A4 \uCE74\uB4DC\uC5D0 \uC9C0\uC815\uB41C
       \uD6A8\uACFC\uB97C 1\uD68C \uBC1C\uB3D9\uD55C\uB2E4."
-    resolutionRule: "\uD574\uB2F9 \uC2AC\uB86F\uC758 \uC591\uCE21 \uAE30\uBCF8 \uD589\uB3D9
-      \uC644\uB8CC \uD6C4 \uC0DD\uC874\uD55C \uC720\uB2DB\uB9CC \uBC1C\uB3D9\uC744
-      \uD310\uC815\uD55C\uB2E4. \uBC1B\uC740 \uD53C\uD574\uAC00 0\uC774\uC5B4\uB3C4
-      \uC9C1\uC811 \uACF5\uACA9\uC5D0 \uC801\uC911\uD558\uBA74 \uBC1C\uB3D9\uD55C\uB2E4.
-      \uC5EC\uB7EC \uB300\uC0C1\uC5D0\uAC8C \uACF5\uACA9\uBC1B\uC544\uB3C4 \uC2AC\uB86F\uB2F9
-      \uCD5C\uB300 1\uD68C \uBC1C\uB3D9\uD55C\uB2E4. \uAE30\uBCF8 \uD589\uB3D9\uC73C\uB85C
-      \uC0AC\uB9DD\uD55C \uC720\uB2DB\uC740 \uBC1C\uB3D9\uD558\uC9C0 \uC54A\uB294\uB2E4.
-      \uD50C\uB808\uC774\uC5B4 \uBC18\uACA9 \uC5F0\uCD9C \uD6C4 \uC801 \uBC18\uACA9
-      \uC5F0\uCD9C\uC744 \uC7AC\uC0DD\uD558\uACE0 \uC591\uCE21 \uBC18\uACA9 \uD53C\uD574\uB97C
-      \uB3D9\uC2DC\uC5D0 \uC801\uC6A9\uD55C\uB2E4. \uD655\uC815\uB41C \uBC18\uACA9\uC740
-      \uB2E4\uB978 \uBC18\uACA9 \uD53C\uD574\uB85C \uC0AC\uB9DD\uD574\uB3C4 \uD568\uAED8
-      \uC801\uC6A9\uD55C\uB2E4. \uBC18\uACA9 \uD53C\uD574, \uCD9C\uD608 \uBC0F \uB514\uBC84\uD504
-      \uD53C\uD574\uB85C\uB294 \uBC1C\uB3D9\uD558\uC9C0 \uC54A\uB294\uB2E4. \uD6A8\uACFC
-      \uC885\uB958\uC640 \uBC94\uC704\uB294 \uCE74\uB4DC\uBCC4 \uC815\uC758\uB97C
-      \uB530\uB974\uBA70, \uBC94\uC704\uB294 \uBC18\uACA9 \uC2DC \uC790\uC2E0\uC758
-      \uC704\uCE58\uC640 \uC608\uC57D \uBC29\uD5A5\uC744 \uAE30\uC900\uC73C\uB85C
-      \uD310\uC815\uD55C\uB2E4."
-    triggerTiming: "\uC591\uCE21 \uAE30\uBCF8 \uD589\uB3D9 \uC644\uB8CC \uD6C4 /
-      \uC2AC\uB86F \uC885\uB8CC \uCC98\uB9AC \uC804"
     parameters: "\uC5C6\uC74C (\uD6A8\uACFC\uC640 \uBC94\uC704\uB294 \uCE74\uB4DC\uBCC4
       \uC815\uC758)"
     textColor: '#FFBA47'
+  - id: preparation
+    name: "\uC900\uBE44"
+    description: "\uC804\uD22C \uC2DC\uC791 \uD6C4 \uC9C0\uC815\uB41C \uD134\uC774
+      \uC9C0\uB098\uC57C \uC0AC\uC6A9\uD560 \uC218 \uC788\uB2E4."
+    parameters: "\uC900\uBE44 \uD134 \uC218"
+    textColor: '#999999'
+  - id: exhaust
+    name: "\uC18C\uBA78"
+    description: "\uC0AC\uC6A9 \uD6C4 \uC774\uBC88 \uC804\uD22C \uB3D9\uC548 \uB2E4\uC2DC
+      \uC0AC\uC6A9\uD560 \uC218 \uC5C6\uB2E4."
+    parameters: 
+    textColor: '#999999'
+  - id: foresight
+    name: "\uC608\uC9C0"
+    description: "\uB2E4\uC74C\uD134 \uC2DC\uC791 \uC2DC, \uC0C1\uB300\uC758 \uD589\uB3D9
+      \uC2AC\uB86F\uC758 \uC815\uBCF4\uB97C \uC911\uCCA9\uB2F9 1\uAC1C\uC529 \uBB34\uC791\uC704\uB85C
+      \uC644\uC804\uACF5\uAC1C\uD55C\uB2E4. (\uCD5C\uB300 3\uC911\uCCA9)"
+    parameters: 
+    textColor: '#BC9BFF'
   statuses:
   - id: stun
     name: "\uAE30\uC808"
@@ -743,5 +1337,11 @@ MonoBehaviour:
     name: "\uCD9C\uD608"
     category: "\uB514\uBC84\uD504"
     keywordId: bleed
+    stackRule: add
+    countUnit: stack
+  - id: foresight
+    name: "\uC608\uC9C0"
+    category: "\uBC84\uD504"
+    keywordId: foresight
     stackRule: add
     countUnit: stack

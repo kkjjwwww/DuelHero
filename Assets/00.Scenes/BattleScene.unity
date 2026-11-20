@@ -11070,7 +11070,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DuelHero.Battle.BattleDamageNumberUI
   resolver: {fileID: 1243114849}
   battleCamera: {fileID: 330585545}
-  hudRoot: {fileID: 979334508}
   digits:
   - {fileID: 21300000, guid: cf0e430691be5ad438017066a0701119, type: 3}
   - {fileID: 21300000, guid: 22d05eb624785fb4092690890d9fbc4a, type: 3}

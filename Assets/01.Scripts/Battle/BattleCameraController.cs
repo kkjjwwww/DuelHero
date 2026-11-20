@@ -6,6 +6,16 @@ namespace DuelHero.Battle
     [RequireComponent(typeof(Camera))]
     public sealed class BattleCameraController : MonoBehaviour
     {
+        [SerializeField, Min(1)] private int standardImpactDamage = 30;
+        [SerializeField, Min(1)] private int heavyImpactDamage = 50;
+        [SerializeField] private Vector2 standardShakeStrength = new(.008f, .065f);
+        [SerializeField] private Vector2 standardShakeDuration = new(.10f, .22f);
+        [SerializeField] private Vector2 standardHitStop = new(.06f, .14f);
+        [SerializeField, Min(0f)] private float lethalHitStop = .18f;
+        [SerializeField, Min(0f)] private float heavyShakeStrength = .22f;
+        [SerializeField, Min(0f)] private float heavyShakeDuration = .32f;
+        [SerializeField, Min(0f)] private float heavyHitStop = .24f;
+
         private Camera targetCamera;
         private Vector3 basePosition, battlePosition;
         private Quaternion baseRotation;
@@ -14,7 +24,11 @@ namespace DuelHero.Battle
         private float entryZoom = 1f;
         private Tween entryZoomMotion;
         private Tween impactShake;
+        private float activeShakeStrength;
+        private bool hitStopActive;
+        private double hitStopUntil;
         private Vector2 impactOffset;
+        internal Vector3 ImpactWorldOffset => transform.rotation * new Vector3(impactOffset.x, impactOffset.y, 0f);
         private Tween energyFocusMotion;
         private float energyFocusBlend;
         private float energyZoom = 1f;
@@ -64,18 +78,51 @@ namespace DuelHero.Battle
 
         internal void PlayRiftImpactShake() => PlayImpactShake(.09f, .2f);
 
+        internal void PlayDamageImpact(int damage, bool lethal, bool statusDamage)
+        {
+            if (!isActiveAndEnabled || damage <= 0) return;
+            float ratio = Mathf.InverseLerp(1f, Mathf.Max(2, standardImpactDamage), damage);
+            bool heavy = damage >= heavyImpactDamage;
+            PlayImpactShake(
+                heavy ? heavyShakeStrength : Mathf.Lerp(standardShakeStrength.x, standardShakeStrength.y, ratio),
+                heavy ? heavyShakeDuration : Mathf.Lerp(standardShakeDuration.x, standardShakeDuration.y, ratio));
+
+            float duration = heavy ? heavyHitStop :
+                statusDamage ? 0f : Mathf.Lerp(standardHitStop.x, standardHitStop.y, ratio);
+            if (lethal) duration = Mathf.Max(duration, lethalHitStop);
+            if (duration <= 0f) return;
+
+            double deadline = Time.realtimeSinceStartupAsDouble + duration;
+            if (!hitStopActive)
+            {
+                GameTimePause.Acquire();
+                hitStopActive = true;
+                hitStopUntil = deadline;
+            }
+            else hitStopUntil = System.Math.Max(hitStopUntil, deadline);
+        }
+
+        private void EndHitStop()
+        {
+            if (!hitStopActive) return;
+            hitStopActive = false;
+            GameTimePause.Release();
+        }
+
         internal void PlayImpactShake(float strength, float duration)
         {
             if (!isActiveAndEnabled) return;
             if (strength <= 0f || duration <= 0f) return;
+            if (impactShake != null && strength < activeShakeStrength) return;
             impactShake?.Kill();
+            activeShakeStrength = strength;
             impactShake = DOVirtual.Float(0f, 1f, duration, progress =>
             {
                 float envelope = 1f - progress;
                 float phase = progress * Mathf.PI * 6f;
                 impactOffset = new Vector2(Mathf.Sin(phase) * strength, Mathf.Sin(phase * .8f) * (strength * (.055f / .09f))) * envelope;
                 ApplyView();
-            }).SetEase(Ease.Linear).OnKill(() =>
+            }).SetEase(Ease.Linear).SetUpdate(true).OnKill(() =>
             {
                 impactShake = null;
                 impactOffset = Vector2.zero;
@@ -118,6 +165,7 @@ namespace DuelHero.Battle
 
         private void LateUpdate()
         {
+            if (hitStopActive && Time.realtimeSinceStartupAsDouble >= hitStopUntil) EndHitStop();
             if (energyFocus != null) ApplyView();
         }
 
@@ -137,6 +185,7 @@ namespace DuelHero.Battle
 
         private void OnDisable()
         {
+            EndHitStop();
             CancelEnergyFocus();
             impactShake?.Kill();
             entryZoomMotion?.Kill();

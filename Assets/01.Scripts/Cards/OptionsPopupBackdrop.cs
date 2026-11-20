@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using DuelHero.Battle;
 
 namespace DuelHero.Cards
 {
@@ -7,7 +8,6 @@ namespace DuelHero.Cards
     {
         [SerializeField] private GameObject backdrop;
         private static int openCount;
-        private static float previousTimeScale;
         public static bool IsOpen => openCount > 0;
 
         public void OpenWithSound()
@@ -26,8 +26,7 @@ namespace DuelHero.Cards
         {
             if (openCount++ == 0)
             {
-                previousTimeScale = Time.timeScale;
-                Time.timeScale = 0f;
+                GameTimePause.Acquire();
                 foreach (var fan in FindObjectsByType<CardFanLayout>(FindObjectsSortMode.None)) fan.ResetFocus();
                 foreach (var inspection in FindObjectsByType<CardInspectionPresenter>(FindObjectsSortMode.None)) inspection.Hide();
                 foreach (var trigger in FindObjectsByType<DelayedTooltipTrigger>(FindObjectsSortMode.None)) trigger.Cancel();
@@ -53,7 +52,7 @@ namespace DuelHero.Cards
             {
                 backdrop.SetActive(false);
             }
-            if (openCount > 0 && --openCount == 0) Time.timeScale = previousTimeScale;
+            if (openCount > 0 && --openCount == 0) GameTimePause.Release();
         }
         private void OnDestroy()
         {

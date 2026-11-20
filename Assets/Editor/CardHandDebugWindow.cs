@@ -252,14 +252,14 @@ namespace DuelHero.EditorTools
             }
 
             var units = new List<UnitStats> { player };
-            if (statusIndex == 2) return;
-                foreach (var unit in FindObjectsByType<UnitStats>(FindObjectsSortMode.None))
+            foreach (var unit in FindObjectsByType<UnitStats>(FindObjectsSortMode.None))
                 if (unit != player && unit.IsInitialized) units.Add(unit);
             int selectedIndex = units.IndexOf(selectedUnit);
             if (selectedIndex < 0) { selectedIndex = 0; SelectUnit(player); }
             int nextIndex = EditorGUILayout.Popup("대상", selectedIndex,
                 units.Select((unit, index) => (index == 0 ? "플레이어 · " : "적 · ") + unit.gameObject.name).ToArray());
-            if (nextIndex != selectedIndex) SelectUnit(units[nextIndex]);
+            var target = units[nextIndex];
+            if (target != selectedUnit) SelectUnit(target);
 
             EditorGUILayout.LabelField("현재 상태", FormatStats(selectedUnit));
             using (new EditorGUI.DisabledScope(!editable))
@@ -282,7 +282,7 @@ namespace DuelHero.EditorTools
                 damageAmount = Mathf.Max(1, EditorGUILayout.IntField("체력 피해량", damageAmount));
                 statAmount = Mathf.Max(1, EditorGUILayout.IntField("변화량", statAmount));
                 guardSlots = Mathf.Max(1, EditorGUILayout.IntField("보호막 지속 슬롯", guardSlots));
-                var unit = selectedUnit;
+                var unit = target;
                 using (new EditorGUILayout.HorizontalScope())
                 {
                     if (GUILayout.Button("체력 피해"))
@@ -319,16 +319,30 @@ namespace DuelHero.EditorTools
 
         private void ApplyDebugDamage(UnitStats unit)
         {
+            if (unit == null || !unit.IsInitialized)
+            {
+                statResult = "체력 피해를 적용할 수 없습니다. 초기화된 전투 유닛을 선택해 주세요.";
+                return;
+            }
+            string beforeStats = FormatStats(unit);
             int before = unit.Health;
-            ApplyStatChange("체력 피해", () => unit.TakeDamage(damageAmount));
+            unit.TakeDamage(damageAmount);
             int damage = before - unit.Health;
+            healthInput = unit.Health;
+            energyInput = unit.Energy;
+            statResult = $"체력 피해 · 요청 {damageAmount}, 실제 {damage}\n이전  {beforeStats}\n이후  {FormatStats(unit)}";
             if (damage > 0)
-                FindFirstObjectByType<BattleDamageNumberUI>()?.ShowDamageForDebug(unit.transform, damage);
+                FindFirstObjectByType<BattleDamageNumberUI>()?.ShowDamageForDebug(unit.transform, damage, unit.Health <= 0);
         }
 
         private void ApplyStatChange(string label, Action apply)
         {
             var unit = selectedUnit;
+            if (unit == null || !unit.IsInitialized)
+            {
+                statResult = "초기화된 전투 유닛을 선택해 주세요.";
+                return;
+            }
             string before = FormatStats(unit);
             apply();
             healthInput = unit.Health;

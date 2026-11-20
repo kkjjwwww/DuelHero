@@ -11,7 +11,6 @@ namespace DuelHero.Battle
     {
         [SerializeField] private CombatEffectResolver resolver;
         [SerializeField] private Camera battleCamera;
-        [SerializeField] private RectTransform hudRoot;
         [SerializeField] private Sprite[] digits;
         [SerializeField, Min(2)] private int damageForMaxScale = 50;
         [SerializeField, Min(1f)] private float maxDamageNumberScale = 1.6f;
@@ -21,6 +20,7 @@ namespace DuelHero.Battle
         private readonly System.Random random = new();
         private readonly List<(Transform target, int direction, Tween motion)> active = new();
         private Canvas canvas;
+        private Canvas damageOverlay;
 
         private void OnEnable()
         {
@@ -34,31 +34,47 @@ namespace DuelHero.Battle
             for (int i = active.Count - 1; i >= 0; i--)
                 active[i].motion.Kill();
             active.Clear();
+            if (damageOverlay != null) Destroy(damageOverlay.gameObject);
+            damageOverlay = null;
         }
 
         private void Show(BattleActionResult result)
         {
             if (result.Outcome != BattleActionOutcome.Success || result.Value <= 0 ||
                 (result.Kind != BattleActionKind.Damage && result.Kind != BattleActionKind.StatusDamage) ||
-                !resolver.TryGetUnit(result.TargetId, out var target, out _))
+                !resolver.TryGetUnit(result.TargetId, out var target, out var stats))
                 return;
 
             ShowNumber(target.transform, result.Value);
+            PlayImpact(result.Value, stats != null && stats.Health <= 0, result.Kind == BattleActionKind.StatusDamage);
         }
 
 #if UNITY_EDITOR
-        public void ShowDamageForDebug(Transform target, int amount)
+        public void ShowDamageForDebug(Transform target, int amount, bool lethal)
         {
             if (Application.isPlaying && isActiveAndEnabled && target != null && amount > 0)
+            {
                 ShowNumber(target, amount);
+                PlayImpact(amount, lethal, false);
+            }
         }
 #endif
+
+        private void PlayImpact(int amount, bool lethal, bool statusDamage)
+        {
+            if (battleCamera != null && battleCamera.TryGetComponent<BattleCameraController>(out var controller))
+                controller.PlayDamageImpact(amount, lethal, statusDamage);
+        }
 
         private void ShowNumber(Transform target, int amount)
         {
             if (battleCamera == null) return;
             var sprite = target.GetComponentInChildren<SpriteRenderer>();
             Vector3 origin = sprite != null ? sprite.bounds.center : target.position;
+            if (battleCamera.TryGetComponent<BattleCameraController>(out var controller))
+                origin += controller.ImpactWorldOffset;
+            Vector3 screen = battleCamera.WorldToScreenPoint(origin);
+            if (screen.z <= 0f) return;
             int previous = active.FindLastIndex(number => number.target == target);
             int direction = previous >= 0 ? -active[previous].direction : random.Next(2) * 2 - 1;
             float distance = direction * Mathf.Lerp(18f, 32f, (float)random.NextDouble());
@@ -66,7 +82,7 @@ namespace DuelHero.Battle
 
             var root = new GameObject("Damage Number", typeof(RectTransform), typeof(CanvasGroup), typeof(SpriteNumberUI));
             var rect = (RectTransform)root.transform;
-            var parent = hudRoot != null ? hudRoot : (RectTransform)transform;
+            var parent = GetDamageOverlay();
             rect.SetParent(parent, false);
             rect.SetAsFirstSibling();
             rect.anchorMin = rect.anchorMax = new Vector2(.5f, .5f);
@@ -81,17 +97,12 @@ namespace DuelHero.Battle
             foreach (var image in root.GetComponentsInChildren<Image>())
                 image.color = DamageRed;
 
-            var uiCamera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(parent, screen, null, out var start);
+            start -= parent.rect.center;
             void Render(float progress)
             {
-                Vector3 screen = battleCamera.WorldToScreenPoint(origin);
-                if (screen.z <= 0 || !RectTransformUtility.ScreenPointToLocalPointInRectangle(parent, screen, uiCamera, out var point))
-                {
-                    group.alpha = 0f;
-                    return;
-                }
                 var arc = new Vector2(distance * progress, 4f * height * progress * (1f - progress) - 8f * progress);
-                rect.anchoredPosition = point - parent.rect.center + arc;
+                rect.anchoredPosition = start + arc;
                 group.alpha = Mathf.Clamp01((1f - progress) * Duration / FadeDuration);
             }
 
@@ -103,6 +114,22 @@ namespace DuelHero.Battle
                 active.RemoveAll(entry => entry.motion == motion);
                 if (root != null) Destroy(root);
             });
+        }
+
+        private RectTransform GetDamageOverlay()
+        {
+            if (damageOverlay == null)
+            {
+                var root = new GameObject("Damage Number Overlay", typeof(RectTransform), typeof(Canvas));
+                UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(root, gameObject.scene);
+                damageOverlay = root.GetComponent<Canvas>();
+                damageOverlay.renderMode = RenderMode.ScreenSpaceOverlay;
+                damageOverlay.sortingOrder = canvas.sortingOrder;
+                damageOverlay.targetDisplay = canvas.targetDisplay;
+            }
+            damageOverlay.scaleFactor = canvas.scaleFactor;
+            Canvas.ForceUpdateCanvases();
+            return (RectTransform)damageOverlay.transform;
         }
     }
 }
